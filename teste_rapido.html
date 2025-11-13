@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Upload</title>
+</head>
+<body>
+    <h2>Teste Rápido de Upload</h2>
+    <input type="file" id="fileInput" accept=".mpp">
+    <button onclick="testUpload()">Testar Upload</button>
+    <div id="result"></div>
+
+    <script>
+        function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('result').innerHTML = '❌ Selecione um arquivo primeiro';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('result').innerHTML = '🔄 Testando...';
+
+            fetch('/api/upload-test', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('result').innerHTML = '✅ Sucesso! Erro corrigido!';
+                } else {
+                    document.getElementById('result').innerHTML = '❌ Erro: ' + data.error;
+                }
+            })
+            .catch(error => {
+                document.getElementById('result').innerHTML = '❌ Erro de conexão: ' + error;
+            });
+        }
+    </script>
+</body>
+</html>

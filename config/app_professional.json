@@ -1,0 +1,92 @@
+{
+  "name": "MPP to XML Converter Professional",
+  "version": "1.0.0",
+  "description": "Professional web application for converting Microsoft Project files (.mpp) to XML format with PIX payment integration",
+  "author": "Development Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/mpp-xml-converter"
+  },
+  "keywords": [
+    "mpp",
+    "xml",
+    "converter",
+    "microsoft-project",
+    "pix",
+    "professional",
+    "file-conversion"
+  ],
+  "configuration": {
+    "server": {
+      "port": 8082,
+      "host": "0.0.0.0",
+      "maxFileSize": "100MB",
+      "uploadTimeout": 60000,
+      "cleanupDelay": 300
+    },
+    "payment": {
+      "currency": "BRL",
+      "amount": 10.00,
+      "method": "PIX",
+      "testMode": true
+    },
+    "features": {
+      "dragAndDrop": true,
+      "progressTracking": true,
+      "secureDownload": true,
+      "zipCompression": true,
+      "automaticCleanup": true,
+      "pixPayment": true,
+      "responsiveDesign": true
+    },
+    "security": {
+      "cors": true,
+      "contentSecurityPolicy": true,
+      "xssProtection": true,
+      "frameOptions": "DENY",
+      "contentTypeOptions": "nosniff"
+    },
+    "directories": {
+      "public": "public",
+      "temp": "temp_downloads",
+      "uploads": "uploads",
+      "logs": "logs"
+    },
+    "logging": {
+      "level": "info",
+      "file": "server.log",
+      "console": true,
+      "timestamp": true
+    }
+  },
+  "requirements": {
+    "python": ">=3.8",
+    "node": ">=14.0",
+    "browsers": [
+      "Chrome >= 60",
+      "Firefox >= 55",
+      "Safari >= 12",
+      "Edge >= 79"
+    ]
+  },
+  "apis": {
+    "upload": "/api/upload-test",
+    "download": "/download/",
+    "payment": "/api/payment",
+    "status": "/api/status"
+  },
+  "deployment": {
+    "environment": "production",
+    "ssl": true,
+    "domain": "your-domain.com",
+    "monitoring": true,
+    "backup": true
+  },
+  "maintenance": {
+    "updateCheck": true,
+    "performanceMonitoring": true,
+    "errorTracking": true,
+    "analyticsEnabled": false
+  }
+}

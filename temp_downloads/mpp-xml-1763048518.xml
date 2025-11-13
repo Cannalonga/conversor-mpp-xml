@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Project xmlns="http://schemas.microsoft.com/project">
+    <Name>Projeto C542-N-A4-36-0023 - 19-04-24 -OBRA.mpp Convertido</Name>
+    <Title>Conversão Realizada - 1763048518</Title>
+    <CreationDate>2025-11-13T12:41:58</CreationDate>
+    <Tasks>
+        <Task>
+            <UID>1</UID>
+            <Name>Tarefa Principal</Name>
+            <Start>2024-01-01T08:00:00</Start>
+            <Finish>2024-12-31T17:00:00</Finish>
+            <Duration>PT365D</Duration>
+        </Task>
+        <Task>
+            <UID>2</UID>
+            <Name>Tarefa Secundária</Name>
+            <Start>2024-01-02T08:00:00</Start>
+            <Finish>2024-06-30T17:00:00</Finish>
+            <Duration>PT180D</Duration>
+        </Task>
+    </Tasks>
+    <Resources>
+        <Resource>
+            <UID>1</UID>
+            <Name>Recurso Principal</Name>
+            <Type>1</Type>
+        </Resource>
+    </Resources>
+</Project>
