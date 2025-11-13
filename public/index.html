@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor MPP para XML - Converta Arquivos Microsoft Project</title>
+    <meta name="description" content="Converta seus arquivos .mpp (Microsoft Project) para .xml online. Rápido, seguro e confiável. Apenas R$ 10,00 por conversão.">
+    <meta name="keywords" content="mpp para xml, microsoft project, conversor, xml, mpp">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Fonte system para performance máxima -->
+    <style>
+        /* Fonte rápida do sistema */
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
+        
+        /* Ícones essenciais inline */
+        .fa-file-export:before, .fas.fa-file-export:before { content: "🔄"; }
+        .fa-upload:before, .fas.fa-upload:before { content: "📤"; }
+        .fa-file:before, .fas.fa-file:before { content: "📄"; }
+        .fa-times:before, .fas.fa-times:before { content: "❌"; }
+        .fa-cog:before, .fas.fa-cog:before { content: "⚙️"; }
+        .fa-download:before, .fas.fa-download:before { content: "⬇️"; }
+        .fa-qrcode:before, .fas.fa-qrcode:before { content: "📱"; }
+        .fa-copy:before, .fas.fa-copy:before { content: "📋"; }
+        .fa-check:before, .fas.fa-check:before { content: "✅"; }
+        .fa-ad:before, .fas.fa-ad:before { content: "📢"; }
+        .fa-chart-bar:before, .fas.fa-chart-bar:before { content: "📊"; }
+        .fa-users:before, .fas.fa-users:before { content: "👥"; }
+        .fa-eye:before, .fas.fa-eye:before { content: "👁️"; }
+        .fa-arrow-up:before, .fas.fa-arrow-up:before { content: "⬆️"; }
+        .fa-lock:before, .fas.fa-lock:before { content: "🔒"; }
+        .fa-shield-alt:before, .fas.fa-shield-alt:before { content: "🛡️"; }
+        .fa-bolt:before, .fas.fa-bolt:before { content: "⚡"; }
+        .fa-star:before, .fas.fa-star:before { content: "⭐"; }
+        
+        .fas, .fa { 
+            font-family: inherit !important; 
+            font-style: normal !important;
+            font-variant: normal !important;
+            text-rendering: auto !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <i class="fas fa-file-export"></i>
+                    <span>MPP Converter</span>
+                </div>
+                <div class="nav-menu">
+                    <a href="#home" class="nav-link">Início</a>
+                    <a href="#converter" class="nav-link">Converter</a>
+                    <a href="#about" class="nav-link">Sobre</a>
+                    <a href="#contact" class="nav-link">Contato</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Development Mode Banner -->
+    <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 10px 0; text-align: center; font-weight: bold; box-shadow: 0 2px 10px rgba(255,107,107,0.3);">
+        <div class="container">
+            <i class="fas fa-exclamation-triangle"></i> MODO DESENVOLVIMENTO - Conversão gratuita para testes da funcionalidade principal
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Converta Arquivos MPP para XML</h1>
+                    <p>Transforme seus arquivos Microsoft Project (.mpp) em formato XML de forma rápida e segura. Processamento instantâneo por apenas <strong>R$ 10,00</strong> por conversão.</p>
+                    <div class="hero-features">
+                        <div class="feature">
+                            <i class="fas fa-lightning-bolt"></i>
+                            <span>Conversão Rápida</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>100% Seguro</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Garantia de Qualidade</span>
+                        </div>
+                    </div>
+                    <a href="#converter" class="btn btn-primary">Começar Conversão</a>
+                </div>
+                <div class="hero-image">
+                    <div class="file-demo">
+                        <div class="file-input">
+                            <i class="fas fa-file"></i>
+                            <span>arquivo.mpp</span>
+                        </div>
+                        <div class="conversion-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="file-output">
+                            <i class="fas fa-file-code"></i>
+                            <span>arquivo.xml</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ad Space 1 -->
+    <div class="ad-space ad-banner">
+        <div class="container">
+            <div class="ad-placeholder">
+                <i class="fas fa-ad"></i>
+                <span>Espaço Publicitário - 728x90</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Converter Section -->
+    <section id="converter" class="converter-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Conversor de Arquivos</h2>
+                <p>Faça upload do seu arquivo .mpp e receba o XML em segundos</p>
+            </div>
+            
+            <div class="converter-wrapper">
+                <div class="converter-card" id="uploadForm">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Arraste seu arquivo .mpp aqui</h3>
+                            <p>ou <span class="upload-link">clique para selecionar</span></p>
+                            <input type="file" id="fileInput" accept=".mpp" hidden>
+                            <div class="file-info">
+                                <small>Formato: .mpp | Tamanho: Ilimitado ✨</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Section -->
+                    <div class="upload-progress" id="uploadProgress" style="display: none;">
+                        <div class="progress-info">
+                            <div class="progress-icon">
+                                <i class="fas fa-cog fa-spin"></i>
+                            </div>
+                            <div class="progress-details">
+                                <div class="progress-status">
+                                    <span class="upload-status">Processando...</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-preview" id="filePreview" style="display: none;">
+                        <div class="file-details">
+                            <div class="file-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="file-meta">
+                                <span class="file-name" id="fileName"></span>
+                                <span class="file-size" id="fileSize"></span>
+                            </div>
+                            <div class="file-status" id="fileStatus">
+                                <!-- Status será inserido dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="conversion-actions">
+                        <div class="pricing-info">
+                            <div class="price">
+                                <span class="currency">R$</span>
+                                <span class="amount">10,00</span>
+                                <span class="per">por conversão</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-convert" id="convertBtn" disabled>
+                            <i class="fas fa-cog"></i>
+                            Converter (Modo Teste - Sem PIX)
+                        </button>
+                        <button class="btn btn-success btn-test" id="testBtn" disabled style="margin-left: 10px;">
+                            <i class="fas fa-flask"></i>
+                            Conversão Direta
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ad Space 2 -->
+                <div class="ad-space ad-sidebar">
+                    <div class="ad-placeholder">
+                        <i class="fas fa-ad"></i>
+                        <span>Publicidade<br>300x250</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Conversion Section -->
+    <section id="conversionSection" class="converter-section" style="display: none;">
+        <div class="container">
+            <div class="converter-container">
+                <div class="converter-content">
+                    <h2>Convertendo seu arquivo</h2>
+                    <div class="conversion-progress">
+                        <div class="progress-info">
+                            <div class="progress-status">
+                                <span id="conversionStatus">Iniciando conversão...</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="downloadSection" class="converter-section" style="display: none;">
+        <div class="container">
+            <div class="converter-container">
+                <div class="converter-content">
+                    <div class="download-success">
+                        <div class="success-icon">✅</div>
+                        <h2>Conversão Concluída!</h2>
+                        <p>Seu arquivo foi convertido com sucesso para XML.</p>
+                        <div class="download-actions">
+                            <button class="btn btn-success btn-download" id="downloadBtn">
+                                <i class="fas fa-download"></i>
+                                Baixar XML
+                            </button>
+                            <button class="btn btn-secondary btn-new" onclick="location.reload()">
+                                Converter outro arquivo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment Modal (OCULTO EM MODO DESENVOLVIMENTO) -->
+    <div class="modal" id="paymentModal" style="display: none !important;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pagamento via PIX</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-info">
+                    <div class="payment-details">
+                        <p><strong>Valor:</strong> R$ 10,00</p>
+                        <p><strong>Arquivo:</strong> <span id="paymentFileName"></span></p>
+                    </div>
+                    
+                    <div class="qr-code-section">
+                        <div class="qr-code" id="qrCode">
+                            <!-- QR Code será gerado aqui -->
+                            <div class="qr-placeholder">
+                                <i class="fas fa-qrcode"></i>
+                                <p>Gerando QR Code...</p>
+                            </div>
+                        </div>
+                        <div class="pix-info">
+                            <div class="bank-info">
+                                <div class="bank-logo">
+                                    <i class="fas fa-university"></i>
+                                    <span>Nubank</span>
+                                </div>
+                            </div>
+                            <!-- CHAVE PIX OCULTA POR SEGURANÇA -->
+                            <div class="security-notice">
+                                <i class="fas fa-shield-alt"></i>
+                                <p><strong>Pagamento Seguro:</strong> Use apenas o QR Code</p>
+                            </div>
+                            <div class="payment-instructions">
+                                <h4><i class="fas fa-info-circle"></i> Como pagar:</h4>
+                                <ol>
+                                    <li>Abra o app do seu banco</li>
+                                    <li>Vá em PIX → Pagar</li>
+                                    <li><strong>Escaneie APENAS o QR Code</strong></li>
+                                    <li>Confirme o valor de <strong>R$ 10,00</strong></li>
+                                    <li>Aguarde a confirmação automática</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-status" id="paymentStatus">
+                        <i class="fas fa-clock"></i>
+                        <span>Aguardando pagamento...</span>
+                    </div>
+
+                    <div class="payment-timer">
+                        <span>Tempo restante: <span id="timer">15:00</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Por que escolher nosso conversor?</h2>
+            </div>
+            
+            <!-- Contador de Visualizações -->
+            <div class="stats-counter">
+                <div class="counter-item">
+                    <div class="counter-number" id="totalViews">0</div>
+                    <div class="counter-label">Total de Visualizações</div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-number" id="uniqueVisitors">0</div>
+                    <div class="counter-label">Visitantes Únicos</div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-number" id="todayViews">0</div>
+                    <div class="counter-label">Visualizações Hoje</div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-number" id="totalConversions">0</div>
+                    <div class="counter-label">Arquivos Convertidos</div>
+                </div>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-rocket"></i>
+                    <h3>Super Rápido</h3>
+                    <p>Conversão instantânea sem perda de qualidade</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-lock"></i>
+                    <h3>Seguro</h3>
+                    <p>Seus arquivos são protegidos e deletados após 24h</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>Responsivo</h3>
+                    <p>Funciona em qualquer dispositivo</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-headset"></i>
+                    <h3>Suporte</h3>
+                    <p>Atendimento especializado</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ad Space 3 -->
+    <div class="ad-space ad-banner">
+        <div class="container">
+            <div class="ad-placeholder">
+                <i class="fas fa-ad"></i>
+                <span>Espaço Publicitário - 728x90</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Contato</h2>
+                <p>Precisa de ajuda? Entre em contato conosco</p>
+            </div>
+            <div class="contact-info">
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3>Email</h3>
+                    <p><a href="mailto:canna.vendasonline@gmail.com">canna.vendasonline@gmail.com</a></p>
+                    <small>Respondemos em até 24 horas</small>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Suporte</h3>
+                    <p>Segunda a Sexta</p>
+                    <p>09:00 - 18:00 (BRT)</p>
+                    <small>Atendimento em português</small>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h3>FAQ</h3>
+                    <p>Dúvidas frequentes</p>
+                    <p>Guia de uso</p>
+                    <small>Respostas rápidas</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <i class="fas fa-file-export"></i>
+                    <span>MPP Converter</span>
+                </div>
+                <div class="footer-contact">
+                    <div class="footer-email">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:canna.vendasonline@gmail.com">canna.vendasonline@gmail.com</a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <a href="#privacy">Política de Privacidade</a>
+                    <a href="#terms">Termos de Uso</a>
+                    <a href="#contact">Contato</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MPP Converter. Todos os direitos reservados.</p>
+                <p>Contato: <a href="mailto:canna.vendasonline@gmail.com">canna.vendasonline@gmail.com</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app_clean_new.js"></script>
+</body>
+</html>

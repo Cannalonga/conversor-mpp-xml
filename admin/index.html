@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - MPP Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Admin Dashboard Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        .admin-header {
+            background: var(--surface-color);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .admin-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .conversions { color: var(--primary-color); }
+        .revenue { color: var(--success-color); }
+        .pending { color: var(--warning-color); }
+        .failed { color: var(--danger-color); }
+
+        .data-section {
+            background: var(--surface-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: var(--bg-color);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-failed { background: #fee2e2; color: #991b1b; }
+        .status-processing { background: #dbeafe; color: #1e40af; }
+
+        .refresh-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-table {
+                font-size: 0.85rem;
+            }
+            
+            .section-title {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="admin-title">
+            <i class="fas fa-shield-alt"></i>
+            Painel Administrativo - MPP Converter
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <!-- Dashboard Overview -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-icon conversions">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="stat-value conversions" id="totalViews">--</div>
+                <div class="stat-label">Total de Visualizações</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value pending" id="uniqueVisitors">--</div>
+                <div class="stat-label">Visitantes Únicos</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon conversions">
+                    <i class="fas fa-file-export"></i>
+                </div>
+                <div class="stat-value conversions" id="totalConversions">--</div>
+                <div class="stat-label">Total de Conversões</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon revenue">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-value revenue" id="totalRevenue">--</div>
+                <div class="stat-label">Receita Total</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="stat-value warning" id="todayViews">--</div>
+                <div class="stat-label">Visualizações Hoje</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon failed">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-value failed" id="conversionRate">--</div>
+                <div class="stat-label">Taxa de Conversão</div>
+            </div>
+        </div>
+
+        <!-- Analytics Chart -->
+        <div class="data-section">
+            <div class="section-title">
+                <span><i class="fas fa-chart-area"></i> Visualizações dos Últimos 7 Dias</span>
+            </div>
+            <div id="analyticsChart">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Carregando gráfico...
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Visitors -->
+        <div class="data-section">
+            <div class="section-title">
+                <span><i class="fas fa-globe"></i> Visitantes Recentes</span>
+                <button class="refresh-btn" onclick="loadRecentVisitors()">
+                    <i class="fas fa-sync-alt"></i>
+                    Atualizar
+                </button>
+            </div>
+            
+            <div id="visitorsTable">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Carregando...
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Conversions -->
+        <div class="data-section">
+            <div class="section-title">
+                <span><i class="fas fa-list"></i> Conversões Recentes</span>
+                <button class="refresh-btn" onclick="loadConversions()">
+                    <i class="fas fa-sync-alt"></i>
+                    Atualizar
+                </button>
+            </div>
+            
+            <div id="conversionsTable">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Carregando...
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Payments -->
+        <div class="data-section">
+            <div class="section-title">
+                <span><i class="fas fa-credit-card"></i> Pagamentos Recentes</span>
+                <button class="refresh-btn" onclick="loadPayments()">
+                    <i class="fas fa-sync-alt"></i>
+                    Atualizar
+                </button>
+            </div>
+            
+            <div id="paymentsTable">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Carregando...
+                </div>
+            </div>
+        </div>
+
+        <!-- System Stats -->
+        <div class="data-section">
+            <div class="section-title">
+                <span><i class="fas fa-chart-line"></i> Estatísticas do Sistema</span>
+                <button class="refresh-btn" onclick="loadSystemStats()">
+                    <i class="fas fa-sync-alt"></i>
+                    Atualizar
+                </button>
+            </div>
+            
+            <div id="systemStats">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Carregando...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AdminDashboard {
+            constructor() {
+                this.apiUrl = '/api/admin';
+                this.refreshInterval = 30000; // 30 segundos
+                
+                this.loadAllData();
+                this.startAutoRefresh();
+            }
+
+            async loadAllData() {
+                await Promise.all([
+                    this.loadOverview(),
+                    this.loadConversions(),
+                    this.loadPayments(),
+                    this.loadSystemStats()
+                ]);
+            }
+
+            async loadOverview() {
+                try {
+                    const data = await this.fetchData('/admin/analytics');
+                    
+                    if (data.overview) {
+                        document.getElementById('totalViews').textContent = data.overview.totalViews || '0';
+                        document.getElementById('uniqueVisitors').textContent = data.overview.uniqueVisitors || '0';
+                        document.getElementById('totalConversions').textContent = '156'; // Dados simulados
+                        document.getElementById('totalRevenue').textContent = 'R$ 1.560,00';
+                        document.getElementById('todayViews').textContent = data.overview.todayViews || '0';
+                        document.getElementById('conversionRate').textContent = data.overview.conversionRate || '0%';
+                    }
+                    
+                    // Carregar gráfico dos últimos 7 dias
+                    if (data.last7Days) {
+                        this.renderAnalyticsChart(data.last7Days);
+                    }
+                    
+                    // Carregar visitantes recentes
+                    if (data.recentVisitors) {
+                        this.renderRecentVisitors(data.recentVisitors);
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar overview:', error);
+                    this.showError('Erro ao carregar dados gerais');
+                }
+            }
+
+            async loadConversions() {
+                try {
+                    const data = await this.fetchData('/conversions');
+                    this.renderConversionsTable(data.conversions || []);
+                } catch (error) {
+                    console.error('Erro ao carregar conversões:', error);
+                    this.showTableError('conversionsTable', 'Erro ao carregar conversões');
+                }
+            }
+
+            async loadPayments() {
+                try {
+                    const data = await this.fetchData('/payments');
+                    this.renderPaymentsTable(data.payments || []);
+                } catch (error) {
+                    console.error('Erro ao carregar pagamentos:', error);
+                    this.showTableError('paymentsTable', 'Erro ao carregar pagamentos');
+                }
+            }
+
+            async loadSystemStats() {
+                try {
+                    const data = await this.fetchData('/system-stats');
+                    this.renderSystemStats(data || {});
+                } catch (error) {
+                    console.error('Erro ao carregar estatísticas do sistema:', error);
+                    this.showTableError('systemStats', 'Erro ao carregar estatísticas');
+                }
+            }
+
+            async fetchData(endpoint) {
+                // Dados simulados para demonstração
+                // Em produção, faça requisições reais para o backend
+                
+                const simulatedData = {
+                    '/overview': {
+                        totalConversions: 142,
+                        totalRevenue: 1420.00,
+                        pendingPayments: 3,
+                        failedConversions: 7
+                    },
+                    '/conversions': {
+                        conversions: [
+                            {
+                                id: '1',
+                                fileName: 'projeto-exemplo.mpp',
+                                status: 'completed',
+                                createdAt: new Date(Date.now() - 3600000),
+                                downloadCount: 1,
+                                paymentStatus: 'paid'
+                            },
+                            {
+                                id: '2',
+                                fileName: 'cronograma.mpp',
+                                status: 'processing',
+                                createdAt: new Date(Date.now() - 1800000),
+                                downloadCount: 0,
+                                paymentStatus: 'paid'
+                            },
+                            {
+                                id: '3',
+                                fileName: 'planejamento.mpp',
+                                status: 'pending',
+                                createdAt: new Date(Date.now() - 900000),
+                                downloadCount: 0,
+                                paymentStatus: 'pending'
+                            }
+                        ]
+                    },
+                    '/payments': {
+                        payments: [
+                            {
+                                id: 'pay-1',
+                                conversionId: '1',
+                                amount: 10.00,
+                                status: 'paid',
+                                createdAt: new Date(Date.now() - 3600000),
+                                paidAt: new Date(Date.now() - 3500000)
+                            },
+                            {
+                                id: 'pay-2',
+                                conversionId: '2',
+                                amount: 10.00,
+                                status: 'paid',
+                                createdAt: new Date(Date.now() - 1800000),
+                                paidAt: new Date(Date.now() - 1700000)
+                            },
+                            {
+                                id: 'pay-3',
+                                conversionId: '3',
+                                amount: 10.00,
+                                status: 'pending',
+                                createdAt: new Date(Date.now() - 900000),
+                                expiresAt: new Date(Date.now() + 600000)
+                            }
+                        ]
+                    },
+                    '/system-stats': {
+                        todayConversions: 12,
+                        todayRevenue: 120.00,
+                        averageProcessingTime: '2.3s',
+                        successRate: '94.2%',
+                        serverUptime: '15d 7h 32m'
+                    }
+                };
+
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                return simulatedData[endpoint] || {};
+            }
+
+            renderConversionsTable(conversions) {
+                const container = document.getElementById('conversionsTable');
+                
+                if (conversions.length === 0) {
+                    container.innerHTML = '<div class="no-data">Nenhuma conversão encontrada</div>';
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.className = 'data-table';
+                
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Arquivo</th>
+                            <th>Status</th>
+                            <th>Data</th>
+                            <th>Downloads</th>
+                            <th>Pagamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${conversions.map(conversion => `
+                            <tr>
+                                <td><code>${conversion.id.substring(0, 8)}...</code></td>
+                                <td>${conversion.fileName}</td>
+                                <td><span class="status-badge status-${conversion.status}">${this.translateStatus(conversion.status)}</span></td>
+                                <td>${this.formatDate(conversion.createdAt)}</td>
+                                <td>${conversion.downloadCount}</td>
+                                <td><span class="status-badge status-${conversion.paymentStatus === 'paid' ? 'completed' : 'pending'}">${conversion.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(table);
+            }
+
+            renderPaymentsTable(payments) {
+                const container = document.getElementById('paymentsTable');
+                
+                if (payments.length === 0) {
+                    container.innerHTML = '<div class="no-data">Nenhum pagamento encontrado</div>';
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.className = 'data-table';
+                
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Conversão</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            <th>Data</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${payments.map(payment => `
+                            <tr>
+                                <td><code>${payment.id.substring(0, 8)}...</code></td>
+                                <td><code>${payment.conversionId.substring(0, 8)}...</code></td>
+                                <td>R$ ${payment.amount.toFixed(2)}</td>
+                                <td><span class="status-badge status-${payment.status === 'paid' ? 'completed' : 'pending'}">${payment.status === 'paid' ? 'Pago' : 'Pendente'}</span></td>
+                                <td>${this.formatDate(payment.createdAt)}</td>
+                                <td>
+                                    ${payment.status === 'pending' 
+                                        ? `<small>Expira: ${this.formatDate(payment.expiresAt)}</small>` 
+                                        : `<small>Pago: ${this.formatDate(payment.paidAt)}</small>`
+                                    }
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(table);
+            }
+
+            renderSystemStats(stats) {
+                const container = document.getElementById('systemStats');
+                
+                const statsHtml = `
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <div class="stat-value conversions">${stats.todayConversions || 0}</div>
+                            <div class="stat-label">Conversões Hoje</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value revenue">R$ ${(stats.todayRevenue || 0).toFixed(2)}</div>
+                            <div class="stat-label">Receita Hoje</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value conversions">${stats.averageProcessingTime || '--'}</div>
+                            <div class="stat-label">Tempo Médio de Processamento</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value revenue">${stats.successRate || '--'}</div>
+                            <div class="stat-label">Taxa de Sucesso</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value conversions">${stats.serverUptime || '--'}</div>
+                            <div class="stat-label">Uptime do Servidor</div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML = statsHtml;
+            }
+
+            renderAnalyticsChart(data) {
+                const container = document.getElementById('analyticsChart');
+                
+                // Criar gráfico simples com CSS (em produção, use Chart.js)
+                const maxViews = Math.max(...data.map(d => d.views));
+                
+                const chartHtml = `
+                    <div class="simple-chart">
+                        ${data.map(day => `
+                            <div class="chart-bar">
+                                <div class="bar" style="height: ${(day.views / maxViews) * 100}%; background: var(--primary-color);" 
+                                     title="${day.views} visualizações em ${day.date}"></div>
+                                <div class="bar-label">${new Date(day.date).toLocaleDateString('pt-BR', { weekday: 'short' })}</div>
+                                <div class="bar-value">${day.views}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <style>
+                        .simple-chart {
+                            display: flex;
+                            align-items: end;
+                            gap: 1rem;
+                            padding: 2rem;
+                            min-height: 200px;
+                        }
+                        .chart-bar {
+                            flex: 1;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            gap: 0.5rem;
+                        }
+                        .bar {
+                            width: 100%;
+                            min-height: 20px;
+                            border-radius: 4px 4px 0 0;
+                            transition: all 0.3s ease;
+                        }
+                        .bar:hover {
+                            opacity: 0.8;
+                            transform: translateY(-2px);
+                        }
+                        .bar-label {
+                            font-size: 0.8rem;
+                            color: var(--text-secondary);
+                            text-transform: capitalize;
+                        }
+                        .bar-value {
+                            font-weight: 600;
+                            font-size: 0.9rem;
+                            color: var(--text-primary);
+                        }
+                    </style>
+                `;
+                
+                container.innerHTML = chartHtml;
+            }
+
+            renderRecentVisitors(visitors) {
+                const container = document.getElementById('visitorsTable');
+                
+                if (visitors.length === 0) {
+                    container.innerHTML = '<div class="no-data">Nenhum visitante encontrado</div>';
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.className = 'data-table';
+                
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>IP</th>
+                            <th>Última Visita</th>
+                            <th>Total de Visitas</th>
+                            <th>País</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${visitors.map(visitor => `
+                            <tr>
+                                <td><code>${visitor.ip}</code></td>
+                                <td>${this.formatDate(visitor.lastVisit)}</td>
+                                <td>${visitor.visits}</td>
+                                <td>
+                                    <span class="flag">🇧🇷</span>
+                                    ${visitor.country}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(table);
+            }
+
+            translateStatus(status) {
+                const translations = {
+                    'uploaded': 'Enviado',
+                    'processing': 'Processando',
+                    'completed': 'Concluído',
+                    'failed': 'Falhado',
+                    'pending': 'Pendente'
+                };
+                return translations[status] || status;
+            }
+
+            formatDate(date) {
+                if (!date) return '--';
+                return new Date(date).toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            showTableError(containerId, message) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i><br>
+                        ${message}
+                    </div>
+                `;
+            }
+
+            showError(message) {
+                console.error(message);
+                // Implementar notificação de erro
+            }
+
+            startAutoRefresh() {
+                setInterval(() => {
+                    this.loadAllData();
+                }, this.refreshInterval);
+            }
+        }
+
+        // Funções globais para os botões
+        let adminDashboard;
+
+        function loadConversions() {
+            adminDashboard.loadConversions();
+        }
+
+        function loadPayments() {
+            adminDashboard.loadPayments();
+        }
+
+        function loadSystemStats() {
+            adminDashboard.loadSystemStats();
+        }
+
+        function loadRecentVisitors() {
+            adminDashboard.loadOverview(); // Carrega visitantes junto com overview
+        }
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            adminDashboard = new AdminDashboard();
+        });
+    </script>
+</body>
+</html>

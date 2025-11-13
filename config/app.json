@@ -1,0 +1,59 @@
+{
+  "development": {
+    "port": 3000,
+    "database": {
+      "type": "sqlite",
+      "path": "./database.sqlite"
+    },
+    "uploads": {
+      "maxSize": 52428800,
+      "allowedTypes": [".mpp"],
+      "tempDir": "uploads"
+    },
+    "payment": {
+      "timeout": 900000,
+      "price": 10.00,
+      "currency": "BRL"
+    },
+    "security": {
+      "rateLimit": {
+        "windowMs": 900000,
+        "max": 100
+      },
+      "cors": {
+        "origin": ["http://localhost:3000"]
+      }
+    }
+  },
+  "production": {
+    "port": 80,
+    "database": {
+      "type": "postgresql",
+      "url": "$DATABASE_URL"
+    },
+    "uploads": {
+      "maxSize": 52428800,
+      "allowedTypes": [".mpp"],
+      "tempDir": "/tmp/uploads"
+    },
+    "payment": {
+      "timeout": 900000,
+      "price": 10.00,
+      "currency": "BRL"
+    },
+    "security": {
+      "rateLimit": {
+        "windowMs": 900000,
+        "max": 50
+      },
+      "cors": {
+        "origin": ["https://seu-dominio.com"]
+      }
+    },
+    "ssl": {
+      "enabled": true,
+      "cert": "/path/to/cert.pem",
+      "key": "/path/to/key.pem"
+    }
+  }
+}
