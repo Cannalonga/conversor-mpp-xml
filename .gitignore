@@ -18,6 +18,34 @@ jspm_packages/
 .env.local
 .env.production
 
+# CRITICAL: User data folders (NEVER commit user files)
+uploads/
+temp_downloads/
+downloads/
+user_files/
+converted/
+processing/
+incoming/
+quarantine/
+expired/
+
+# Server logs
+server.log
+*.log
+logs/
+
+# PIX and payment data
+pix_keys.txt
+payment_data.json
+credentials.json
+
+# Temporary files
+*.tmp
+*.temp
+__pycache__/
+*.pyc
+*.pyo
+
 # Build outputs
 dist/
 build/
