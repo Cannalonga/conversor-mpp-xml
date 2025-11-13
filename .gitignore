@@ -18,6 +18,22 @@ jspm_packages/
 .env.local
 .env.production
 
+# Python
+__pycache__/
+.venv/
+
+# Upload directories
+uploads/
+temp_downloads/
+
+# Build directories
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
 # CRITICAL: User data folders (NEVER commit user files)
 uploads/
 temp_downloads/
