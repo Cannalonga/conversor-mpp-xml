@@ -6,6 +6,8 @@ const crypto = require('crypto');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const uploadUtils = require('./upload-utils');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +35,60 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(compression());
 
+// 🛡️ RATE LIMITING - Proteção contra ataques
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // máximo 100 requests por IP por janela
+    message: {
+        error: 'Muitas tentativas. Tente novamente em 15 minutos.',
+        retryAfter: '15 minutos'
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minuto
+    max: 5, // máximo 5 uploads por minuto por IP
+    message: {
+        error: 'Muitos uploads. Aguarde 1 minuto.',
+        retryAfter: '1 minuto'
+    }
+});
+
+app.use('/api', apiLimiter);
+app.use('/api/upload-test', uploadLimiter);
+
+// 🔒 MIDDLEWARE DE MONITORAMENTO DE SEGURANÇA
+app.use((req, res, next) => {
+    // Log de requests suspeitos
+    const suspiciousPatterns = [
+        /\.\./,                    // Path traversal
+        /[<>\"']/,                 // XSS attempts  
+        /union.*select/i,          // SQL injection
+        /(script|javascript|vbscript)/i // Script injection
+    ];
+    
+    const fullUrl = req.url;
+    const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(fullUrl));
+    
+    if (isSuspicious) {
+        console.log('⚠️ Tentativa suspeita detectada:', {
+            ip: req.ip,
+            url: fullUrl,
+            userAgent: req.get('User-Agent'),
+            timestamp: new Date().toISOString()
+        });
+        
+        return res.status(400).json({
+            error: 'Request inválido',
+            code: 'SUSPICIOUS_ACTIVITY'
+        });
+    }
+    
+    next();
+});
+
 // Middleware para rastrear visualizações de página
 app.use((req, res, next) => {
     // Rastrear apenas páginas principais, não recursos estáticos
@@ -55,30 +111,45 @@ app.use((req, res, next) => {
     next();
 });
 
-// Configuração do multer para upload de arquivos
+// 🛡️ CONFIGURAÇÃO SEGURA DE UPLOAD
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+    destination: async (req, file, cb) => {
+        const uploadDir = 'uploads/incoming';
+        const success = await uploadUtils.ensureDirectory(uploadDir);
+        if (success) {
+            cb(null, uploadDir);
+        } else {
+            cb(new Error('Erro ao preparar diretório de upload'));
+        }
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        try {
+            // Gera nome seguro com UUID
+            const safeFilename = uploadUtils.generateSafeFilename(file.originalname);
+            cb(null, safeFilename);
+        } catch (error) {
+            cb(error);
+        }
     }
 });
 
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 50 * 1024 * 1024, // 50MB
+        fileSize: uploadUtils.MAX_FILE_SIZE,
+        files: 1, // Apenas um arquivo por vez
+        fieldNameSize: 100,
+        fieldSize: 1024
     },
     fileFilter: (req, file, cb) => {
-        const allowedExtensions = ['.mpp'];
-        const fileExtension = path.extname(file.originalname).toLowerCase();
+        // Validação completa usando utilitários seguros
+        const validation = uploadUtils.validateUpload(file);
         
-        if (allowedExtensions.includes(fileExtension)) {
+        if (validation.valid) {
             cb(null, true);
         } else {
-            cb(new Error('Formato de arquivo não suportado. Use apenas arquivos .mpp'));
+            const errorMsg = validation.errors.join(', ');
+            cb(new Error(errorMsg));
         }
     }
 });
@@ -415,37 +486,96 @@ class AnalyticsManager {
 // Rotas da API
 
 // Rota de teste para upload
+// 🛡️ ROTA SEGURA DE UPLOAD
 app.post('/api/upload-test', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Nenhum arquivo enviado' 
+                error: 'Nenhum arquivo enviado',
+                code: 'NO_FILE'
             });
         }
-        
-        console.log('📁 Arquivo recebido:', req.file.originalname);
-        console.log('📊 Tamanho:', req.file.size, 'bytes');
-        
-        // Simular processamento
-        setTimeout(() => {
-            // Gerar XML de exemplo
-            const xmlContent = generateSampleXML(req.file.originalname);
+
+        // Validação adicional pós-upload
+        const validation = uploadUtils.validateUpload(req.file);
+        if (!validation.valid) {
+            // Remove arquivo inválido
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                console.error('Erro ao remover arquivo inválido:', unlinkError);
+            }
             
-            res.json({
-                success: true,
-                message: 'Arquivo convertido com sucesso',
-                filename: req.file.originalname.replace('.mpp', '_convertido.xml'),
-                downloadUrl: '/api/download/' + req.file.filename,
-                xmlContent: xmlContent
+            return res.status(400).json({
+                success: false,
+                error: validation.errors.join(', '),
+                code: 'VALIDATION_FAILED'
             });
+        }
+
+        // Log seguro do upload
+        const logData = uploadUtils.logUploadInfo(req.file, req.file.filename);
+        
+        // Mover arquivo para processamento
+        const processingDir = 'uploads/processing';
+        await uploadUtils.ensureDirectory(processingDir);
+        const processingPath = path.join(processingDir, req.file.filename);
+        
+        try {
+            await fs.rename(req.file.path, processingPath);
+        } catch (moveError) {
+            console.error('Erro ao mover arquivo:', moveError);
+            return res.status(500).json({
+                success: false,
+                error: 'Erro no processamento do arquivo',
+                code: 'MOVE_FAILED'
+            });
+        }
+
+        // Simular processamento seguro
+        setTimeout(async () => {
+            try {
+                // Gerar XML de exemplo
+                const xmlContent = generateSampleXML(logData.originalName);
+                
+                // Mover para diretório de convertidos
+                const convertedDir = 'uploads/converted';
+                await uploadUtils.ensureDirectory(convertedDir);
+                
+                res.json({
+                    success: true,
+                    message: 'Arquivo convertido com sucesso',
+                    filename: logData.originalName.replace('.mpp', '_convertido.xml'),
+                    fileId: req.file.filename.replace('.mpp', ''),
+                    xmlContent: xmlContent,
+                    processedAt: new Date().toISOString()
+                });
+            } catch (processError) {
+                console.error('Erro no processamento:', processError);
+                res.status(500).json({
+                    success: false,
+                    error: 'Erro durante a conversão',
+                    code: 'PROCESS_FAILED'
+                });
+            }
         }, 1000);
         
     } catch (error) {
-        console.error('❌ Erro no upload-test:', error);
+        console.error('❌ Erro crítico no upload:', error);
+        
+        // Log de segurança para monitoramento
+        console.log('🔒 Tentativa de upload suspeita:', {
+            ip: req.ip,
+            userAgent: req.get('User-Agent'),
+            timestamp: new Date().toISOString(),
+            error: error.message
+        });
+        
         res.status(500).json({ 
             success: false, 
-            error: 'Erro interno do servidor' 
+            error: 'Erro interno do servidor',
+            code: 'INTERNAL_ERROR'
         });
     }
 });
