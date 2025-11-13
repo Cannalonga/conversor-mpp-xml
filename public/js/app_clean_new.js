@@ -36,27 +36,21 @@ function setupFileUpload() {
         
         console.log('📄 Arquivo selecionado:', file.name);
         
-        // Primeiro mostra preview com loading
-        showFilePreview(file);
-        showFileStatus('loading');
+        // Mostrar arquivo selecionado
+        showFileSelected(file);
         
-        // Simular validação rápida
-        setTimeout(() => {
-            // Validar extensão
-            if (!file.name.toLowerCase().endsWith('.mpp')) {
-                showFileStatus('error');
-                alert('❌ Selecione um arquivo .mpp válido');
-                fileInput.value = '';
-                const preview = document.getElementById('filePreview');
-                if (preview) preview.style.display = 'none';
-                return;
-            }
-            
-            // Arquivo válido
-            currentFile = file;
-            showFileStatus('success');
-            enableButtons();
-        }, 1500); // Aumentei para 1.5s para ver a animação
+        // Validar extensão
+        if (!file.name.toLowerCase().endsWith('.mpp')) {
+            alert('❌ Selecione um arquivo .mpp válido');
+            fileInput.value = '';
+            hideFileSelected();
+            return;
+        }
+        
+        // Arquivo válido
+        currentFile = file;
+        enableConvertButton();
+        console.log('✅ Arquivo válido carregado:', file.name);
     });
     
     console.log('✅ Upload configurado');
@@ -64,33 +58,372 @@ function setupFileUpload() {
 
 function setupConversionButtons() {
     const convertBtn = document.getElementById('convertBtn');
+    const changeFileBtn = document.getElementById('changeFileBtn');
     
     if (convertBtn) {
-        convertBtn.addEventListener('click', showPaymentModal);
+        convertBtn.addEventListener('click', startConversion);
     }
     
-    console.log('✅ Botão de conversão configurado para PIX');
-    
-    // Setup do modal PIX
-    const closeModal = document.getElementById('closeModal');
-    if (closeModal) {
-        closeModal.addEventListener('click', () => {
-            const modal = document.getElementById('paymentModal');
-            if (modal) modal.style.display = 'none';
+    if (changeFileBtn) {
+        changeFileBtn.addEventListener('click', () => {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) {
+                fileInput.value = '';
+                currentFile = null;
+                hideFileSelected();
+            }
         });
+    }
+    
+    console.log('✅ Botão de conversão configurado');
+}
+
+function showFileSelected(file) {
+    const uploadWrapper = document.querySelector('.upload-wrapper');
+    const fileSelectedDiv = document.getElementById('fileSelected');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const selectedFileSize = document.getElementById('selectedFileSize');
+    
+    if (uploadWrapper && uploadWrapper.querySelector('.upload-area')) {
+        uploadWrapper.querySelector('.upload-area').style.display = 'none';
+    }
+    
+    if (fileSelectedDiv) {
+        fileSelectedDiv.style.display = 'block';
+    }
+    
+    if (selectedFileName) {
+        selectedFileName.textContent = file.name;
+    }
+    
+    if (selectedFileSize) {
+        selectedFileSize.textContent = (file.size / 1048576).toFixed(2) + ' MB';
+    }
+    
+    console.log('✅ Arquivo mostrado na interface');
+}
+
+function hideFileSelected() {
+    const uploadWrapper = document.querySelector('.upload-wrapper');
+    const fileSelectedDiv = document.getElementById('fileSelected');
+    
+    if (uploadWrapper && uploadWrapper.querySelector('.upload-area')) {
+        uploadWrapper.querySelector('.upload-area').style.display = 'block';
+    }
+    
+    if (fileSelectedDiv) {
+        fileSelectedDiv.style.display = 'none';
     }
 }
 
-function showFilePreview(file) {
-    const preview = document.getElementById('filePreview');
-    const fileName = document.getElementById('fileName');
-    const fileSize = document.getElementById('fileSize');
+function enableConvertButton() {
+    const convertBtn = document.getElementById('convertBtn');
     
-    if (preview) preview.style.display = 'block';
-    if (fileName) fileName.textContent = file.name;
-    if (fileSize) fileSize.textContent = (file.size / 1048576).toFixed(2) + ' MB';
+    if (convertBtn) {
+        convertBtn.disabled = false;
+        convertBtn.style.opacity = '1';
+        convertBtn.style.cursor = 'pointer';
+    }
+    
+    console.log('✅ Botão habilitado');
+}
+
+function startConversion() {
+    console.log('🔄 Iniciando conversão...');
+    
+    if (!currentFile) {
+        alert('❌ Selecione um arquivo .mpp primeiro!');
+        return;
+    }
+    
+    console.log('📄 Convertendo:', currentFile.name);
+    
+    // Mostrar progresso
+    showProgressState();
+    
+    // Fazer upload
+    uploadFile(currentFile)
+        .then(result => {
+            console.log('✅ Conversão concluída:', result);
+            showSuccessState(result);
+        })
+        .catch(error => {
+            console.error('❌ Erro na conversão:', error);
+            showErrorState(error.message);
+        });
+}
+
+function showProgressState() {
+    const fileSelected = document.getElementById('fileSelected');
+    const progressWrapper = document.getElementById('progressWrapper');
+    
+    if (fileSelected) fileSelected.style.display = 'none';
+    if (progressWrapper) progressWrapper.style.display = 'block';
+    
+    console.log('🔄 Estado de progresso ativado');
+}
+
+function showSuccessState(result) {
+    const progressWrapper = document.getElementById('progressWrapper');
+    const successWrapper = document.getElementById('successWrapper');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const newConversionBtn = document.getElementById('newConversionBtn');
+    
+    if (progressWrapper) progressWrapper.style.display = 'none';
+    if (successWrapper) successWrapper.style.display = 'block';
+    
+    // Configurar botão de download
+    if (downloadBtn && result.xmlContent) {
+        downloadBtn.onclick = () => downloadXML(result.xmlContent, currentFile.name);
+    }
+    
+    // Configurar botão de nova conversão
+    if (newConversionBtn) {
+        newConversionBtn.onclick = () => {
+            location.reload();
+        };
+    }
+    
+    console.log('✅ Estado de sucesso ativado');
+}
+
+function showErrorState(errorMessage) {
+    const progressWrapper = document.getElementById('progressWrapper');
+    const errorWrapper = document.getElementById('errorWrapper');
+    const errorMessageEl = document.getElementById('errorMessage');
+    const retryBtn = document.getElementById('retryBtn');
+    
+    if (progressWrapper) progressWrapper.style.display = 'none';
+    if (errorWrapper) errorWrapper.style.display = 'block';
+    
+    if (errorMessageEl) {
+        errorMessageEl.textContent = errorMessage;
+    }
+    
+    if (retryBtn) {
+        retryBtn.onclick = () => {
+            errorWrapper.style.display = 'none';
+            showFileSelected(currentFile);
+        };
+    }
+    
+    console.log('❌ Estado de erro ativado');
+}
+
+async function uploadFile(file) {
+    console.log('📤 Enviando arquivo...', `${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    updateProgress(30, 'Enviando arquivo...');
+    
+    try {
+        const timeoutMs = Math.max(30000, file.size / 1000);
+        console.log(`⏱️ Timeout configurado: ${timeoutMs}ms`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        
+        const response = await fetch('/api/upload-test', {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        updateProgress(60, 'Processando...');
+        
+        if (!response.ok) {
+            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
+        
+        updateProgress(80, 'Convertendo...');
+        
+        const result = await response.json();
+        
+        updateProgress(95, 'Finalizando...');
+        updateProgress(100, 'Conversão concluída!');
+        
+        return result;
+        
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('⏱️ Upload cancelado por timeout');
+            throw new Error('Upload cancelado - arquivo muito grande ou conexão lenta');
+        } else if (error.message.includes('Failed to fetch')) {
+            console.error('🌐 Erro de conexão');
+            throw new Error('Erro de conexão - verifique se o servidor está rodando');
+        }
+        console.error('❌ Erro no upload:', error);
+        throw error;
+    }
+}
+
+function downloadXML(xmlContent, originalName) {
+    console.log('📥 Baixando XML...');
+    
+    try {
+        // Criar blob com tipo MIME correto
+        const blob = new Blob([xmlContent], { 
+            type: 'application/xml;charset=utf-8' 
+        });
+        
+        const url = window.URL.createObjectURL(blob);
+        const fileName = originalName.replace('.mpp', '_convertido.xml').replace(/[^a-zA-Z0-9.-]/g, '_');
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+        }, 1000);
+        
+        console.log('✅ Download concluído:', fileName);
+        
+    } catch (error) {
+        console.error('❌ Erro no download:', error);
+        alert('Erro ao baixar o arquivo XML. Tente novamente.');
+    }
+}
+
+function updateProgress(percent, message) {
+    const progressFill = document.getElementById('progressFill');
+    const progressSteps = document.querySelectorAll('.progress-step');
+    
+    // Atualizar barra de progresso
+    if (progressFill) {
+        progressFill.style.width = percent + '%';
+    }
+    
+    // Atualizar passos
+    if (progressSteps.length > 0) {
+        progressSteps.forEach((step, index) => {
+            const stepPercent = (index + 1) * 33.33; // 3 passos
+            
+            if (percent >= stepPercent) {
+                step.classList.add('completed');
+                step.classList.remove('active');
+            } else if (percent >= stepPercent - 33.33) {
+                step.classList.add('active');
+                step.classList.remove('completed');
+            } else {
+                step.classList.remove('active', 'completed');
+            }
+        });
+    }
+    
+    console.log(`📊 ${percent}% - ${message}`);
+}
+
+console.log('✅ Script carregado com sucesso');
+
+function setupFileUpload() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    
+    if (!uploadArea || !fileInput) {
+        console.log('❌ Elementos de upload não encontrados');
+        return;
+    }
+    
+    // Click na área de upload
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    // Arquivo selecionado
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        console.log('📄 Arquivo selecionado:', file.name);
+        
+        // Mostrar arquivo selecionado
+        showFileSelected(file);
+        
+        // Validar extensão
+        if (!file.name.toLowerCase().endsWith('.mpp')) {
+            alert('❌ Selecione um arquivo .mpp válido');
+            fileInput.value = '';
+            hideFileSelected();
+            return;
+        }
+        
+        // Arquivo válido
+        currentFile = file;
+        enableConvertButton();
+        console.log('✅ Arquivo válido carregado:', file.name);
+    });
+    
+    console.log('✅ Upload configurado');
+}
+
+function setupConversionButtons() {
+    const convertBtn = document.getElementById('convertBtn');
+    const changeFileBtn = document.getElementById('changeFileBtn');
+    
+    if (convertBtn) {
+        convertBtn.addEventListener('click', startConversion);
+    }
+    
+    if (changeFileBtn) {
+        changeFileBtn.addEventListener('click', () => {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) {
+                fileInput.value = '';
+                currentFile = null;
+                hideFileSelected();
+            }
+        });
+    }
+    
+    console.log('✅ Botão de conversão configurado para teste');
+}
+
+function showFileSelected(file) {
+    // Esconder upload area e mostrar arquivo selecionado
+    const uploadWrapper = document.querySelector('.upload-wrapper');
+    const fileSelectedDiv = document.getElementById('fileSelected');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const selectedFileSize = document.getElementById('selectedFileSize');
+    
+    if (uploadWrapper && uploadWrapper.querySelector('.upload-area')) {
+        uploadWrapper.querySelector('.upload-area').style.display = 'none';
+    }
+    
+    if (fileSelectedDiv) {
+        fileSelectedDiv.style.display = 'block';
+    }
+    
+    if (selectedFileName) {
+        selectedFileName.textContent = file.name;
+    }
+    
+    if (selectedFileSize) {
+        selectedFileSize.textContent = (file.size / 1048576).toFixed(2) + ' MB';
+    }
     
     console.log('✅ Preview exibido');
+}
+
+function hideFileSelected() {
+    const uploadWrapper = document.querySelector('.upload-wrapper');
+    const fileSelectedDiv = document.getElementById('fileSelected');
+    
+    if (uploadWrapper && uploadWrapper.querySelector('.upload-area')) {
+        uploadWrapper.querySelector('.upload-area').style.display = 'block';
+    }
+    
+    if (fileSelectedDiv) {
+        fileSelectedDiv.style.display = 'none';
+    }
 }
 
 function showFileStatus(status) {
@@ -146,9 +479,75 @@ function showFileStatus(status) {
 function enableButtons() {
     const convertBtn = document.getElementById('convertBtn');
     
-    if (convertBtn) convertBtn.disabled = false;
+    if (convertBtn) {
+        convertBtn.disabled = false;
+        convertBtn.style.opacity = '1';
+        convertBtn.style.cursor = 'pointer';
+    }
     
     console.log('✅ Botão habilitado');
+}
+
+function enableConvertButton() {
+    enableButtons();
+}
+
+function showProgressState() {
+    const uploadWrapper = document.querySelector('.upload-wrapper');
+    const fileSelected = document.getElementById('fileSelected');
+    const progressWrapper = document.getElementById('progressWrapper');
+    
+    if (fileSelected) fileSelected.style.display = 'none';
+    if (progressWrapper) progressWrapper.style.display = 'block';
+    
+    console.log('🔄 Estado de progresso ativado');
+}
+
+function showSuccessState(result) {
+    const progressWrapper = document.getElementById('progressWrapper');
+    const successWrapper = document.getElementById('successWrapper');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const newConversionBtn = document.getElementById('newConversionBtn');
+    
+    if (progressWrapper) progressWrapper.style.display = 'none';
+    if (successWrapper) successWrapper.style.display = 'block';
+    
+    // Configurar botão de download
+    if (downloadBtn && result.xmlContent) {
+        downloadBtn.onclick = () => downloadXML(result.xmlContent, currentFile.name);
+    }
+    
+    // Configurar botão de nova conversão
+    if (newConversionBtn) {
+        newConversionBtn.onclick = () => {
+            location.reload();
+        };
+    }
+    
+    console.log('✅ Estado de sucesso ativado');
+}
+
+function showErrorState(errorMessage) {
+    const progressWrapper = document.getElementById('progressWrapper');
+    const errorWrapper = document.getElementById('errorWrapper');
+    const errorMessageEl = document.getElementById('errorMessage');
+    const retryBtn = document.getElementById('retryBtn');
+    
+    if (progressWrapper) progressWrapper.style.display = 'none';
+    if (errorWrapper) errorWrapper.style.display = 'block';
+    
+    if (errorMessageEl) {
+        errorMessageEl.textContent = errorMessage;
+    }
+    
+    if (retryBtn) {
+        retryBtn.onclick = () => {
+            errorWrapper.style.display = 'none';
+            showFileSelected(currentFile);
+        };
+    }
+    
+    console.log('❌ Estado de erro ativado');
 }
 
 function startConversion() {
@@ -162,10 +561,18 @@ function startConversion() {
     console.log('📄 Convertendo:', currentFile.name);
     
     // Mostrar progresso
-    showProgress();
+    showProgressState();
     
-    // Desabilitar botão
-    const convertBtn = document.getElementById('convertBtn');
+    // Fazer upload real
+    uploadFile(currentFile)
+        .then(result => {
+            console.log('✅ Conversão concluída:', result);
+            showSuccessState(result);
+        })
+        .catch(error => {
+            console.error('❌ Erro na conversão:', error);
+            showErrorState(error.message);
+        });
     if (convertBtn) {
         convertBtn.textContent = 'Convertendo...';
         convertBtn.disabled = true;
@@ -178,13 +585,17 @@ function startConversion() {
             updateProgress(100, 'Conversão concluída!');
             
             if (result.xmlContent) {
-                console.log('🎉 XML empacotado em ZIP! Sem red flags!');
+                console.log('🎉 XML gerado com sucesso!');
                 
-                // Salvar ID do arquivo para download seguro via servidor
-                window.currentFileId = result.fileId;
+                // Configurar download direto
+                setTimeout(() => {
+                    const downloadBtn = document.getElementById('downloadBtn');
+                    if (downloadBtn) {
+                        downloadBtn.onclick = () => downloadXML(result.xmlContent, currentFile.name);
+                        console.log('✅ Botão de download configurado');
+                    }
+                }, 500);
                 
-                // Mostrar opções de download
-                showDownloadOptions(result.xmlContent, result.fileId, currentFile.name);
             } else {
                 console.error('❌ XML não recebido na resposta');
                 alert('Erro: XML não foi gerado na conversão');
@@ -377,90 +788,19 @@ function generatePixQRCode() {
 function showDownloadOptions(xmlContent, fileId, originalName) {
     console.log('📋 Mostrando opções de download');
     
-    // Criar modal de download
-    const modal = document.createElement('div');
-    modal.className = 'download-modal';
-    modal.innerHTML = `
-        <div class="download-modal-content">
-            <h3>🎉 Conversão Concluída!</h3>
-            <p>Escolha como deseja baixar seu arquivo XML:</p>
-            
-            <div class="download-options">
-                <button onclick="downloadSecureXML('${fileId}', '${originalName}')" class="btn btn-primary">
-                    📦 Baixar ZIP (Recomendado)
-                </button>
-                
-                <button onclick="downloadDirectXML(decodeURIComponent('${encodeURIComponent(xmlContent)}'), '${originalName}')" class="btn btn-secondary">
-                    📦 Baixar ZIP (Alternativo)
-                </button>
-            </div>
-            
-            <p class="download-info">
-                <small>
-                    <strong>ZIP Recomendado:</strong> Download via servidor - 100% sem red flags<br>
-                    <strong>ZIP Alternativo:</strong> Backup do mesmo arquivo ZIP seguro
-                </small>
-            </p>
-            
-            <button onclick="closeDownloadModal()" class="btn btn-outline">Fechar</button>
-        </div>
-    `;
+    // Usar o botão de download existente em vez de modal
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        downloadBtn.onclick = () => downloadXML(xmlContent, originalName);
+    }
     
-    document.body.appendChild(modal);
-    
-    // CSS inline para o modal
-    const style = document.createElement('style');
-    style.textContent = `
-        .download-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-        .download-modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 500px;
-            text-align: center;
-        }
-        .download-options {
-            margin: 20px 0;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .download-info {
-            margin: 15px 0;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            text-align: left;
-        }
-    `;
-    document.head.appendChild(style);
+    console.log('✅ Download configurado para:', originalName);
 }
 
 function downloadSecureXML(fileId, originalName) {
     console.log('🔒 Download seguro ZIP iniciado');
     const url = `/download/${fileId}`;
     window.open(url, '_blank');
-    closeDownloadModal();
-}
-
-function downloadDirectXML(xmlContent, originalName) {
-    console.log('📦 Download ZIP alternativo iniciado');
-    // Usar o mesmo sistema ZIP seguro
-    const url = `/download/${window.currentFileId}`;
-    window.open(url, '_blank');
-    closeDownloadModal();
 }
 
 function closeDownloadModal() {
@@ -470,51 +810,36 @@ function closeDownloadModal() {
     }
 }
 
-function showProgress() {
-    const uploadForm = document.getElementById('uploadForm');
-    const uploadProgress = document.getElementById('uploadProgress');
+function downloadDirectXML(xmlContent, originalName) {
+    console.log('📥 Baixando XML...');
     
-    if (uploadForm) uploadForm.style.display = 'none';
-    if (uploadProgress) uploadProgress.style.display = 'block';
-    
-    updateProgress(10, 'Iniciando...');
-}
-
-function updateProgress(percent, message) {
-    const progressBar = document.querySelector('.progress-bar');
-    const uploadStatus = document.querySelector('.upload-status');
-    
-    if (progressBar) {
-        progressBar.style.width = percent + '%';
-    }
-    
-    if (uploadStatus) {
-        uploadStatus.textContent = message;
-    }
-    
-    console.log(`📊 ${percent}% - ${message}`);
-}
-
-function hideProgress() {
-    const uploadForm = document.getElementById('uploadForm');
-    const uploadProgress = document.getElementById('uploadProgress');
-    
-    if (uploadProgress) uploadProgress.style.display = 'none';
-    if (uploadForm) uploadForm.style.display = 'block';
-}
-
-function resetButtons() {
-    const convertBtn = document.getElementById('convertBtn');
-    const testBtn = document.getElementById('testBtn');
-    
-    if (convertBtn) {
-        convertBtn.textContent = 'Converter (Modo Teste - Sem PIX)';
-        convertBtn.disabled = false;
-    }
-    
-    if (testBtn) {
-        testBtn.textContent = 'Conversão Direta';
-        testBtn.disabled = false;
+    try {
+        // Criar blob com tipo MIME correto
+        const blob = new Blob([xmlContent], { 
+            type: 'application/xml;charset=utf-8' 
+        });
+        
+        const url = window.URL.createObjectURL(blob);
+        const fileName = originalName.replace('.mpp', '_convertido.xml').replace(/[^a-zA-Z0-9.-]/g, '_');
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+        }, 1000);
+        
+        console.log('✅ Download concluído:', fileName);
+        
+    } catch (error) {
+        console.error('❌ Erro no download:', error);
+        alert('Erro ao baixar o arquivo XML. Tente novamente.');
     }
 }
 

@@ -5,35 +5,33 @@ const fs = require('fs').promises;
 const crypto = require('crypto');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-
-// Import security module for enterprise-grade protection
-const security = require('./security');
+const compression = require('compression');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 🛡️ SECURITY HARDENING - ENTERPRISE GRADE
-// Apply comprehensive security configuration
-security.configureHelmet(app);
-security.configureCORS(app);
-security.applyRateLimiting(app);
+// 🛡️ SECURITY HARDENING - Configuração direta
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-hashes'"],
+            scriptSrcAttr: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"],
+        },
+    },
+}));
+app.use(cors());
 
-// Enable compression with security considerations
+// Enable compression
 app.use(require('compression')());
 
-// Security logging
-app.use(security.securityLogger);
 app.use(express.json());
-app.use(express.static('public'));
-
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // máximo 100 requests por IP
-    message: 'Muitas requisições, tente novamente em 15 minutos.'
-});
-app.use('/api', limiter);
+app.use(express.static(path.join(__dirname, '../public')));
+app.use(compression());
 
 // Middleware para rastrear visualizações de página
 app.use((req, res, next) => {
@@ -416,6 +414,88 @@ class AnalyticsManager {
 
 // Rotas da API
 
+// Rota de teste para upload
+app.post('/api/upload-test', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Nenhum arquivo enviado' 
+            });
+        }
+        
+        console.log('📁 Arquivo recebido:', req.file.originalname);
+        console.log('📊 Tamanho:', req.file.size, 'bytes');
+        
+        // Simular processamento
+        setTimeout(() => {
+            // Gerar XML de exemplo
+            const xmlContent = generateSampleXML(req.file.originalname);
+            
+            res.json({
+                success: true,
+                message: 'Arquivo convertido com sucesso',
+                filename: req.file.originalname.replace('.mpp', '_convertido.xml'),
+                downloadUrl: '/api/download/' + req.file.filename,
+                xmlContent: xmlContent
+            });
+        }, 1000);
+        
+    } catch (error) {
+        console.error('❌ Erro no upload-test:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Erro interno do servidor' 
+        });
+    }
+});
+
+// Função para gerar XML de exemplo
+function generateSampleXML(originalName) {
+    const currentDate = new Date().toISOString();
+    
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Project xmlns="http://schemas.microsoft.com/project">
+    <SaveVersion>14</SaveVersion>
+    <Name>Projeto Convertido - ${originalName}</Name>
+    <Title>Conversão MPP para XML</Title>
+    <Subject>Arquivo convertido automaticamente</Subject>
+    <Author>Conversor MPP-XML</Author>
+    <CreationDate>${currentDate}</CreationDate>
+    <LastSaved>${currentDate}</LastSaved>
+    <StartDate>2024-01-01T08:00:00</StartDate>
+    <FinishDate>2024-12-31T17:00:00</FinishDate>
+    <CurrencySymbol>R$</CurrencySymbol>
+    <CurrencyCode>BRL</CurrencyCode>
+    
+    <Tasks>
+        <Task>
+            <UID>1</UID>
+            <ID>1</ID>
+            <Name>Projeto Principal - ${originalName}</Name>
+            <Type>1</Type>
+            <Start>2024-01-01T08:00:00</Start>
+            <Finish>2024-12-31T17:00:00</Finish>
+            <Duration>PT8760H0M0S</Duration>
+            <Work>PT2000H0M0S</Work>
+            <PercentComplete>0</PercentComplete>
+            <Priority>500</Priority>
+        </Task>
+    </Tasks>
+    
+    <Resources>
+        <Resource>
+            <UID>1</UID>
+            <ID>1</ID>
+            <Name>Gerente de Projeto</Name>
+            <Type>1</Type>
+            <StandardRate>80.00</StandardRate>
+            <OvertimeRate>120.00</OvertimeRate>
+        </Resource>
+    </Resources>
+</Project>`;
+}
+
 // Upload de arquivo
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
@@ -639,7 +719,7 @@ app.get('/api/analytics/counter', async (req, res) => {
 
 // Rota para servir o frontend
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
 // Middleware de tratamento de erros

@@ -5,15 +5,8 @@
   "main": "api/server.js",
   "scripts": {
     "start": "node api/server.js",
-    "secure": "node api/secure_server.js",
     "dev": "nodemon api/server.js",
-    "dev:secure": "nodemon api/secure_server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "echo \"No build step required\"",
-    "lint": "eslint api/ --ext .js",
-    "lint:fix": "eslint api/ --ext .js --fix",
-    "security:check": "npm audit && nsp check",
-    "demo": "python demo_server.py"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "mpp",
@@ -27,31 +20,14 @@
   "author": "Seu Nome <seu.email@exemplo.com>",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
+    "express": "^4.18.2",
     "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
-    "express-slow-down": "^2.0.0",
-    "compression": "^1.7.4",
-    "validator": "^13.11.0",
-    "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.0.2",
-    "crypto": "^1.0.1",
-    "uuid": "^9.0.1",
-    "xss": "^1.0.14",
-    "joi": "^17.11.0",
-    "qrcode": "^1.5.3",
-    "dotenv": "^16.3.1",
-    "morgan": "^1.10.0"
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2",
-    "eslint": "^8.55.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-n": "^16.4.0",
-    "eslint-plugin-promise": "^6.1.1"
+    "nodemon": "^3.0.2"
   },
   "engines": {
     "node": ">=16.0.0",

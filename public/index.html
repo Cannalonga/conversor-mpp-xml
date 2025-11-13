@@ -1,434 +1,469 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <!-- Meta tags essenciais -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor MPP para XML - Converta Arquivos Microsoft Project</title>
-    <meta name="description" content="Converta seus arquivos .mpp (Microsoft Project) para .xml online. Rápido, seguro e confiável. Apenas R$ 10,00 por conversão.">
-    <meta name="keywords" content="mpp para xml, microsoft project, conversor, xml, mpp">
+    
+    <!-- SEO Meta Tags -->
+    <title>Conversor MPP para XML | Abrir arquivos MS Project online</title>
+    <meta name="description" content="Converta arquivos .MPP para XML do MS Project de forma rápida, segura e online. Ideal para quem não possui Microsoft Project instalado.">
+    <meta name="keywords" content="converter mpp, mpp to xml, conversor mpp online, converter MS Project, abrir mpp sem project">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://SEUSITE.com">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Conversor MPP para XML | Abrir arquivos MS Project online">
+    <meta property="og:description" content="Converta arquivos .MPP para XML do MS Project de forma rápida, segura e online.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://SEUSITE.com">
+    
+    <!-- Performance e Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
-    <!-- Fonte system para performance máxima -->
-    <style>
-        /* Fonte rápida do sistema */
-        * {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        }
-        
-        /* Ícones essenciais inline */
-        .fa-file-export:before, .fas.fa-file-export:before { content: "🔄"; }
-        .fa-upload:before, .fas.fa-upload:before { content: "📤"; }
-        .fa-file:before, .fas.fa-file:before { content: "📄"; }
-        .fa-times:before, .fas.fa-times:before { content: "❌"; }
-        .fa-cog:before, .fas.fa-cog:before { content: "⚙️"; }
-        .fa-download:before, .fas.fa-download:before { content: "⬇️"; }
-        .fa-qrcode:before, .fas.fa-qrcode:before { content: "📱"; }
-        .fa-copy:before, .fas.fa-copy:before { content: "📋"; }
-        .fa-check:before, .fas.fa-check:before { content: "✅"; }
-        .fa-ad:before, .fas.fa-ad:before { content: "📢"; }
-        .fa-chart-bar:before, .fas.fa-chart-bar:before { content: "📊"; }
-        .fa-users:before, .fas.fa-users:before { content: "👥"; }
-        .fa-eye:before, .fas.fa-eye:before { content: "👁️"; }
-        .fa-arrow-up:before, .fas.fa-arrow-up:before { content: "⬆️"; }
-        .fa-lock:before, .fas.fa-lock:before { content: "🔒"; }
-        .fa-shield-alt:before, .fas.fa-shield-alt:before { content: "🛡️"; }
-        .fa-bolt:before, .fas.fa-bolt:before { content: "⚡"; }
-        .fa-star:before, .fas.fa-star:before { content: "⭐"; }
-        
-        .fas, .fa { 
-            font-family: inherit !important; 
-            font-style: normal !important;
-            font-variant: normal !important;
-            text-rendering: auto !important;
-        }
-    </style>
+    
+    <!-- Schema Markup (SEO avançado) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Conversor MPP para XML Online",
+      "applicationCategory": "Utility",
+      "operatingSystem": "Any",
+      "url": "https://SEUSITE.com",
+      "description": "Ferramenta online para converter arquivos .MPP do Microsoft Project para XML.",
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "BRL",
+        "price": "10.00"
+      }
+    }
+    </script>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header Minimalista -->
     <header class="header">
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-brand">
-                    <i class="fas fa-file-export"></i>
-                    <span>MPP Converter</span>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="32" height="32" rx="8" fill="#3B82F6"/>
+                        <path d="M8 10H24V22H8V10Z" stroke="white" stroke-width="2" fill="none"/>
+                        <path d="M12 14H20M12 18H18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span class="logo-text">Conversor MPP</span>
                 </div>
-                <div class="nav-menu">
+                <nav class="nav">
                     <a href="#home" class="nav-link">Início</a>
                     <a href="#converter" class="nav-link">Converter</a>
-                    <a href="#about" class="nav-link">Sobre</a>
-                    <a href="#contact" class="nav-link">Contato</a>
-                </div>
+                    <a href="#como-usar" class="nav-link">Como Usar</a>
+                </nav>
             </div>
-        </nav>
+        </div>
     </header>
 
-
-
     <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1>Converta Arquivos MPP para XML</h1>
-                    <p>Transforme seus arquivos Microsoft Project (.mpp) em formato XML de forma rápida e segura. Processamento instantâneo por apenas <strong>R$ 10,00</strong> por conversão.</p>
+    <main>
+        <section id="home" class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        Converta Arquivos <span class="highlight">MPP para XML</span> 
+                        <br>de Forma Rápida e Segura
+                    </h1>
+                    <p class="hero-subtitle">
+                        Transforme seus arquivos Microsoft Project (.mpp) em formato XML sem precisar instalar software adicional. 
+                        Processamento online seguro por apenas <strong>R$ 10,00</strong> por conversão.
+                    </p>
+                    
                     <div class="hero-features">
-                        <div class="feature">
-                            <i class="fas fa-lightning-bolt"></i>
-                            <span>Conversão Rápida</span>
+                        <div class="feature-item">
+                            <div class="feature-icon">⚡</div>
+                            <span>Conversão Instantânea</span>
                         </div>
-                        <div class="feature">
-                            <i class="fas fa-shield-alt"></i>
+                        <div class="feature-item">
+                            <div class="feature-icon">🔒</div>
                             <span>100% Seguro</span>
                         </div>
-                        <div class="feature">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Garantia de Qualidade</span>
+                        <div class="feature-item">
+                            <div class="feature-icon">☁️</div>
+                            <span>Totalmente Online</span>
                         </div>
-                    </div>
-                    <a href="#converter" class="btn btn-primary">Começar Conversão</a>
-                </div>
-                <div class="hero-image">
-                    <div class="file-demo">
-                        <div class="file-input">
-                            <i class="fas fa-file"></i>
-                            <span>arquivo.mpp</span>
-                        </div>
-                        <div class="conversion-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        <div class="file-output">
-                            <i class="fas fa-file-code"></i>
-                            <span>arquivo.xml</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Ad Space 1 -->
-    <div class="ad-space ad-banner">
-        <div class="container">
-            <div class="ad-placeholder">
-                <i class="fas fa-ad"></i>
-                <span>Espaço Publicitário - 728x90</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Converter Section -->
-    <section id="converter" class="converter-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Conversor de Arquivos</h2>
-                <p>Faça upload do seu arquivo .mpp e receba o XML em segundos</p>
-            </div>
-            
-            <div class="converter-wrapper">
-                <div class="converter-card" id="uploadForm">
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-content">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <h3>Arraste seu arquivo .mpp aqui</h3>
-                            <p>ou <span class="upload-link">clique para selecionar</span></p>
-                            <input type="file" id="fileInput" accept=".mpp" hidden>
-                            <div class="file-info">
-                                <small>Formato: .mpp | Tamanho: Ilimitado ✨</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Progress Section -->
-                    <div class="upload-progress" id="uploadProgress" style="display: none;">
-                        <div class="progress-info">
-                            <div class="progress-icon">
-                                <i class="fas fa-cog fa-spin"></i>
-                            </div>
-                            <div class="progress-details">
-                                <div class="progress-status">
-                                    <span class="upload-status">Processando...</span>
-                                </div>
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="file-preview" id="filePreview" style="display: none;">
-                        <div class="file-details">
-                            <div class="file-icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="file-meta">
-                                <span class="file-name" id="fileName"></span>
-                                <span class="file-size" id="fileSize"></span>
-                            </div>
-                            <div class="file-status" id="fileStatus">
-                                <!-- Status será inserido dinamicamente -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="conversion-actions">
-                        <div class="pricing-info">
-                            <div class="price">
-                                <span class="currency">R$</span>
-                                <span class="amount">10,00</span>
-                                <span class="per">por conversão</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-convert" id="convertBtn" disabled>
-                            <i class="fas fa-cog"></i>
-                            Converter por R$ 10,00
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Ad Space 2 -->
-                <div class="ad-space ad-sidebar">
-                    <div class="ad-placeholder">
-                        <i class="fas fa-ad"></i>
-                        <span>Publicidade<br>300x250</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Conversion Section -->
-    <section id="conversionSection" class="converter-section" style="display: none;">
-        <div class="container">
-            <div class="converter-container">
-                <div class="converter-content">
-                    <h2>Convertendo seu arquivo</h2>
-                    <div class="conversion-progress">
-                        <div class="progress-info">
-                            <div class="progress-status">
-                                <span id="conversionStatus">Iniciando conversão...</span>
-                            </div>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Download Section -->
-    <section id="downloadSection" class="converter-section" style="display: none;">
-        <div class="container">
-            <div class="converter-container">
-                <div class="converter-content">
-                    <div class="download-success">
-                        <div class="success-icon">✅</div>
-                        <h2>Conversão Concluída!</h2>
-                        <p>Seu arquivo foi convertido com sucesso para XML.</p>
-                        <div class="download-actions">
-                            <button class="btn btn-success btn-download" id="downloadBtn">
-                                <i class="fas fa-download"></i>
-                                📦 Baixar ZIP
-                            </button>
-                            <button class="btn btn-secondary btn-new" onclick="location.reload()">
-                                Converter outro arquivo
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Payment Modal -->
-    <div class="modal" id="paymentModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Pagamento via PIX</h3>
-                <button class="modal-close" id="closeModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="payment-info">
-                    <div class="payment-details">
-                        <p><strong>Valor:</strong> R$ 10,00</p>
-                        <p><strong>Arquivo:</strong> <span id="paymentFileName"></span></p>
                     </div>
                     
-                    <div class="qr-code-section">
-                        <div class="qr-code" id="qrCode">
-                            <!-- QR Code será gerado aqui -->
-                            <div class="qr-placeholder">
-                                <i class="fas fa-qrcode"></i>
-                                <p>Gerando QR Code...</p>
+                    <div class="hero-cta">
+                        <a href="#converter" class="btn btn-primary btn-large" aria-label="Iniciar conversão de arquivo MPP">
+                            Converter Agora
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M4 10H16M16 10L12 6M16 10L12 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                        <p class="cta-note">Sem cadastro • Pagamento seguro • Resultado imediato</p>
+                    </div>
+                </div>
+                
+                <div class="hero-visual">
+                    <div class="conversion-demo">
+                        <div class="file-card file-input">
+                            <div class="file-icon">📄</div>
+                            <div class="file-info">
+                                <span class="file-name">projeto.mpp</span>
+                                <span class="file-type">Microsoft Project</span>
                             </div>
                         </div>
-                        <div class="pix-info">
-                            <div class="bank-info">
-                                <div class="bank-logo">
-                                    <i class="fas fa-university"></i>
-                                    <span>Nubank</span>
+                        
+                        <div class="conversion-arrow">
+                            <svg width="48" height="24" viewBox="0 0 48 24" fill="none">
+                                <path d="M2 12H46M46 12L36 2M46 12L36 22" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="file-card file-output">
+                            <div class="file-icon">📋</div>
+                            <div class="file-info">
+                                <span class="file-name">projeto.xml</span>
+                                <span class="file-type">Formato XML</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Converter Section -->
+        <section id="converter" class="converter-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Conversor de Arquivos MPP</h2>
+                    <p>Faça upload do seu arquivo .mpp e receba o XML convertido em segundos</p>
+                </div>
+                
+                <div class="converter-card">
+                    <!-- Upload Area -->
+                    <div class="upload-wrapper">
+                        <form id="uploadForm" enctype="multipart/form-data">
+                            <div class="upload-area" id="uploadArea" tabindex="0" 
+                                 aria-label="Área de upload de arquivo">
+                                <div class="upload-content">
+                                    <div class="upload-icon">
+                                        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                                            <rect x="8" y="16" width="48" height="36" rx="4" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="2"/>
+                                            <path d="M24 32L32 24L40 32M32 24V48" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="upload-title">Arraste seu arquivo .mpp aqui</h3>
+                                    <p class="upload-subtitle">
+                                        ou <button type="button" class="upload-btn" id="selectFileBtn" 
+                                                  aria-label="Selecionar arquivo do computador">
+                                            clique para selecionar
+                                        </button>
+                                    </p>
+                                    <input type="file" id="fileInput" accept=".mpp" hidden aria-label="Seletor de arquivo MPP">
+                                    
+                                    <div class="upload-info">
+                                        <div class="info-item">
+                                            <span class="info-label">Formato aceito:</span>
+                                            <span class="info-value">.mpp</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Tamanho máximo:</span>
+                                            <span class="info-value">100MB</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <!-- CHAVE PIX OCULTA POR SEGURANÇA -->
-                            <div class="security-notice">
-                                <i class="fas fa-shield-alt"></i>
-                                <p><strong>Pagamento Seguro:</strong> Use apenas o QR Code</p>
+                        </form>
+                        
+                        <!-- File Selected State -->
+                        <div class="file-selected" id="fileSelected" style="display: none;">
+                            <div class="selected-file">
+                                <div class="file-preview">
+                                    <div class="file-icon-large">📄</div>
+                                    <div class="file-details">
+                                        <span class="file-name" id="selectedFileName">arquivo.mpp</span>
+                                        <span class="file-size" id="selectedFileSize">2.5 MB</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline btn-small" id="changeFileBtn" 
+                                        aria-label="Alterar arquivo selecionado">
+                                    Alterar arquivo
+                                </button>
                             </div>
-                            <div class="payment-instructions">
-                                <h4><i class="fas fa-info-circle"></i> Como pagar:</h4>
-                                <ol>
-                                    <li>Abra o app do seu banco</li>
-                                    <li>Vá em PIX → Pagar</li>
-                                    <li><strong>Escaneie APENAS o QR Code</strong></li>
-                                    <li>Confirme o valor de <strong>R$ 10,00</strong></li>
-                                    <li>Aguarde a confirmação automática</li>
-                                </ol>
+                            
+                            <button type="button" class="btn btn-primary btn-convert" id="convertBtn" 
+                                    aria-label="Iniciar conversão do arquivo">
+                                <span class="btn-text">Converter para XML</span>
+                                <span class="btn-price">R$ 10,00</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress State -->
+                    <div class="progress-wrapper" id="progressWrapper" style="display: none;">
+                        <div class="progress-content">
+                            <div class="progress-icon">
+                                <div class="spinner" aria-label="Processando conversão"></div>
+                            </div>
+                            <div class="progress-info">
+                                <h3 class="progress-title" id="progressTitle">Processando arquivo...</h3>
+                                <p class="progress-subtitle" id="progressSubtitle">Isso pode levar alguns segundos</p>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-percentage" id="progressPercentage">0%</div>
+                    </div>
+                    
+                    <!-- Success State -->
+                    <div class="success-wrapper" id="successWrapper" style="display: none;">
+                        <div class="success-content">
+                            <div class="success-icon">
+                                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                                    <circle cx="32" cy="32" r="30" fill="#10B981" fill-opacity="0.1"/>
+                                    <circle cx="32" cy="32" r="20" fill="#10B981"/>
+                                    <path d="M24 32L28 36L40 24" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h3 class="success-title">Conversão Concluída!</h3>
+                            <p class="success-subtitle">Seu arquivo XML está pronto para download</p>
+                            
+                            <div class="download-actions">
+                                <button type="button" class="btn btn-primary btn-download" id="downloadBtn" 
+                                        aria-label="Fazer download do arquivo XML convertido">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <path d="M10 2V14M10 14L6 10M10 14L14 10M4 18H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    Download XML
+                                </button>
+                                <button type="button" class="btn btn-outline" id="newConversionBtn" 
+                                        aria-label="Fazer nova conversão">
+                                    Nova Conversão
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    <div class="payment-status" id="paymentStatus">
-                        <i class="fas fa-clock"></i>
-                        <span>Aguardando pagamento...</span>
+                    
+                    <!-- Error State -->
+                    <div class="error-wrapper" id="errorWrapper" style="display: none;">
+                        <div class="error-content">
+                            <div class="error-icon">
+                                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                                    <circle cx="32" cy="32" r="30" fill="#EF4444" fill-opacity="0.1"/>
+                                    <circle cx="32" cy="32" r="20" fill="#EF4444"/>
+                                    <path d="M24 24L40 40M40 24L24 40" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <h3 class="error-title">Erro na Conversão</h3>
+                            <p class="error-subtitle" id="errorMessage">Ocorreu um erro ao processar seu arquivo. Tente novamente.</p>
+                            
+                            <button type="button" class="btn btn-primary" id="retryBtn" 
+                                    aria-label="Tentar conversão novamente">
+                                Tentar Novamente
+                            </button>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </section>
 
-                    <div class="payment-timer">
-                        <span>Tempo restante: <span id="timer">15:00</span></span>
+        <!-- How to Use Section -->
+        <section id="como-usar" class="how-to-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Como converter arquivos MPP para XML</h2>
+                    <p>Processo simples em apenas 3 passos</p>
+                </div>
+                
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Selecione o arquivo</h3>
+                            <p>Faça upload do seu arquivo .mpp do Microsoft Project através do nosso sistema seguro de upload.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Realize o pagamento</h3>
+                            <p>Pague apenas R$ 10,00 via PIX de forma rápida e segura. Processamento imediato após confirmação.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Baixe o resultado</h3>
+                            <p>Receba seu arquivo convertido em formato XML, pronto para usar em qualquer aplicação compatível.</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- About Section -->
-    <section id="about" class="about-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Por que escolher nosso conversor?</h2>
-            </div>
-            
-            <!-- Contador de Visualizações -->
-            <div class="stats-counter">
-                <div class="counter-item">
-                    <div class="counter-number" id="totalViews">0</div>
-                    <div class="counter-label">Total de Visualizações</div>
+        <!-- Benefits Section -->
+        <section class="benefits-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Por que usar conversão online de MS Project</h2>
+                    <p>Vantagens de trabalhar com nosso conversor MPP para XML</p>
                 </div>
-                <div class="counter-item">
-                    <div class="counter-number" id="uniqueVisitors">0</div>
-                    <div class="counter-label">Visitantes Únicos</div>
-                </div>
-                <div class="counter-item">
-                    <div class="counter-number" id="todayViews">0</div>
-                    <div class="counter-label">Visualizações Hoje</div>
-                </div>
-                <div class="counter-item">
-                    <div class="counter-number" id="totalConversions">0</div>
-                    <div class="counter-label">Arquivos Convertidos</div>
-                </div>
-            </div>
-            
-            <div class="features-grid">
-                <div class="feature-card">
-                    <i class="fas fa-rocket"></i>
-                    <h3>Super Rápido</h3>
-                    <p>Conversão instantânea sem perda de qualidade</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-lock"></i>
-                    <h3>Seguro</h3>
-                    <p>Seus arquivos são protegidos e deletados após 24h</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-mobile-alt"></i>
-                    <h3>Responsivo</h3>
-                    <p>Funciona em qualquer dispositivo</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-headset"></i>
-                    <h3>Suporte</h3>
-                    <p>Atendimento especializado</p>
+                
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">💻</div>
+                        <h3>Sem instalação de software</h3>
+                        <p>Não precisa instalar o Microsoft Project ou qualquer outro programa. Tudo funciona direto no seu navegador.</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🔒</div>
+                        <h3>Segurança garantida</h3>
+                        <p>Seus arquivos são processados com criptografia e removidos automaticamente após a conversão para máxima segurança.</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">⚡</div>
+                        <h3>Processamento rápido</h3>
+                        <p>Conversão otimizada que preserva toda a estrutura do projeto, incluindo tarefas, recursos e dependências.</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">📱</div>
+                        <h3>Acesso multiplataforma</h3>
+                        <p>Funciona em qualquer dispositivo - Windows, Mac, Linux, tablet ou smartphone. Apenas precisa de internet.</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">💰</div>
+                        <h3>Preço justo</h3>
+                        <p>Por apenas R$ 10,00 você converte seu arquivo sem mensalidades ou taxas adicionais. Pague apenas pelo que usar.</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🎯</div>
+                        <h3>XML compatível</h3>
+                        <p>Formato XML padrão que pode ser aberto em diversos programas de gerenciamento de projetos e planilhas.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Ad Space 3 -->
-    <div class="ad-space ad-banner">
-        <div class="container">
-            <div class="ad-placeholder">
-                <i class="fas fa-ad"></i>
-                <span>Espaço Publicitário - 728x90</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Contato</h2>
-                <p>Precisa de ajuda? Entre em contato conosco</p>
-            </div>
-            <div class="contact-info">
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <h3>Email</h3>
-                    <p><a href="mailto:canna.vendasonline@gmail.com">canna.vendasonline@gmail.com</a></p>
-                    <small>Respondemos em até 24 horas</small>
-                </div>
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <h3>Suporte</h3>
-                    <p>Segunda a Sexta</p>
-                    <p>09:00 - 18:00 (BRT)</p>
-                    <small>Atendimento em português</small>
-                </div>
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-question-circle"></i>
-                    </div>
-                    <h3>FAQ</h3>
-                    <p>Dúvidas frequentes</p>
-                    <p>Guia de uso</p>
-                    <small>Respostas rápidas</small>
+        <!-- Content Section for SEO -->
+        <section class="content-section">
+            <div class="container">
+                <div class="content-wrapper">
+                    <article class="content-article">
+                        <h2>Vantagens de trabalhar com XML do MS Project</h2>
+                        <p>
+                            O formato XML (eXtensible Markup Language) oferece inúmeras vantagens para o gerenciamento de projetos. 
+                            Ao converter seus arquivos MPP para XML, você obtém um formato universalmente aceito que pode ser lido 
+                            por diversas aplicações, facilitando a integração e o compartilhamento de dados entre diferentes sistemas.
+                        </p>
+                        
+                        <p>
+                            Arquivos XML são mais leves e flexíveis que os formatos proprietários, permitindo maior controle sobre 
+                            os dados do projeto. Além disso, o formato XML facilita a automação de processos, análise de dados e 
+                            criação de relatórios customizados, tornando-se uma escolha inteligente para equipes que trabalham 
+                            com múltiplas ferramentas de gestão de projetos.
+                        </p>
+                        
+                        <p>
+                            Nossa ferramenta de conversão mantém a integridade de todos os elementos do seu projeto Microsoft Project, 
+                            incluindo tarefas, marcos, recursos, calendários e dependências. O resultado é um arquivo XML 
+                            estruturado e compatível com os principais padrões da indústria, garantindo que você possa trabalhar 
+                            com seus dados em qualquer plataforma ou aplicação que suporte o formato XML.
+                        </p>
+                        
+                        <p>
+                            Com nosso conversor online, você economiza tempo e recursos, eliminando a necessidade de software 
+                            especializado e obtendo resultados profissionais de forma rápida e segura. O investimento de apenas 
+                            R$ 10,00 por conversão se paga rapidamente pela praticidade e qualidade do serviço oferecido.
+                        </p>
+                    </article>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <i class="fas fa-file-export"></i>
-                    <span>MPP Converter</span>
+                    <div class="logo">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="32" height="32" rx="8" fill="#3B82F6"/>
+                            <path d="M8 10H24V22H8V10Z" stroke="white" stroke-width="2" fill="none"/>
+                            <path d="M12 14H20M12 18H18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span class="logo-text">Conversor MPP</span>
+                    </div>
+                    <p class="footer-description">
+                        Conversão profissional de arquivos Microsoft Project para XML de forma rápida e segura.
+                    </p>
                 </div>
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Serviço</h4>
+                        <ul>
+                            <li><a href="#converter">Converter MPP</a></li>
+                            <li><a href="#como-usar">Como Usar</a></li>
+                            <li><a href="#precos">Preços</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Suporte</h4>
+                        <ul>
+                            <li><a href="#faq">FAQ</a></li>
+                            <li><a href="mailto:canna.vendasonline@gmail.com">Contato</a></li>
+                            <li><a href="#ajuda">Central de Ajuda</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="#termos">Termos de Uso</a></li>
+                            <li><a href="#privacidade">Política de Privacidade</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
                 <div class="footer-contact">
-                    <div class="footer-email">
-                        <i class="fas fa-envelope"></i>
+                    <h4>Contato</h4>
+                    <div class="contact-item">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M2.5 3H13.5C14.05 3 14.5 3.45 14.5 4V12C14.5 12.55 14.05 13 13.5 13H2.5C1.95 13 1.5 12.55 1.5 12V4C1.5 3.45 1.95 3 2.5 3Z" stroke="currentColor" fill="none"/>
+                            <path d="M14.5 4L8 8.5L1.5 4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                         <a href="mailto:canna.vendasonline@gmail.com">canna.vendasonline@gmail.com</a>
                     </div>
                 </div>
-                <div class="footer-links">
-                    <a href="#privacy">Política de Privacidade</a>
-                    <a href="#terms">Termos de Uso</a>
-                    <a href="#contact">Contato</a>
-                </div>
             </div>
+            
             <div class="footer-bottom">
-                <p>&copy; 2025 MPP Converter. Todos os direitos reservados.</p>
-                <p>Contato: <a href="mailto:canna.vendasonline@gmail.com">canna.vendasonline@gmail.com</a></p>
+                <div class="footer-bottom-content">
+                    <p>&copy; <span id="currentYear">2025</span> Conversor MPP para XML. Todos os direitos reservados.</p>
+                    <p class="footer-tagline">Conversão profissional • Segurança garantida • Suporte especializado</p>
+                </div>
             </div>
         </div>
     </footer>
 
+    <!-- Scripts -->
+    <script>
+        // Update current year
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
     <script src="js/app_clean_new.js"></script>
 </body>
 </html>
