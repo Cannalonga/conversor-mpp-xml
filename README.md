@@ -1,422 +1,189 @@
-# 🚀 Conversor MPP → XML
+# 🚀 Conversor MPP para XML - Sistema Enterprise
 
-**Sistema web profissional para conversão de arquivos Microsoft Project para XML**
+[![Status](https://img.shields.io/badge/Status-Produção-green.svg)](http://localhost:3000)
+[![Node.js](https://img.shields.io/badge/Node.js-v20+-blue.svg)](https://nodejs.org/)
+[![PM2](https://img.shields.io/badge/PM2-Enabled-brightgreen.svg)](https://pm2.keymetrics.io/)
 
-## ✨ Características
+> Sistema profissional para conversão de arquivos Microsoft Project (.mpp) para XML com interface web moderna, controle financeiro e painel administrativo completo.
 
-- 🎯 **Conversão completa**: Arquivos .mpp para XML
-- 💰 **Monetização**: R$ 10,00 por conversão via PIX  
-- 🎨 **Interface moderna**: Loading circular animado
-- 🔄 **Modo teste**: Desenvolvimento sem cobrança
-- 📱 **Responsivo**: Otimizado para qualquer device
+## 📋 Características Principais
 
-## 🛠️ Stack
+### ✨ Funcionalidades Core
+- **Conversão MPP → XML** - Interface web intuitiva
+- **Upload Seguro** - Validação de arquivos e rate limiting  
+- **Download Automático** - Arquivos XML gerados instantaneamente
+- **Sistema de Cobrança** - R$ 10,00 por conversão
+- **Disclaimer Transparente** - Informações sobre limitações técnicas
 
-- **Frontend**: HTML5, CSS3, JavaScript vanilla (288 linhas)
-- **Backend**: Python com servidor integrado
-- **Pagamento**: PIX (02038351740 - Nubank)
+### 🛡️ Segurança Enterprise
+- **Autenticação Admin** - Login protegido com credenciais
+- **Rate Limiting** - Proteção contra abuso de API
+- **Validação de Arquivos** - Verificação de tipos e tamanhos
+- **Logs Centralizados** - Monitoramento completo de atividades
 
-## 🚀 Como usar
+### 💰 Sistema Financeiro
+- **Controle de Receitas** - Rastreamento automático de transações
+- **Calculadora IR 2025** - Tabelas atualizadas do Imposto de Renda
+- **Relatórios Detalhados** - Estatísticas diárias, mensais e anuais
+- **Dashboard Administrativo** - Interface completa de gestão
 
+### 🔧 Infraestrutura de Produção
+- **PM2 Process Manager** - Estabilidade e auto-restart
+- **Zero Downtime** - Sistema robusto para produção
+- **Logs Persistentes** - Monitoramento e debugging
+- **Scripts de Deploy** - Inicialização automática
+
+## 🚀 Quick Start
+
+### 1. Inicialização Rápida
 ```bash
-# 1. Clone o projeto
-git clone <repo-url>
-cd "CONVERSOR MPP XML"
-
-# 2. Configure ambiente
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-
-# 3. Execute
-python simple_server.py
-
-# 4. Acesse
-# http://localhost:3000
+# Execute o script automático
+restart-completo.bat
 ```
 
-## 📁 Estrutura
-
-```
-├── public/
-│   ├── css/style.css         # Estilos (1331 linhas)
-│   ├── js/app_clean_new.js   # JavaScript principal
-│   └── index.html            # Interface
-├── uploads/                   # Sistema de arquivos
-├── simple_server.py          # Servidor principal
-└── requirements.txt          # Dependências
-```
-
-## 🎯 Funcionalidades
-
-### Interface
-- **Upload**: Drag & drop com validação .mpp
-- **Loading**: Spinner circular com 8 pontos coloridos
-- **Estados**: Success limpo, error com pontos vermelhos
-- **Preview**: Nome e tamanho do arquivo
-
-### Sistema
-- **Conversão**: MPP → XML preservando estrutura
-- **Pagamento**: QR Code PIX automático
-- **Validação**: Tipos de arquivo e segurança
-- **Cleanup**: Limpeza automática de temporários
-
-## ⚙️ Configuração
-
-**Modo Teste** (desenvolvimento):
-```python
-TEST_MODE = True   # Banner visível, sem PIX
-```
-
-**Modo Produção**:
-```python  
-TEST_MODE = False  # Interface limpa, PIX ativo
-```
-
-## 🔒 Status
-
-✅ **Funcional e pronto para produção**
-- Interface 100% completa
-- Sistema de upload testado
-- Conversão MPP→XML implementada  
-- Integração PIX configurada
-- Código limpo e otimizado
-
----
-
-**© 2025 - Desenvolvimento Privado**
-
-## � **Características Principais**
-
-- ⚡ **Performance Máxima**: Carregamento < 200ms
-- 🔄 **Conversão Completa**: Preserva toda estrutura MPP (tarefas, dependências, recursos)
-- 💰 **Pagamento PIX**: R$ 10,00 por conversão com QR Code automático
-- 🛡️ **Segurança Enterprise**: Rate limiting, validação, proteções avançadas
-- 📱 **Interface Moderna**: Design responsivo e otimizado
-- 📊 **Painel Admin**: Monitoramento completo de analytics
-- � **Upload Ilimitado**: Sem limite de tamanho de arquivo
-
-## 🏗️ **Arquitetura Otimizada**
-
-### **Frontend Ultra-Leve**
-- HTML5 + CSS3 + JavaScript Vanilla (150 linhas)
-- Fontes do sistema (sem CDN)
-- Ícones emoji inline
-- Zero dependências externas
-
-### **Backend High-Performance**
-- Python com cache em memória
-- Pré-carregamento de arquivos críticos  
-- Headers de performance otimizados
-- Compressão automática
-
-### **Conversão MPP Avançada**
-- Múltiplos métodos de extração (COM/Interop, Parser Python, Fallback)
-- Preservação de estruturas hierárquicas
-- Dependências complexas (FS, SS, FF, SF)
-- Recursos, calendários e linhas de base
-
-## 🚀 Instalação e Configuração
-
-### Pré-requisitos
-- Node.js (versão 16 ou superior)
-- NPM ou Yarn
-- Conta bancária com chave PIX
-
-### 1. Clone o repositório
+### 2. Inicialização Manual
 ```bash
-git clone https://github.com/seu-usuario/mpp-xml-converter.git
-cd mpp-xml-converter
+# Navegar para o diretório
+cd "C:\Users\rafae\Desktop\PROJETOS DE ESTUDOS\CONVERSOR MPP XML"
+
+# Iniciar com PM2
+pm2 start ecosystem.config.json --env production
+
+# Verificar status
+pm2 status
 ```
 
-### 2. Instale as dependências
+### 3. Acessar o Sistema
+- **Frontend:** http://localhost:3000
+- **Admin Panel:** http://localhost:3000/admin
+- **Health Check:** http://localhost:3000/api/health
+
+## 🔐 Credenciais de Admin
+
+### Acesso do Proprietário
+```
+Usuário: Alcap0ne
+Senha: C@rolin@36932025
+Email 2FA: rafaelcannalonga2@hotmail.com
+```
+
+### Recursos de Segurança
+- **Autenticação personalizada** - Credenciais exclusivas do proprietário
+- **2FA via Email** - Notificações de login para rafaelcannalonga2@hotmail.com
+- **Logs de acesso** - Monitoramento completo de tentativas de login
+- **Sessão segura** - Token-based authentication com timeout
+
+> ⚠️ **SEGURANÇA:** Credenciais configuradas exclusivamente para o proprietário Rafael Cannalonga
+
+## 🏗️ Estrutura do Projeto
+
+```
+📦 conversor-mpp-xml/
+├── 📁 api/                    # Backend Node.js
+│   ├── server-minimal.js      # Servidor principal
+│   └── ...
+├── 📁 public/                 # Frontend
+│   ├── index.html            # Interface principal
+│   ├── 📁 css/
+│   │   └── style.css         # Estilos responsivos
+│   └── 📁 js/
+│       └── app_clean_new.js   # JavaScript principal
+├── 📁 admin/                  # Painel Administrativo
+│   ├── login.html            # Página de login
+│   └── dashboard.html        # Dashboard completo
+├── 📁 uploads/                # Diretório de arquivos
+│   ├── 📁 incoming/          # Arquivos recebidos
+│   ├── 📁 converted/         # XMLs gerados
+│   ├── 📁 processing/        # Em processamento
+│   └── 📁 expired/           # Arquivos expirados
+├── 📁 logs/                   # Logs do sistema
+├── ecosystem.config.json     # Configuração PM2
+├── package.json              # Dependências Node.js
+├── restart-completo.bat      # Script de inicialização
+└── README.md                 # Esta documentação
+```
+
+## ⚙️ Configuração de Produção
+
+### Variáveis de Ambiente
 ```bash
-npm install
-```
+# Opcional: Credenciais admin customizadas
+ADMIN_USER=seu_usuario
+ADMIN_PASS=sua_senha_super_segura
 
-### 3. Configure as variáveis de ambiente
-```bash
-cp .env.example .env
-```
-
-Edite o arquivo `.env` com suas configurações:
-```bash
-# Configuração do PIX
-PIX_KEY=sua-chave-pix@email.com
-PIX_MERCHANT_NAME=Seu Nome ou Empresa
-PIX_MERCHANT_CITY=Sua Cidade
-
-# Configuração do servidor
-PORT=3000
-NODE_ENV=development
-
-# Configuração de segurança
-JWT_SECRET=seu-jwt-secret-super-seguro
-ADMIN_PASSWORD=sua-senha-admin
-```
-
-### 4. Execute a aplicação
-
-**Modo desenvolvimento:**
-```bash
-npm run dev
-```
-
-**Modo produção:**
-```bash
-npm start
-```
-
-A aplicação estará disponível em `http://localhost:3000`
-
-## 📁 Estrutura do Projeto
-
-```
-mpp-xml-converter/
-├── api/                    # Backend Node.js
-│   └── server.js          # Servidor principal
-├── public/                # Frontend
-│   ├── index.html         # Página principal
-│   ├── css/
-│   │   └── style.css      # Estilos
-│   └── js/
-│       └── app.js         # JavaScript do frontend
-├── admin/                 # Painel administrativo
-│   └── index.html         # Dashboard admin
-├── config/                # Configurações
-│   └── app.json          # Configurações da aplicação
-├── uploads/               # Diretório para uploads temporários
-├── .env.example          # Exemplo de variáveis de ambiente
-├── .gitignore           # Arquivos ignorados pelo Git
-├── package.json         # Dependências e scripts
-└── README.md           # Esta documentação
-```
-
-## 💡 Como Usar
-
-### Para Usuários
-
-1. **Acesse** a aplicação web
-2. **Faça upload** do seu arquivo `.mpp`
-3. **Clique** em "Converter Arquivo"
-4. **Escaneie** o QR Code PIX ou copie a chave
-5. **Realize** o pagamento de R$ 10,00
-6. **Aguarde** a confirmação automática
-7. **Baixe** o arquivo XML convertido
-
-### Para Administradores
-
-1. **Acesse** `/admin` no navegador
-2. **Monitore** conversões em tempo real
-3. **Acompanhe** receita e estatísticas
-4. **Visualize** pagamentos pendentes
-5. **Analise** performance do sistema
-
-## 💰 Sistema de Monetização
-
-### Modelo de Negócio
-- **Preço por conversão**: R$ 10,00
-- **Pagamento via PIX**: Instantâneo
-- **Espaços publicitários**: Google AdSense integrado
-- **Taxa de conversão estimada**: 15-25%
-
-### Espaços Publicitários
-- **Banner superior**: 728x90px
-- **Sidebar**: 300x250px  
-- **Banner inferior**: 728x90px
-
-### Integração PIX
-- QR Code gerado automaticamente
-- Verificação de pagamento em tempo real
-- Timeout de 15 minutos por transação
-- Webhook para confirmação bancária
-
-## 🔧 Configuração Avançada
-
-### Variáveis de Ambiente Completas
-```bash
-# Servidor
+# Opcional: Configurações do servidor
 PORT=3000
 NODE_ENV=production
-
-# PIX
-PIX_KEY=sua-chave@email.com
-PIX_MERCHANT_NAME=Sua Empresa
-PIX_MERCHANT_CITY=São Paulo
-
-# Segurança
-JWT_SECRET=secret-super-seguro-123
-ADMIN_PASSWORD=senha-admin-forte
-
-# Arquivos
-MAX_FILE_SIZE=52428800
-UPLOAD_DIR=uploads
-
-# Taxa de requisições
-RATE_LIMIT_WINDOW=900000
-RATE_LIMIT_MAX=100
-
-# CORS
-CORS_ORIGIN=https://seu-dominio.com
-
-# Analytics
-GOOGLE_ANALYTICS_ID=GA_MEASUREMENT_ID
-GOOGLE_ADSENSE_CLIENT=ca-pub-xxx
 ```
 
-### Implementar Conversão Real
-
-O projeto inclui uma implementação simulada da conversão. Para produção, você precisará:
-
-1. **Instalar biblioteca de conversão MPP**:
+### Comandos PM2
 ```bash
-npm install node-mpp-reader xml2js
-```
+# Status do sistema
+pm2 status
 
-2. **Implementar conversão real** em `api/server.js`:
-```javascript
-const MPPReader = require('node-mpp-reader');
+# Logs em tempo real
+pm2 logs mpp-converter-prod
 
-static async convertMppToXml(inputPath) {
-    const mppData = await MPPReader.read(inputPath);
-    // Processar dados e gerar XML
-    // Retornar caminho do arquivo XML
-}
-```
+# Reiniciar serviço
+pm2 restart mpp-converter-prod
 
-## 🚀 Deploy em Produção
+# Parar serviço
+pm2 stop mpp-converter-prod
 
-### VPS/Cloud
-1. **Configure o servidor** (Ubuntu/CentOS)
-2. **Instale Node.js e PM2**
-3. **Clone o repositório**
-4. **Configure variáveis de ambiente**
-5. **Execute** com PM2:
-```bash
-pm2 start api/server.js --name mpp-converter
-pm2 startup
+# Salvar configuração
 pm2 save
 ```
 
-### Docker
-```dockerfile
-FROM node:16-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-EXPOSE 3000
-CMD ["npm", "start"]
-```
+## 📊 Painel Administrativo
 
-### Nginx (Proxy Reverso)
-```nginx
-server {
-    listen 80;
-    server_name seu-dominio.com;
-    
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
+### Funcionalidades do Dashboard
+1. **Estatísticas em Tempo Real**
+   - Conversões do dia
+   - Total de arquivos processados
+   - Status do servidor
+   - Uso de disco
 
-## 📊 Analytics e Monitoramento
+2. **Gestão Financeira**
+   - Receita total e diária
+   - Calculadora de IR 2025
+   - Histórico de transações
+   - Relatórios exportáveis
 
-### Métricas Importantes
-- Taxa de conversão (uploads → pagamentos)
-- Receita por dia/mês
-- Tempo médio de processamento
-- Taxa de sucesso das conversões
-- Origem do tráfego
+3. **Monitoramento**
+   - Logs do sistema em tempo real
+   - Atividade recente
+   - Gestão de arquivos
+   - Configurações do servidor
 
-### Integração Google Analytics
-```javascript
-// Já configurado no frontend
-gtag('event', 'conversion', {
-    'send_to': 'AW-XXXXXXXXX/XXXXXXXX',
-    'value': 10.00,
-    'currency': 'BRL'
-});
-```
+## 🚀 Deploy em Produção
 
-## 🔒 Segurança
+### Checklist de Produção
+- [ ] Credenciais admin alteradas
+- [ ] SSL/HTTPS configurado
+- [ ] Firewall configurado
+- [ ] Backup automático configurado
+- [ ] Monitoramento ativo
+- [ ] DNS apontando corretamente
 
-### Medidas Implementadas
-- ✅ Rate limiting por IP
-- ✅ Validação de tipo de arquivo
-- ✅ Sanitização de uploads
-- ✅ CORS configurado
-- ✅ Helmet para headers de segurança
-- ✅ Limpeza automática de arquivos
+### Problemas Comuns
+1. **Porta em uso:** Altere a porta no `ecosystem.config.json`
+2. **Falha no PM2:** Reinstale com `npm install -g pm2`
+3. **Erro 500:** Verifique logs com `pm2 logs`
+4. **Admin não carrega:** Limpe localStorage do navegador
 
-### Recomendações Adicionais
-- Implementar HTTPS (Let's Encrypt)
-- Configurar firewall
-- Monitoramento de logs
-- Backup automático
-- Autenticação admin robusta
+## 📝 Changelog
 
-## 🐛 Solução de Problemas
-
-### Erro de Upload
-- Verificar tamanho do arquivo (max 50MB)
-- Confirmar formato .mpp
-- Checar permissões da pasta uploads
-
-### Problemas de Pagamento
-- Validar chave PIX nas configurações
-- Verificar conectividade com API bancária
-- Confirmar webhook configurado
-
-### Performance
-- Implementar cache Redis
-- Otimizar imagens
-- Minificar CSS/JS
-- Usar CDN para assets
-
-## 🤝 Contribuindo
-
-1. Fork o projeto
-2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
-3. Commit: `git commit -am 'Adiciona nova funcionalidade'`
-4. Push: `git push origin feature/nova-funcionalidade`
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 📞 Suporte
-
-- **Email**: canna.vendasonline@gmail.com
-- **Horário**: Segunda a Sexta, 09:00 - 18:00 (BRT)
-- **Issues**: [GitHub Issues](https://github.com/seu-usuario/mpp-xml-converter/issues)
-
-## 🔄 Roadmap
-
-### Próximas Funcionalidades
-- [ ] Conversão batch (múltiplos arquivos)
-- [ ] API para integrações
-- [ ] Dashboard analytics avançado
-- [ ] Sistema de afiliados
-- [ ] App mobile
-- [ ] Suporte a outros formatos (MPX, XML → MPP)
+### v1.0 (13/11/2025)
+- ✅ Sistema completo de conversão MPP → XML
+- ✅ Interface web moderna e responsiva  
+- ✅ Painel administrativo com autenticação
+- ✅ Sistema financeiro com calculadora IR 2025
+- ✅ Infraestrutura PM2 para produção
+- ✅ Segurança com rate limiting
+- ✅ Disclaimer transparente sobre limitações
 
 ---
 
-## 💼 Monetização Estimada
+**🏆 Sistema Enterprise Completo - Pronto para Produção! 🏆**
 
-| Métrica | Valor |
-|---------|--------|
-| Conversões/dia | 10-50 |
-| Receita/dia | R$ 100-500 |
-| Receita/mês | R$ 3.000-15.000 |
-| ROI estimado | 300-500% |
-
-**Desenvolvido com ❤️ para facilitar o trabalho com Microsoft Project**
+*Desenvolvido em Novembro 2025*

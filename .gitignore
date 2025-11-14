@@ -22,9 +22,12 @@ jspm_packages/
 __pycache__/
 .venv/
 
-# Upload directories
+# Upload directories and temporary files
 uploads/
 temp_downloads/
+uploads/incoming/
+uploads/processing/
+uploads/converted/
 
 # Build directories
 dist/
@@ -33,6 +36,12 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Test coverage
+coverage/
+
+# ESLint cache
+.eslintcache
 
 # CRITICAL: User data folders (NEVER commit user files)
 uploads/

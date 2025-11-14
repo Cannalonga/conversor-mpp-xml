@@ -7,7 +7,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+require('dotenv').config();
+
 const uploadUtils = require('./upload-utils');
+const downloadToken = require('../utils/downloadToken');
+const fileQueue = require('../queue/queue');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -486,7 +490,7 @@ class AnalyticsManager {
 // Rotas da API
 
 // Rota de teste para upload
-// 🛡️ ROTA SEGURA DE UPLOAD
+// 🛡️ ROTA SEGURA DE UPLOAD COM FILA
 app.post('/api/upload-test', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
@@ -517,49 +521,51 @@ app.post('/api/upload-test', upload.single('file'), async (req, res) => {
         // Log seguro do upload
         const logData = uploadUtils.logUploadInfo(req.file, req.file.filename);
         
-        // Mover arquivo para processamento
-        const processingDir = 'uploads/processing';
-        await uploadUtils.ensureDirectory(processingDir);
-        const processingPath = path.join(processingDir, req.file.filename);
-        
+        // Enfileirar para processamento
         try {
-            await fs.rename(req.file.path, processingPath);
-        } catch (moveError) {
-            console.error('Erro ao mover arquivo:', moveError);
+            const jobResult = await fileQueue.addConversionJob(req.file.filename, {
+                originalName: logData.originalName,
+                size: req.file.size,
+                userId: req.ip // Usando IP como identificador simples
+            });
+
+            // Gerar token para download futuro
+            const downloadTokenString = downloadToken.gerarToken(
+                req.file.filename.replace('.mpp', '.xml'),
+                {
+                    originalName: logData.originalName.replace('.mpp', '_convertido.xml'),
+                    jobId: jobResult.jobId
+                }
+            );
+
+            res.status(202).json({
+                success: true,
+                message: 'Arquivo enviado para processamento',
+                jobId: jobResult.jobId,
+                status: jobResult.status,
+                filename: logData.originalName,
+                downloadToken: downloadTokenString,
+                statusUrl: `/api/status/${jobResult.jobId}`,
+                estimatedTime: '2-5 minutos',
+                createdAt: jobResult.createdAt
+            });
+
+        } catch (queueError) {
+            console.error('❌ Erro ao enfileirar:', queueError);
+            
+            // Remove arquivo se falhou ao enfileirar
+            try {
+                await fs.unlink(req.file.path);
+            } catch {
+                // Ignorar erro de remoção
+            }
+
             return res.status(500).json({
                 success: false,
-                error: 'Erro no processamento do arquivo',
-                code: 'MOVE_FAILED'
+                error: 'Erro no sistema de processamento',
+                code: 'QUEUE_FAILED'
             });
         }
-
-        // Simular processamento seguro
-        setTimeout(async () => {
-            try {
-                // Gerar XML de exemplo
-                const xmlContent = generateSampleXML(logData.originalName);
-                
-                // Mover para diretório de convertidos
-                const convertedDir = 'uploads/converted';
-                await uploadUtils.ensureDirectory(convertedDir);
-                
-                res.json({
-                    success: true,
-                    message: 'Arquivo convertido com sucesso',
-                    filename: logData.originalName.replace('.mpp', '_convertido.xml'),
-                    fileId: req.file.filename.replace('.mpp', ''),
-                    xmlContent: xmlContent,
-                    processedAt: new Date().toISOString()
-                });
-            } catch (processError) {
-                console.error('Erro no processamento:', processError);
-                res.status(500).json({
-                    success: false,
-                    error: 'Erro durante a conversão',
-                    code: 'PROCESS_FAILED'
-                });
-            }
-        }, 1000);
         
     } catch (error) {
         console.error('❌ Erro crítico no upload:', error);
@@ -900,7 +906,89 @@ setInterval(async () => {
     }
 }, 60 * 60 * 1000); // A cada hora
 
+// 🏥 ROTA DE HEALTH CHECK
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
+// 📊 ROTA DE STATUS DE JOB
+app.get('/api/status/:jobId', async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        const status = await fileQueue.getJobStatus(jobId);
+        res.json(status);
+    } catch (error) {
+        console.error('❌ Erro ao obter status do job:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor',
+            code: 'STATUS_ERROR'
+        });
+    }
+});
+
+// 📥 ROTA SEGURA DE DOWNLOAD
+app.get('/api/download/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        
+        // Validar token
+        const payload = downloadToken.validarToken(token);
+        if (!payload) {
+            return res.status(401).json({
+                error: 'Token inválido ou expirado',
+                code: 'INVALID_TOKEN'
+            });
+        }
+
+        const filename = payload.filename;
+        const filePath = path.join('uploads/converted', filename);
+        
+        // Verificar se arquivo existe
+        try {
+            await fs.access(filePath);
+        } catch {
+            return res.status(404).json({
+                error: 'Arquivo não encontrado',
+                code: 'FILE_NOT_FOUND'
+            });
+        }
+
+        // Log de download autorizado
+        console.log(`📥 Download autorizado: ${filename} | Token: ${token.substring(0, 20)}...`);
+
+        // Configurar headers para download
+        const originalName = payload.metadata?.originalName || filename;
+        res.setHeader('Content-Disposition', `attachment; filename="${originalName}"`);
+        res.setHeader('Content-Type', 'application/xml');
+
+        // Enviar arquivo
+        res.sendFile(path.resolve(filePath));
+
+    } catch (error) {
+        console.error('❌ Erro no download:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor',
+            code: 'DOWNLOAD_ERROR'
+        });
+    }
+});
+
+// 📊 ROTA DE ESTATÍSTICAS DA FILA
+app.get('/api/queue/stats', async (req, res) => {
+    try {
+        const stats = await fileQueue.getActiveJobs();
+        res.json(stats);
+    } catch (error) {
+        console.error('❌ Erro ao obter estatísticas:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor',
+            code: 'STATS_ERROR'
+        });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
     console.log(`Acesse: http://localhost:${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
 });
