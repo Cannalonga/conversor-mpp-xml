@@ -153,6 +153,31 @@ function startConversion() {
         });
 }
 
+function hideProgressBar() {
+    const progressWrapper = document.getElementById('progressWrapper');
+    if (progressWrapper) {
+        progressWrapper.style.display = 'none';
+    }
+    console.log('📊 Barra de progresso ocultada');
+}
+
+function resetButtons() {
+    const convertBtn = document.getElementById('convertBtn');
+    const fileInput = document.getElementById('fileInput');
+    
+    if (convertBtn) {
+        convertBtn.disabled = false;
+        convertBtn.textContent = 'Converter Arquivo';
+        convertBtn.style.backgroundColor = '';
+    }
+    
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    
+    console.log('🔄 Botões resetados');
+}
+
 function showProgressState() {
     const fileSelected = document.getElementById('fileSelected');
     const progressWrapper = document.getElementById('progressWrapper');
@@ -225,7 +250,7 @@ async function uploadFile(file) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         
-        const response = await fetch('/api/upload-test', {
+        const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
             signal: controller.signal
@@ -584,14 +609,14 @@ function startConversion() {
             console.log('✅ Sucesso:', result);
             updateProgress(100, 'Conversão concluída!');
             
-            if (result.xmlContent) {
+            if (result.xml) {
                 console.log('🎉 XML gerado com sucesso!');
                 
                 // Configurar download direto
                 setTimeout(() => {
                     const downloadBtn = document.getElementById('downloadBtn');
                     if (downloadBtn) {
-                        downloadBtn.onclick = () => downloadXML(result.xmlContent, currentFile.name);
+                        downloadBtn.onclick = () => downloadXML(result.xml, currentFile.name);
                         console.log('✅ Botão de download configurado');
                     }
                 }, 500);
@@ -602,7 +627,7 @@ function startConversion() {
             }
             
             setTimeout(() => {
-                hideProgress();
+                hideProgressBar();
                 resetButtons();
             }, 2000);
         })
@@ -612,7 +637,7 @@ function startConversion() {
             alert('Erro: ' + error.message);
             
             setTimeout(() => {
-                hideProgress();
+                hideProgressBar();
                 resetButtons();
             }, 2000);
         });
@@ -634,7 +659,7 @@ async function uploadFile(file) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         
-        const response = await fetch('/api/upload-test', {
+        const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
             signal: controller.signal
@@ -773,16 +798,58 @@ function showPaymentModal() {
 }
 
 function generatePixQRCode() {
+    if (!currentFile) return;
+    
     const qrCode = document.getElementById('qrCode');
-    if (qrCode) {
+    if (!qrCode) return;
+    
+    // Mostrar loading
+    qrCode.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 40px;">⏳</div>
+            <p>Gerando QR Code PIX...</p>
+        </div>
+    `;
+    
+    // Fazer requisição para gerar QR Code real
+    fetch('/api/payment/pix', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            fileName: currentFile.name,
+            amount: 10.00
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar QR Code real
+            qrCode.innerHTML = `
+                <div style="background: #fff; padding: 20px; border-radius: 10px; border: 2px solid #ddd; text-align: center;">
+                    <img src="${data.qrCode}" alt="QR Code PIX" style="width: 200px; height: 200px; margin-bottom: 10px;">
+                    <p style="margin: 10px 0; font-weight: bold;">QR Code PIX - R$ ${data.amount.toFixed(2)}</p>
+                    <p style="font-size: 12px; color: #666;">Escaneie com seu app bancário</p>
+                    <p style="font-size: 10px; color: #888; margin-top: 10px;">PIX: ${data.pixKey}</p>
+                </div>
+            `;
+            
+            console.log('✅ QR Code PIX gerado com sucesso');
+        } else {
+            throw new Error(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erro ao gerar QR Code:', error);
         qrCode.innerHTML = `
-            <div style="background: #fff; padding: 20px; border-radius: 10px; border: 2px solid #ddd;">
-                <div style="font-size: 120px; text-align: center;">📱</div>
-                <p style="text-align: center; margin: 10px 0;"><strong>QR Code PIX</strong></p>
-                <p style="text-align: center; font-size: 12px; color: #666;">Escaneie com seu app bancário</p>
+            <div style="background: #ffebee; padding: 20px; border-radius: 10px; border: 2px solid #f44336; text-align: center;">
+                <div style="font-size: 40px; color: #f44336;">❌</div>
+                <p style="color: #f44336; margin: 10px 0;">Erro ao gerar QR Code</p>
+                <p style="font-size: 12px; color: #666;">Tente novamente</p>
             </div>
         `;
-    }
+    });
 }
 
 function showDownloadOptions(xmlContent, fileId, originalName) {

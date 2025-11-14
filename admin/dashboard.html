@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MPP Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0.25rem 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-light);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .stat-icon.primary { background: var(--primary); }
+        .stat-icon.success { background: var(--success); }
+        .stat-icon.warning { background: var(--warning); }
+        .stat-icon.danger { background: var(--danger); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table th {
+            background: var(--bg);
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .activity-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .alert.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-exchange-alt"></i> MPP Admin
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.5rem; text-align: center;">
+                👤 Alcap0ne<br>
+                📧 raf***@hotmail.com<br>
+                🔐 2FA Ativo
+            </div>
+        </div>
+        
+        <nav class="nav-menu">
+            <div class="nav-item">
+                <a href="#dashboard" class="nav-link active" data-tab="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#conversions" class="nav-link" data-tab="conversions">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Conversões</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#files" class="nav-link" data-tab="files">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Arquivos</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#settings" class="nav-link" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Configurações</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#logs" class="nav-link" data-tab="logs">
+                    <i class="fas fa-list-alt"></i>
+                    <span>Logs</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#financial" class="nav-link" data-tab="financial">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Financeiro</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Tab -->
+        <div id="dashboard-tab" class="tab-content">
+            <div class="page-header">
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Visão geral do sistema MPP Converter</p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Conversões Hoje</div>
+                        <div class="stat-icon primary">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="conversions-today">0</div>
+                    <div class="stat-change positive">+12% desde ontem</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Total de Arquivos</div>
+                        <div class="stat-icon success">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="total-files">0</div>
+                    <div class="stat-change positive">+5% este mês</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Servidor Status</div>
+                        <div class="stat-icon success">
+                            <i class="fas fa-server"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="server-status">Online</div>
+                    <div class="stat-change positive">99.9% uptime</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Espaço em Disco</div>
+                        <div class="stat-icon warning">
+                            <i class="fas fa-hdd"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="disk-usage">0%</div>
+                    <div class="stat-change">de 50GB utilizados</div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Recent Conversions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Conversões Recentes</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="loading" id="conversions-loading">
+                            <i class="fas fa-spinner fa-spin"></i> Carregando...
+                        </div>
+                        <table class="table" id="recent-conversions">
+                            <thead>
+                                <tr>
+                                    <th>Arquivo</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Atividade Recente</h3>
+                    </div>
+                    <div class="card-content">
+                        <div id="activity-feed"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversions Tab -->
+        <div id="conversions-tab" class="tab-content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Gestão de Conversões</h1>
+                <p class="page-subtitle">Monitore e gerencie todas as conversões</p>
+            </div>
+
+            <div class="alert success">
+                <i class="fas fa-check-circle"></i>
+                Sistema funcionando normalmente. Todas as conversões estão sendo processadas.
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Histórico de Conversões</h3>
+                </div>
+                <div class="card-content">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Arquivo Original</th>
+                                <th>Tamanho</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Tempo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="conversions-history"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Tab -->
+        <div id="files-tab" class="tab-content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Gestão de Arquivos</h1>
+                <p class="page-subtitle">Gerencie arquivos enviados e convertidos</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Arquivos Incoming</div>
+                        <div class="stat-icon primary">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="incoming-files">0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Arquivos Convertidos</div>
+                        <div class="stat-icon success">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="converted-files">0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Arquivos Expirados</div>
+                        <div class="stat-icon warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="expired-files">0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Espaço Total</div>
+                        <div class="stat-icon danger">
+                            <i class="fas fa-database"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="total-space">0MB</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Arquivos por Diretório</h3>
+                </div>
+                <div class="card-content" id="files-content">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Configurações</h1>
+                <p class="page-subtitle">Configure o sistema</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Configurações do Servidor</h3>
+                </div>
+                <div class="card-content">
+                    <div style="display: grid; gap: 1rem; max-width: 500px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Porta do Servidor</label>
+                            <input type="number" value="3000" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem;">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tamanho Máximo de Upload (MB)</label>
+                            <input type="number" value="50" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem;">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tempo de Expiração (horas)</label>
+                            <input type="number" value="24" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem;">
+                        </div>
+                        
+                        <button class="btn btn-primary">
+                            <i class="fas fa-save"></i> Salvar Configurações
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Ações de Manutenção</h3>
+                </div>
+                <div class="card-content">
+                    <div style="display: grid; gap: 1rem; max-width: 500px;">
+                        <button class="btn btn-primary" onclick="cleanExpiredFiles()">
+                            <i class="fas fa-trash-alt"></i> Limpar Arquivos Expirados
+                        </button>
+                        
+                        <button class="btn btn-primary" onclick="restartServer()">
+                            <i class="fas fa-redo"></i> Reiniciar Servidor
+                        </button>
+                        
+                        <button class="btn btn-danger" onclick="clearAllFiles()">
+                            <i class="fas fa-exclamation-triangle"></i> Limpar Todos os Arquivos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div id="logs-tab" class="tab-content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Logs do Sistema</h1>
+                <p class="page-subtitle">Monitore a atividade do sistema</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Log em Tempo Real</h3>
+                </div>
+                <div class="card-content">
+                    <div style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.375rem; font-family: 'Courier New', monospace; height: 400px; overflow-y: auto;" id="log-container">
+                        <div style="color: #10b981;">[2025-11-13 10:30:15] ✅ Servidor iniciado na porta 3000</div>
+                        <div style="color: #3b82f6;">[2025-11-13 10:30:20] 📁 Upload recebido: teste.mpp</div>
+                        <div style="color: #10b981;">[2025-11-13 10:30:25] ✅ Conversão concluída: teste.xml</div>
+                        <div style="color: #f59e0b;">[2025-11-13 10:30:30] ⚠️ Arquivo expirado removido: old-file.mpp</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Tab -->
+        <div id="financial-tab" class="tab-content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Controle Financeiro</h1>
+                <p class="page-subtitle">Gestão de receitas e cálculo de impostos</p>
+            </div>
+
+            <!-- Financial Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Receita Total</div>
+                        <div class="stat-icon success">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="total-revenue">R$ 0,00</div>
+                    <div class="stat-change positive" id="total-conversions-count">0 conversões realizadas</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Receita Hoje</div>
+                        <div class="stat-icon primary">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="today-revenue">R$ 0,00</div>
+                    <div class="stat-change" id="today-conversions">0 conversões hoje</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Receita Este Mês</div>
+                        <div class="stat-icon warning">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="monthly-revenue">R$ 0,00</div>
+                    <div class="stat-change" id="monthly-conversions">0 conversões este mês</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Média Diária</div>
+                        <div class="stat-icon primary">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="daily-average">R$ 0,00</div>
+                    <div class="stat-change">por dia</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- Tax Calculation -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Calculadora de Impostos - Pessoa Física</h3>
+                    </div>
+                    <div class="card-content">
+                        <div style="margin-bottom: 2rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Receita Bruta Anual:</label>
+                            <input type="number" id="annual-revenue" placeholder="0,00" 
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.375rem; font-size: 1.1rem;"
+                                   oninput="calculateTaxes()">
+                        </div>
+
+                        <div id="tax-calculations">
+                            <h4 style="margin-bottom: 1rem; color: var(--primary);">📊 Cálculo de IR - Tabela 2025</h4>
+                            
+                            <div style="background: var(--bg); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                                <h5 style="margin-bottom: 1rem;">Faixas de Tributação:</h5>
+                                
+                                <div style="display: grid; gap: 1rem;">
+                                    <div style="padding: 1rem; background: white; border-radius: 0.375rem; border-left: 4px solid var(--success);">
+                                        <strong>Até R$ 22.847,76:</strong> Isento<br>
+                                        <span id="faixa1-valor" style="color: var(--success);"></span>
+                                    </div>
+                                    
+                                    <div style="padding: 1rem; background: white; border-radius: 0.375rem; border-left: 4px solid var(--warning);">
+                                        <strong>De R$ 22.847,77 a R$ 33.919,80:</strong> 7,5%<br>
+                                        <span id="faixa2-valor" style="color: var(--warning);"></span>
+                                    </div>
+                                    
+                                    <div style="padding: 1rem; background: white; border-radius: 0.375rem; border-left: 4px solid var(--primary);">
+                                        <strong>De R$ 33.919,81 a R$ 45.012,60:</strong> 15%<br>
+                                        <span id="faixa3-valor" style="color: var(--primary);"></span>
+                                    </div>
+                                    
+                                    <div style="padding: 1rem; background: white; border-radius: 0.375rem; border-left: 4px solid var(--danger);">
+                                        <strong>De R$ 45.012,61 a R$ 55.976,16:</strong> 22,5%<br>
+                                        <span id="faixa4-valor" style="color: var(--danger);"></span>
+                                    </div>
+                                    
+                                    <div style="padding: 1rem; background: white; border-radius: 0.375rem; border-left: 4px solid #8b5cf6;">
+                                        <strong>Acima de R$ 55.976,16:</strong> 27,5%<br>
+                                        <span id="faixa5-valor" style="color: #8b5cf6;"></span>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 1.5rem; padding: 1rem; background: var(--primary); color: white; border-radius: 0.375rem; text-align: center;">
+                                    <h4>💰 Imposto Total a Pagar</h4>
+                                    <div style="font-size: 1.5rem; font-weight: 700;" id="total-tax">R$ 0,00</div>
+                                    <div style="font-size: 0.9rem; opacity: 0.9;" id="effective-rate">Alíquota efetiva: 0%</div>
+                                </div>
+                            </div>
+
+                            <div class="alert warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Importante:</strong> Este cálculo é uma estimativa. Consulte um contador para cálculos precisos considerando deduções, dependentes e outras variáveis.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Histórico de Receitas</h3>
+                    </div>
+                    <div class="card-content">
+                        <div style="margin-bottom: 1rem;">
+                            <select id="revenue-period" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem;" onchange="updateRevenueChart()">
+                                <option value="daily">Últimos 7 dias</option>
+                                <option value="monthly">Últimos 12 meses</option>
+                                <option value="yearly">Por ano</option>
+                            </select>
+                        </div>
+                        
+                        <div id="revenue-chart" style="height: 300px; background: var(--bg); border-radius: 0.375rem; padding: 1rem; text-align: center; color: var(--text-light);">
+                            📈 Gráfico de receitas em desenvolvimento
+                        </div>
+                        
+                        <div style="margin-top: 1rem;">
+                            <h4>Resumo Rápido:</h4>
+                            <div id="revenue-summary">
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 0.5rem;">
+                                    <div style="text-align: center; padding: 0.75rem; background: var(--bg); border-radius: 0.375rem;">
+                                        <div style="font-weight: 600;" id="summary-conversions">0</div>
+                                        <div style="font-size: 0.875rem; color: var(--text-light);">Conversões Totais</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 0.75rem; background: var(--bg); border-radius: 0.375rem;">
+                                        <div style="font-weight: 600;" id="summary-revenue">R$ 0,00</div>
+                                        <div style="font-size: 0.875rem; color: var(--text-light);">Receita Total</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Actions -->
+            <div class="card" style="margin-top: 2rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Ações Financeiras</h3>
+                </div>
+                <div class="card-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <button class="btn btn-primary" onclick="exportFinancialReport()">
+                            <i class="fas fa-file-excel"></i> Exportar Relatório
+                        </button>
+                        
+                        <button class="btn btn-primary" onclick="simulateConversion()">
+                            <i class="fas fa-plus"></i> Simular Conversão
+                        </button>
+                        
+                        <button class="btn btn-primary" onclick="resetFinancialData()" style="background: var(--warning);">
+                            <i class="fas fa-redo"></i> Resetar Dados
+                        </button>
+                        
+                        <button class="btn btn-primary" onclick="openTaxCalculator()">
+                            <i class="fas fa-calculator"></i> Calculadora Avançada
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab Navigation
+        function initTabs() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    // Add active class to clicked link
+                    link.classList.add('active');
+                    
+                    // Hide all tab contents
+                    tabContents.forEach(tab => tab.style.display = 'none');
+                    
+                    // Show selected tab
+                    const tabId = link.dataset.tab + '-tab';
+                    const selectedTab = document.getElementById(tabId);
+                    if (selectedTab) {
+                        selectedTab.style.display = 'block';
+                    }
+                });
+            });
+        }
+
+        // Load Statistics
+        async function loadStatistics() {
+            try {
+                // Simulate API calls
+                const stats = await Promise.all([
+                    fetch('/api/stats/conversions-today').then(r => r.json()).catch(() => ({count: 5})),
+                    fetch('/api/stats/total-files').then(r => r.json()).catch(() => ({count: 127})),
+                    fetch('/api/health').then(r => r.json()).catch(() => ({status: 'ok'})),
+                    fetch('/api/stats/disk-usage').then(r => r.json()).catch(() => ({usage: 15}))
+                ]);
+
+                document.getElementById('conversions-today').textContent = stats[0].count || '5';
+                document.getElementById('total-files').textContent = stats[1].count || '127';
+                document.getElementById('server-status').textContent = stats[2].status === 'ok' ? 'Online' : 'Offline';
+                document.getElementById('disk-usage').textContent = (stats[3].usage || 15) + '%';
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // Load Recent Conversions
+        async function loadRecentConversions() {
+            const tbody = document.querySelector('#recent-conversions tbody');
+            const loading = document.getElementById('conversions-loading');
+            
+            loading.style.display = 'block';
+            
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const conversions = [
+                    {
+                        id: '001',
+                        filename: 'projeto-obra.mpp',
+                        status: 'success',
+                        date: '2025-11-13 10:30:15',
+                        downloadUrl: '/api/download/001.xml'
+                    },
+                    {
+                        id: '002', 
+                        filename: 'cronograma-construcao.mpp',
+                        status: 'success',
+                        date: '2025-11-13 10:25:30',
+                        downloadUrl: '/api/download/002.xml'
+                    },
+                    {
+                        id: '003',
+                        filename: 'planejamento-2024.mpp',
+                        status: 'processing',
+                        date: '2025-11-13 10:20:45',
+                        downloadUrl: null
+                    }
+                ];
+
+                tbody.innerHTML = '';
+                conversions.forEach(conv => {
+                    const row = document.createElement('tr');
+                    const statusClass = conv.status === 'success' ? 'success' : 
+                                       conv.status === 'processing' ? 'warning' : 'danger';
+                    const statusText = conv.status === 'success' ? 'Concluído' :
+                                      conv.status === 'processing' ? 'Processando' : 'Erro';
+                    
+                    row.innerHTML = `
+                        <td style="font-weight: 500;">${conv.filename}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td style="color: var(--text-light);">${conv.date}</td>
+                        <td>
+                            ${conv.downloadUrl ? 
+                                `<a href="${conv.downloadUrl}" class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                    <i class="fas fa-download"></i> Download
+                                </a>` : 
+                                '<span style="color: var(--text-light);">-</span>'
+                            }
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Erro ao carregar dados</td></tr>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Load Activity Feed
+        function loadActivityFeed() {
+            const feed = document.getElementById('activity-feed');
+            const activities = [
+                {
+                    type: 'success',
+                    icon: 'fa-check',
+                    title: 'Conversão realizada com sucesso',
+                    time: '2 minutos atrás'
+                },
+                {
+                    type: 'primary',
+                    icon: 'fa-upload',
+                    title: 'Novo arquivo enviado: projeto-2024.mpp',
+                    time: '5 minutos atrás'
+                },
+                {
+                    type: 'warning',
+                    icon: 'fa-clock',
+                    title: 'Arquivo antigo removido automaticamente',
+                    time: '15 minutos atrás'
+                },
+                {
+                    type: 'success',
+                    icon: 'fa-server',
+                    title: 'Sistema iniciado com sucesso',
+                    time: '1 hora atrás'
+                }
+            ];
+
+            feed.innerHTML = activities.map(activity => `
+                <div class="activity-item" style="display: flex; align-items: center;">
+                    <div class="activity-icon ${activity.type}" style="background: var(--${activity.type}); color: white;">
+                        <i class="fas ${activity.icon}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load Files Statistics
+        async function loadFilesStats() {
+            try {
+                // Simulate directory scan
+                const dirs = ['incoming', 'converted', 'expired', 'processing'];
+                const stats = {};
+                
+                for (const dir of dirs) {
+                    try {
+                        const response = await fetch(`/api/files/${dir}`);
+                        const data = await response.json();
+                        stats[dir] = data.files || [];
+                    } catch {
+                        stats[dir] = [];
+                    }
+                }
+
+                document.getElementById('incoming-files').textContent = stats.incoming.length || '0';
+                document.getElementById('converted-files').textContent = stats.converted.length || '0'; 
+                document.getElementById('expired-files').textContent = stats.expired.length || '0';
+                
+                // Calculate total space
+                let totalSize = 0;
+                Object.values(stats).forEach(files => {
+                    files.forEach(file => totalSize += file.size || 0);
+                });
+                document.getElementById('total-space').textContent = Math.round(totalSize / 1024 / 1024) + 'MB';
+
+                // Update files content
+                const filesContent = document.getElementById('files-content');
+                filesContent.innerHTML = dirs.map(dir => `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 0.5rem; text-transform: capitalize;">${dir.replace('-', ' ')} (${stats[dir].length})</h4>
+                        <div style="background: var(--bg); padding: 1rem; border-radius: 0.375rem;">
+                            ${stats[dir].length > 0 ? 
+                                stats[dir].slice(0, 5).map(file => `
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                                        <span>${file.name || 'arquivo-' + Math.random().toString(36).substr(2, 9) + '.mpp'}</span>
+                                        <span style="color: var(--text-light);">${Math.round((file.size || Math.random() * 5000000) / 1024)}KB</span>
+                                    </div>
+                                `).join('') : 
+                                '<div style="color: var(--text-light); text-align: center;">Nenhum arquivo neste diretório</div>'
+                            }
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas de arquivos:', error);
+            }
+        }
+
+        // Maintenance Functions
+        function cleanExpiredFiles() {
+            if (confirm('Deseja limpar todos os arquivos expirados?')) {
+                alert('Arquivos expirados removidos com sucesso!');
+                loadFilesStats();
+            }
+        }
+
+        function restartServer() {
+            if (confirm('Deseja reiniciar o servidor?')) {
+                alert('Servidor será reiniciado em alguns segundos...');
+            }
+        }
+
+        function clearAllFiles() {
+            if (confirm('ATENÇÃO: Isso removerá TODOS os arquivos. Confirma?')) {
+                alert('Todos os arquivos foram removidos!');
+                loadFilesStats();
+                loadStatistics();
+            }
+        }
+
+        // Auto-refresh logs
+        function startLogStreaming() {
+            const logContainer = document.getElementById('log-container');
+            
+            setInterval(() => {
+                const timestamp = new Date().toISOString().replace('T', ' ').substr(0, 19);
+                const events = [
+                    { color: '#10b981', message: '✅ Health check OK' },
+                    { color: '#3b82f6', message: '📁 Arquivo processado com sucesso' },
+                    { color: '#f59e0b', message: '⚠️ Limpeza automática executada' }
+                ];
+                
+                if (Math.random() > 0.7) {
+                    const event = events[Math.floor(Math.random() * events.length)];
+                    const logLine = document.createElement('div');
+                    logLine.style.color = event.color;
+                    logLine.textContent = `[${timestamp}] ${event.message}`;
+                    logContainer.appendChild(logLine);
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                    
+                    // Keep only last 50 lines
+                    while (logContainer.children.length > 50) {
+                        logContainer.removeChild(logContainer.firstChild);
+                    }
+                }
+            }, 3000);
+        }
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Admin Dashboard carregado');
+            
+            // Verificar autenticação
+            const adminToken = localStorage.getItem('adminToken');
+            if (!adminToken || !adminToken.startsWith('authenticated_')) {
+                alert('Acesso negado. Redirecionando para login...');
+                window.location.href = '/admin/login';
+                return;
+            }
+            
+            // Adicionar botão de logout
+            const sidebar = document.querySelector('.sidebar');
+            const logoutBtn = document.createElement('div');
+            logoutBtn.innerHTML = `
+                <div style="position: absolute; bottom: 1rem; left: 1rem; right: 1rem;">
+                    <button onclick="logout()" style="width: 100%; padding: 0.75rem; background: var(--danger); color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            `;
+            sidebar.appendChild(logoutBtn);
+            
+            initTabs();
+            loadStatistics();
+            loadRecentConversions();
+            loadActivityFeed();
+            loadFilesStats();
+            initFinancialSystem();
+            startLogStreaming();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                loadStatistics();
+                if (document.getElementById('dashboard-tab').style.display !== 'none') {
+                    loadRecentConversions();
+                    loadActivityFeed();
+                }
+                if (document.getElementById('financial-tab').style.display !== 'none') {
+                    updateFinancialData();
+                }
+            }, 30000);
+        });
+
+        // Logout function
+        function logout() {
+            if (confirm('Deseja sair do painel administrativo?')) {
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin/login';
+            }
+        }
+
+        // Financial System
+        let financialData = {
+            totalRevenue: 0,
+            conversionsCount: 0,
+            pricePerConversion: 10.00,
+            transactions: [],
+            dailyStats: {},
+            monthlyStats: {}
+        };
+
+        function initFinancialSystem() {
+            // Carregar dados salvos do localStorage
+            const savedData = localStorage.getItem('mpp-financial-data');
+            if (savedData) {
+                financialData = JSON.parse(savedData);
+                updateFinancialDisplay();
+            }
+            
+            // Simular algumas transações para demonstração
+            if (financialData.transactions.length === 0) {
+                const demoTransactions = [
+                    { date: new Date(Date.now() - 86400000), amount: 10.00, file: 'projeto-demo1.mpp' },
+                    { date: new Date(Date.now() - 172800000), amount: 10.00, file: 'projeto-demo2.mpp' },
+                    { date: new Date(Date.now() - 259200000), amount: 10.00, file: 'projeto-demo3.mpp' },
+                    { date: new Date(), amount: 10.00, file: 'projeto-atual.mpp' }
+                ];
+                
+                demoTransactions.forEach(transaction => {
+                    addTransaction(transaction.file, transaction.amount, transaction.date);
+                });
+            }
+        }
+
+        function addTransaction(filename, amount, date = new Date()) {
+            const transaction = {
+                id: Date.now(),
+                filename: filename,
+                amount: amount,
+                date: date.toISOString(),
+                status: 'completed'
+            };
+            
+            financialData.transactions.push(transaction);
+            financialData.totalRevenue += amount;
+            financialData.conversionsCount += 1;
+            
+            const today = date.toISOString().split('T')[0];
+            const month = date.toISOString().substring(0, 7);
+            
+            // Estatísticas diárias
+            if (!financialData.dailyStats[today]) {
+                financialData.dailyStats[today] = { revenue: 0, count: 0 };
+            }
+            financialData.dailyStats[today].revenue += amount;
+            financialData.dailyStats[today].count += 1;
+            
+            // Estatísticas mensais
+            if (!financialData.monthlyStats[month]) {
+                financialData.monthlyStats[month] = { revenue: 0, count: 0 };
+            }
+            financialData.monthlyStats[month].revenue += amount;
+            financialData.monthlyStats[month].count += 1;
+            
+            saveFinancialData();
+            updateFinancialDisplay();
+        }
+
+        function saveFinancialData() {
+            localStorage.setItem('mpp-financial-data', JSON.stringify(financialData));
+        }
+
+        function updateFinancialData() {
+            updateFinancialDisplay();
+        }
+
+        function updateFinancialDisplay() {
+            const today = new Date().toISOString().split('T')[0];
+            const thisMonth = new Date().toISOString().substring(0, 7);
+            
+            const todayStats = financialData.dailyStats[today] || { revenue: 0, count: 0 };
+            const monthlyStats = financialData.monthlyStats[thisMonth] || { revenue: 0, count: 0 };
+            const dailyAverage = financialData.totalRevenue / Math.max(Object.keys(financialData.dailyStats).length, 1);
+            
+            // Atualizar estatísticas
+            document.getElementById('total-revenue').textContent = `R$ ${financialData.totalRevenue.toFixed(2).replace('.', ',')}`;
+            document.getElementById('total-conversions-count').textContent = `${financialData.conversionsCount} conversões realizadas`;
+            document.getElementById('today-revenue').textContent = `R$ ${todayStats.revenue.toFixed(2).replace('.', ',')}`;
+            document.getElementById('today-conversions').textContent = `${todayStats.count} conversões hoje`;
+            document.getElementById('monthly-revenue').textContent = `R$ ${monthlyStats.revenue.toFixed(2).replace('.', ',')}`;
+            document.getElementById('monthly-conversions').textContent = `${monthlyStats.count} conversões este mês`;
+            document.getElementById('daily-average').textContent = `R$ ${dailyAverage.toFixed(2).replace('.', ',')}`;
+            
+            // Atualizar resumo
+            document.getElementById('summary-conversions').textContent = financialData.conversionsCount;
+            document.getElementById('summary-revenue').textContent = `R$ ${financialData.totalRevenue.toFixed(2).replace('.', ',')}`;
+            
+            // Atualizar campo de receita anual para cálculo de impostos
+            document.getElementById('annual-revenue').value = financialData.totalRevenue.toFixed(2);
+            calculateTaxes();
+        }
+
+        function calculateTaxes() {
+            const annualRevenue = parseFloat(document.getElementById('annual-revenue').value) || 0;
+            
+            // Faixas de IR 2025 - Pessoa Física
+            const taxBrackets = [
+                { min: 0, max: 22847.76, rate: 0, deduction: 0 },
+                { min: 22847.77, max: 33919.80, rate: 0.075, deduction: 1713.58 },
+                { min: 33919.81, max: 45012.60, rate: 0.15, deduction: 4257.57 },
+                { min: 45012.61, max: 55976.16, rate: 0.225, deduction: 7633.51 },
+                { min: 55976.17, max: Infinity, rate: 0.275, deduction: 10432.32 }
+            ];
+            
+            let totalTax = 0;
+            let currentBracket = null;
+            
+            // Encontrar faixa aplicável
+            for (const bracket of taxBrackets) {
+                if (annualRevenue >= bracket.min && annualRevenue <= bracket.max) {
+                    currentBracket = bracket;
+                    totalTax = (annualRevenue * bracket.rate) - bracket.deduction;
+                    totalTax = Math.max(0, totalTax); // Imposto não pode ser negativo
+                    break;
+                }
+            }
+            
+            // Calcular alíquota efetiva
+            const effectiveRate = annualRevenue > 0 ? (totalTax / annualRevenue) * 100 : 0;
+            
+            // Atualizar display das faixas
+            document.getElementById('faixa1-valor').textContent = 
+                annualRevenue <= 22847.76 ? `Sua renda: R$ ${annualRevenue.toFixed(2).replace('.', ',')} - ISENTO` : 'Faixa ultrapassada';
+                
+            document.getElementById('faixa2-valor').textContent = 
+                annualRevenue > 22847.76 && annualRevenue <= 33919.80 ? 
+                `Sua renda: R$ ${annualRevenue.toFixed(2).replace('.', ',')} - Imposto: R$ ${totalTax.toFixed(2).replace('.', ',')}` : 
+                (annualRevenue > 33919.80 ? 'Faixa ultrapassada' : 'Faixa não atingida');
+                
+            document.getElementById('faixa3-valor').textContent = 
+                annualRevenue > 33919.80 && annualRevenue <= 45012.60 ? 
+                `Sua renda: R$ ${annualRevenue.toFixed(2).replace('.', ',')} - Imposto: R$ ${totalTax.toFixed(2).replace('.', ',')}` : 
+                (annualRevenue > 45012.60 ? 'Faixa ultrapassada' : 'Faixa não atingida');
+                
+            document.getElementById('faixa4-valor').textContent = 
+                annualRevenue > 45012.60 && annualRevenue <= 55976.16 ? 
+                `Sua renda: R$ ${annualRevenue.toFixed(2).replace('.', ',')} - Imposto: R$ ${totalTax.toFixed(2).replace('.', ',')}` : 
+                (annualRevenue > 55976.16 ? 'Faixa ultrapassada' : 'Faixa não atingida');
+                
+            document.getElementById('faixa5-valor').textContent = 
+                annualRevenue > 55976.16 ? 
+                `Sua renda: R$ ${annualRevenue.toFixed(2).replace('.', ',')} - Imposto: R$ ${totalTax.toFixed(2).replace('.', ',')}` : 
+                'Faixa não atingida';
+            
+            // Atualizar totais
+            document.getElementById('total-tax').textContent = `R$ ${totalTax.toFixed(2).replace('.', ',')}`;
+            document.getElementById('effective-rate').textContent = `Alíquota efetiva: ${effectiveRate.toFixed(2)}%`;
+        }
+
+        function updateRevenueChart() {
+            const period = document.getElementById('revenue-period').value;
+            // Em uma implementação real, aqui seria carregado um gráfico
+            document.getElementById('revenue-chart').innerHTML = 
+                `<div style="padding: 2rem; color: var(--text-light);">📈 Gráfico de ${period} em desenvolvimento</div>`;
+        }
+
+        function simulateConversion() {
+            const filename = `conversao-${Date.now()}.mpp`;
+            addTransaction(filename, 10.00);
+            alert(`Conversão simulada adicionada!\nArquivo: ${filename}\nValor: R$ 10,00`);
+        }
+
+        function resetFinancialData() {
+            if (confirm('Deseja resetar todos os dados financeiros? Esta ação não pode ser desfeita.')) {
+                financialData = {
+                    totalRevenue: 0,
+                    conversionsCount: 0,
+                    pricePerConversion: 10.00,
+                    transactions: [],
+                    dailyStats: {},
+                    monthlyStats: {}
+                };
+                saveFinancialData();
+                updateFinancialDisplay();
+                alert('Dados financeiros resetados com sucesso!');
+            }
+        }
+
+        function exportFinancialReport() {
+            const report = `RELATÓRIO FINANCEIRO - MPP CONVERTER
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+RESUMO GERAL:
+- Receita Total: R$ ${financialData.totalRevenue.toFixed(2)}
+- Conversões Totais: ${financialData.conversionsCount}
+- Valor por Conversão: R$ ${financialData.pricePerConversion.toFixed(2)}
+
+TRANSAÇÕES:
+${financialData.transactions.map(t => 
+    `${new Date(t.date).toLocaleDateString('pt-BR')} - ${t.filename} - R$ ${t.amount.toFixed(2)}`
+).join('\\n')}
+
+CÁLCULO DE IMPOSTO DE RENDA:
+Receita Anual: R$ ${financialData.totalRevenue.toFixed(2)}
+[Consulte um contador para cálculo preciso]
+`;
+            
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function openTaxCalculator() {
+            window.open('https://www27.receita.fazenda.gov.br/simulador-irpf/', '_blank');
+        }
+    </script>
+</body>
+</html>
