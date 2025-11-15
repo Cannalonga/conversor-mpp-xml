@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Converter MPP para XML Online | Conversor de Arquivos Microsoft Project</title>
+    <meta name="description" content="Converta arquivos MPP (Microsoft Project) para XML online de forma segura e rápida. Upload fácil, conversão instantânea, download imediato. R$ 10,00 por conversão.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Converter MPP para XML Online - Conversor de Arquivos Project">
+    <meta property="og:description" content="Converta arquivos MPP para XML rapidamente. Ferramenta online profissional para conversão de projetos Microsoft Project.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://conversor.com/convert/mpp-to-xml">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles/global.css">
+    <link rel="stylesheet" href="../styles/conversion.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Conversor MPP para XML",
+        "description": "Ferramenta online para converter arquivos MPP (Microsoft Project) para formato XML",
+        "url": "https://conversor.com/convert/mpp-to-xml",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "10.00",
+            "priceCurrency": "BRL"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar-container"></nav>
+    
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-text">
+                        <nav class="breadcrumb">
+                            <a href="../index.html">Início</a>
+                            <span class="separator">›</span>
+                            <a href="../index.html#tools">Conversores</a>
+                            <span class="separator">›</span>
+                            <span class="current">MPP para XML</span>
+                        </nav>
+                        
+                        <h1 class="page-title">
+                            <i class="fas fa-project-diagram page-icon"></i>
+                            Converter MPP para XML
+                        </h1>
+                        
+                        <p class="page-description">
+                            Converta seus arquivos Microsoft Project (.mpp) para formato XML rapidamente. 
+                            Ideal para integração de dados, backup de projetos e análise estruturada.
+                        </p>
+                        
+                        <div class="page-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-file-archive"></i>
+                                <span>Entrada: MPP</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-code"></i>
+                                <span>Saída: XML</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Conversão instantânea</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>100% seguro</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-visual">
+                        <div class="conversion-preview">
+                            <div class="file-preview input-preview">
+                                <i class="fas fa-project-diagram"></i>
+                                <span>projeto.mpp</span>
+                            </div>
+                            <div class="conversion-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="file-preview output-preview">
+                                <i class="fas fa-code"></i>
+                                <span>projeto.xml</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="container">
+                <div class="content-grid">
+                    <!-- Conversion Area -->
+                    <section class="conversion-section">
+                        <div class="conversion-card">
+                            <!-- File Upload -->
+                            <div id="file-upload-container"></div>
+                            
+                            <!-- Conversion Options -->
+                            <div class="conversion-options" id="conversion-options" style="display: none;">
+                                <h3>
+                                    <i class="fas fa-cogs"></i>
+                                    Opções de Conversão
+                                </h3>
+                                
+                                <div class="options-grid">
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-layer-group"></i>
+                                            Incluir Recursos
+                                        </label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="include-tasks" checked>
+                                                <span class="checkmark"></span>
+                                                Tarefas do projeto
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="include-resources" checked>
+                                                <span class="checkmark"></span>
+                                                Recursos e atribuições
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="include-calendar">
+                                                <span class="checkmark"></span>
+                                                Calendários
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-calendar-alt"></i>
+                                            Formato de Data
+                                        </label>
+                                        <select name="date-format" class="select-input">
+                                            <option value="iso">ISO 8601 (2024-01-15T10:30:00)</option>
+                                            <option value="br">Brasileiro (15/01/2024)</option>
+                                            <option value="us">Americano (01/15/2024)</option>
+                                            <option value="timestamp">Timestamp Unix</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-code"></i>
+                                            Codificação XML
+                                        </label>
+                                        <select name="encoding" class="select-input">
+                                            <option value="utf-8">UTF-8</option>
+                                            <option value="utf-16">UTF-16</option>
+                                            <option value="iso-8859-1">ISO-8859-1</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-indent"></i>
+                                            Formatação
+                                        </label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="pretty-print" checked>
+                                                <span class="checkmark"></span>
+                                                Formatar XML (indentação)
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="include-schema">
+                                                <span class="checkmark"></span>
+                                                Incluir schema XML
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Convert Button -->
+                            <div id="convert-button-container"></div>
+                            
+                            <!-- Progress -->
+                            <div class="progress-section" id="progress-section" style="display: none;">
+                                <div class="progress-header">
+                                    <h4>
+                                        <i class="fas fa-sync fa-spin"></i>
+                                        Convertendo arquivo MPP...
+                                    </h4>
+                                    <span class="progress-percentage">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="step active" data-step="1">
+                                        <i class="fas fa-upload"></i>
+                                        <span>Upload</span>
+                                    </div>
+                                    <div class="step" data-step="2">
+                                        <i class="fas fa-cogs"></i>
+                                        <span>Processando</span>
+                                    </div>
+                                    <div class="step" data-step="3">
+                                        <i class="fas fa-code"></i>
+                                        <span>Convertendo</span>
+                                    </div>
+                                    <div class="step" data-step="4">
+                                        <i class="fas fa-download"></i>
+                                        <span>Pronto</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Results -->
+                            <div class="results-section" id="results-section" style="display: none;">
+                                <div class="results-header">
+                                    <h4>
+                                        <i class="fas fa-check-circle success"></i>
+                                        Conversão Concluída!
+                                    </h4>
+                                    <p>Seu arquivo MPP foi convertido para XML com sucesso.</p>
+                                </div>
+                                
+                                <div class="results-content">
+                                    <div class="file-result">
+                                        <div class="file-info">
+                                            <div class="file-icon">
+                                                <i class="fas fa-code"></i>
+                                            </div>
+                                            <div class="file-details">
+                                                <h5 id="output-filename">projeto_convertido.xml</h5>
+                                                <div class="file-meta">
+                                                    <span id="output-size">2.3 MB</span>
+                                                    <span class="separator">•</span>
+                                                    <span id="conversion-time">2.1s</span>
+                                                    <span class="separator">•</span>
+                                                    <span class="quality excellent">Excelente</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="file-actions">
+                                            <button class="btn btn-primary" id="download-btn">
+                                                <i class="fas fa-download"></i>
+                                                Download XML
+                                            </button>
+                                            <button class="btn btn-secondary" id="preview-btn">
+                                                <i class="fas fa-eye"></i>
+                                                Visualizar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="conversion-stats">
+                                        <div class="stat-item">
+                                            <i class="fas fa-tasks"></i>
+                                            <span class="stat-label">Tarefas</span>
+                                            <span class="stat-value" id="tasks-count">45</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-users"></i>
+                                            <span class="stat-label">Recursos</span>
+                                            <span class="stat-value" id="resources-count">12</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-calendar-check"></i>
+                                            <span class="stat-label">Marcos</span>
+                                            <span class="stat-value" id="milestones-count">8</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-project-diagram"></i>
+                                            <span class="stat-label">Dependências</span>
+                                            <span class="stat-value" id="dependencies-count">23</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="results-actions">
+                                    <button class="btn btn-outline" id="convert-another-btn">
+                                        <i class="fas fa-plus"></i>
+                                        Converter Outro Arquivo
+                                    </button>
+                                    <button class="btn btn-outline" id="share-btn">
+                                        <i class="fas fa-share"></i>
+                                        Compartilhar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- XML Preview Modal -->
+                            <div class="modal" id="preview-modal" style="display: none;">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4>
+                                            <i class="fas fa-code"></i>
+                                            Prévia do Arquivo XML
+                                        </h4>
+                                        <button class="modal-close" id="close-preview">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="code-preview">
+                                            <pre><code id="xml-content">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;Project xmlns="http://schemas.microsoft.com/project"&gt;
+    &lt;Name&gt;Projeto Exemplo&lt;/Name&gt;
+    &lt;Tasks&gt;
+        &lt;Task ID="1"&gt;
+            &lt;Name&gt;Tarefa 1&lt;/Name&gt;
+            &lt;Start&gt;2024-01-15T09:00:00&lt;/Start&gt;
+            &lt;Duration&gt;P5D&lt;/Duration&gt;
+        &lt;/Task&gt;
+        ...
+    &lt;/Tasks&gt;
+&lt;/Project&gt;
+                                            </code></pre>
+                                        </div>
+                                        <div class="preview-actions">
+                                            <button class="btn btn-secondary" id="copy-xml">
+                                                <i class="fas fa-copy"></i>
+                                                Copiar XML
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Sidebar -->
+                    <aside class="conversion-sidebar">
+                        <!-- Info Card -->
+                        <div class="info-card">
+                            <h3>
+                                <i class="fas fa-info-circle"></i>
+                                Sobre MPP para XML
+                            </h3>
+                            <p>
+                                Converta arquivos Microsoft Project (.mpp) para formato XML estruturado. 
+                                Ideal para integração com outros sistemas, backup de dados e análise de projetos.
+                            </p>
+                            
+                            <div class="info-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Preserva estrutura completa do projeto</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Mantém todas as dependências</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Exporta recursos e atribuições</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>XML validado e bem formatado</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing Card -->
+                        <div class="pricing-card">
+                            <h3>
+                                <i class="fas fa-tag"></i>
+                                Preço da Conversão
+                            </h3>
+                            <div class="price-display">
+                                <span class="currency">R$</span>
+                                <span class="amount">10</span>
+                                <span class="period">,00</span>
+                            </div>
+                            <p class="price-description">
+                                Pagamento seguro via PIX. Processamento instantâneo após confirmação.
+                            </p>
+                            
+                            <div class="payment-features">
+                                <div class="payment-item">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>QR Code PIX automático</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Pagamento 100% seguro</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>Processamento instantâneo</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Related Tools -->
+                        <div class="related-tools">
+                            <h3>
+                                <i class="fas fa-tools"></i>
+                                Ferramentas Relacionadas
+                            </h3>
+                            
+                            <div class="tool-list">
+                                <a href="./pdf-to-text.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>PDF para Texto</h4>
+                                        <p>Extrair texto de PDFs</p>
+                                    </div>
+                                </a>
+                                
+                                <a href="./word-to-pdf.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-word"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>Word para PDF</h4>
+                                        <p>Converter documentos Word</p>
+                                    </div>
+                                </a>
+                                
+                                <a href="./excel-to-pdf.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-excel"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>Excel para PDF</h4>
+                                        <p>Converter planilhas Excel</p>
+                                    </div>
+                                </a>
+                            </div>
+                            
+                            <a href="../index.html#tools" class="view-all-tools">
+                                <i class="fas fa-arrow-right"></i>
+                                Ver todas as ferramentas
+                            </a>
+                        </div>
+                        
+                        <!-- FAQ -->
+                        <div class="faq-section">
+                            <h3>
+                                <i class="fas fa-question-circle"></i>
+                                Perguntas Frequentes
+                            </h3>
+                            
+                            <div class="faq-list">
+                                <details class="faq-item">
+                                    <summary>Quais versões do MS Project são suportadas?</summary>
+                                    <p>Suportamos arquivos .mpp das versões 2007, 2010, 2013, 2016, 2019 e Microsoft Project 365.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>O XML gerado é compatível com outros sistemas?</summary>
+                                    <p>Sim, geramos XML no formato padrão Microsoft Project Schema, compatível com a maioria dos sistemas de gerenciamento de projetos.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Minhas informações ficam seguras?</summary>
+                                    <p>Sim, todos os arquivos são processados de forma segura e excluídos automaticamente após 24 horas.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Posso converter arquivos grandes?</summary>
+                                    <p>Suportamos arquivos de até 100MB. Para projetos maiores, entre em contato conosco.</p>
+                                </details>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <footer id="footer-container"></footer>
+    
+    <!-- Scripts -->
+    <script src="../components/common/NavbarTools.js"></script>
+    <script src="../components/common/FileUpload.js"></script>
+    <script src="../components/common/ConvertButton.js"></script>
+    <script src="../components/common/Footer.js"></script>
+    <script src="../utils/config.js"></script>
+    <script src="./mpp-to-xml.js"></script>
+</body>
+</html>

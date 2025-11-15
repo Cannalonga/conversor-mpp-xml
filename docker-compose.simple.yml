@@ -1,0 +1,50 @@
+services:
+  # FastAPI PDF Service
+  pdf-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.pdf
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - API_ENV=production
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./temp:/tmp/pdf_processing
+    restart: unless-stopped
+    command: python -m uvicorn app.main_simple:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 512M
+
+  # Redis for simple caching (opcional para MVP)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  redis_data:
+  uploads:
+  logs:
+  temp:

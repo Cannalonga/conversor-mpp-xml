@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Converter Word para PDF Online | DOCX para PDF</title>
+    <meta name="description" content="Converta documentos Word (DOC, DOCX) para PDF online de forma segura e rápida. Upload fácil, conversão instantânea, download imediato. R$ 5,00 por conversão.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Converter Word para PDF Online - Conversor DOCX para PDF">
+    <meta property="og:description" content="Converta documentos Word para PDF rapidamente. Ferramenta online profissional para conversão de arquivos Office.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://conversor.com/convert/word-to-pdf">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles/global.css">
+    <link rel="stylesheet" href="../styles/conversion.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Conversor Word para PDF",
+        "description": "Ferramenta online para converter documentos Word (DOC, DOCX) para formato PDF",
+        "url": "https://conversor.com/convert/word-to-pdf",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "5.00",
+            "priceCurrency": "BRL"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar-container"></nav>
+    
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-text">
+                        <nav class="breadcrumb">
+                            <a href="../index.html">Início</a>
+                            <span class="separator">›</span>
+                            <a href="../index.html#tools">Conversores</a>
+                            <span class="separator">›</span>
+                            <span class="current">Word para PDF</span>
+                        </nav>
+                        
+                        <h1 class="page-title">
+                            <i class="fas fa-file-word page-icon"></i>
+                            Converter Word para PDF
+                        </h1>
+                        
+                        <p class="page-description">
+                            Converta seus documentos Word (.doc, .docx) para PDF de alta qualidade. 
+                            Mantenha formatação, imagens e layout originais com conversão profissional.
+                        </p>
+                        
+                        <div class="page-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-file-word"></i>
+                                <span>Entrada: DOC, DOCX</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>Saída: PDF</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Conversão instantânea</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>100% seguro</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-visual">
+                        <div class="conversion-preview">
+                            <div class="file-preview input-preview">
+                                <i class="fas fa-file-word"></i>
+                                <span>documento.docx</span>
+                            </div>
+                            <div class="conversion-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="file-preview output-preview">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>documento.pdf</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="container">
+                <div class="content-grid">
+                    <!-- Conversion Area -->
+                    <section class="conversion-section">
+                        <div class="conversion-card">
+                            <!-- File Upload -->
+                            <div id="file-upload-container"></div>
+                            
+                            <!-- Conversion Options -->
+                            <div class="conversion-options" id="conversion-options" style="display: none;">
+                                <h3>
+                                    <i class="fas fa-cogs"></i>
+                                    Opções de Conversão
+                                </h3>
+                                
+                                <div class="options-grid">
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-star"></i>
+                                            Qualidade do PDF
+                                        </label>
+                                        <select name="pdf-quality" class="select-input">
+                                            <option value="high">Alta Qualidade (arquivo maior)</option>
+                                            <option value="medium" selected>Qualidade Média (balanceado)</option>
+                                            <option value="standard">Qualidade Padrão</option>
+                                            <option value="compressed">Comprimido (arquivo menor)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-rotate"></i>
+                                            Orientação da Página
+                                        </label>
+                                        <select name="page-orientation" class="select-input">
+                                            <option value="auto">Automática (manter original)</option>
+                                            <option value="portrait">Retrato</option>
+                                            <option value="landscape">Paisagem</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-arrows-alt"></i>
+                                            Margens
+                                        </label>
+                                        <select name="margins" class="select-input">
+                                            <option value="normal">Normal</option>
+                                            <option value="narrow">Estreita</option>
+                                            <option value="wide">Ampla</option>
+                                            <option value="custom">Personalizada</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-lock"></i>
+                                            Proteção do PDF
+                                        </label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="password-protect">
+                                                <span class="checkmark"></span>
+                                                Proteger com senha
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="restrict-editing">
+                                                <span class="checkmark"></span>
+                                                Restringir edição
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="disable-print">
+                                                <span class="checkmark"></span>
+                                                Desabilitar impressão
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-info-circle"></i>
+                                            Metadados
+                                        </label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="preserve-metadata" checked>
+                                                <span class="checkmark"></span>
+                                                Preservar metadados originais
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="add-conversion-info">
+                                                <span class="checkmark"></span>
+                                                Adicionar info de conversão
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-bookmark"></i>
+                                            Marcadores
+                                        </label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="create-bookmarks" checked>
+                                                <span class="checkmark"></span>
+                                                Criar marcadores dos títulos
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="hyperlinks">
+                                                <span class="checkmark"></span>
+                                                Preservar hiperlinks
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Password Fields (hidden by default) -->
+                                <div class="password-section" id="password-section" style="display: none;">
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-key"></i>
+                                            Senha de Proteção
+                                        </label>
+                                        <input type="password" name="pdf-password" class="text-input" placeholder="Digite a senha para o PDF" minlength="6">
+                                        <small>Mínimo 6 caracteres. Use letras, números e símbolos.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Convert Button -->
+                            <div id="convert-button-container"></div>
+                            
+                            <!-- Progress -->
+                            <div class="progress-section" id="progress-section" style="display: none;">
+                                <div class="progress-header">
+                                    <h4>
+                                        <i class="fas fa-sync fa-spin"></i>
+                                        Convertendo documento Word...
+                                    </h4>
+                                    <span class="progress-percentage">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="step active" data-step="1">
+                                        <i class="fas fa-upload"></i>
+                                        <span>Upload</span>
+                                    </div>
+                                    <div class="step" data-step="2">
+                                        <i class="fas fa-file-word"></i>
+                                        <span>Analisando</span>
+                                    </div>
+                                    <div class="step" data-step="3">
+                                        <i class="fas fa-file-pdf"></i>
+                                        <span>Convertendo</span>
+                                    </div>
+                                    <div class="step" data-step="4">
+                                        <i class="fas fa-download"></i>
+                                        <span>Pronto</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Results -->
+                            <div class="results-section" id="results-section" style="display: none;">
+                                <div class="results-header">
+                                    <h4>
+                                        <i class="fas fa-check-circle success"></i>
+                                        Conversão Concluída!
+                                    </h4>
+                                    <p>Seu documento Word foi convertido para PDF com sucesso.</p>
+                                </div>
+                                
+                                <div class="results-content">
+                                    <div class="file-result">
+                                        <div class="file-info">
+                                            <div class="file-icon">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </div>
+                                            <div class="file-details">
+                                                <h5 id="output-filename">documento_convertido.pdf</h5>
+                                                <div class="file-meta">
+                                                    <span id="output-size">1.8 MB</span>
+                                                    <span class="separator">•</span>
+                                                    <span id="conversion-time">1.3s</span>
+                                                    <span class="separator">•</span>
+                                                    <span class="quality excellent">Excelente</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="file-actions">
+                                            <button class="btn btn-primary" id="download-btn">
+                                                <i class="fas fa-download"></i>
+                                                Download PDF
+                                            </button>
+                                            <button class="btn btn-secondary" id="preview-btn">
+                                                <i class="fas fa-eye"></i>
+                                                Visualizar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="conversion-stats">
+                                        <div class="stat-item">
+                                            <i class="fas fa-file-alt"></i>
+                                            <span class="stat-label">Páginas</span>
+                                            <span class="stat-value" id="pages-count">12</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-font"></i>
+                                            <span class="stat-label">Palavras</span>
+                                            <span class="stat-value" id="words-count">2,450</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-image"></i>
+                                            <span class="stat-label">Imagens</span>
+                                            <span class="stat-value" id="images-count">5</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-compress"></i>
+                                            <span class="stat-label">Compressão</span>
+                                            <span class="stat-value" id="compression-ratio">25%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="results-actions">
+                                    <button class="btn btn-outline" id="convert-another-btn">
+                                        <i class="fas fa-plus"></i>
+                                        Converter Outro Arquivo
+                                    </button>
+                                    <button class="btn btn-outline" id="share-btn">
+                                        <i class="fas fa-share"></i>
+                                        Compartilhar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- PDF Preview Modal -->
+                            <div class="modal" id="preview-modal" style="display: none;">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4>
+                                            <i class="fas fa-file-pdf"></i>
+                                            Prévia do Arquivo PDF
+                                        </h4>
+                                        <button class="modal-close" id="close-preview">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="pdf-preview">
+                                            <div class="pdf-page">
+                                                <div class="pdf-content">
+                                                    <h3>Documento Convertido</h3>
+                                                    <p>Este é um exemplo de como seu documento Word convertido aparecerá em formato PDF.</p>
+                                                    <p>A formatação original, incluindo:</p>
+                                                    <ul>
+                                                        <li>Fontes e estilos de texto</li>
+                                                        <li>Imagens e gráficos</li>
+                                                        <li>Tabelas e layouts</li>
+                                                        <li>Cabeçalhos e rodapés</li>
+                                                    </ul>
+                                                    <p>Foram preservados durante a conversão.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="preview-actions">
+                                            <button class="btn btn-secondary" id="zoom-in">
+                                                <i class="fas fa-search-plus"></i>
+                                                Ampliar
+                                            </button>
+                                            <button class="btn btn-secondary" id="zoom-out">
+                                                <i class="fas fa-search-minus"></i>
+                                                Reduzir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Sidebar -->
+                    <aside class="conversion-sidebar">
+                        <!-- Info Card -->
+                        <div class="info-card">
+                            <h3>
+                                <i class="fas fa-info-circle"></i>
+                                Sobre Word para PDF
+                            </h3>
+                            <p>
+                                Converta documentos Word (.doc, .docx) para PDF de alta qualidade. 
+                                Mantenha formatação original, imagens, tabelas e estilos perfeitamente preservados.
+                            </p>
+                            
+                            <div class="info-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Formatação 100% preservada</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Suporte a imagens e tabelas</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Controle de qualidade e tamanho</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Proteção com senha opcional</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Marcadores automáticos</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Metadados preservados</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing Card -->
+                        <div class="pricing-card">
+                            <h3>
+                                <i class="fas fa-tag"></i>
+                                Preço da Conversão
+                            </h3>
+                            <div class="price-display">
+                                <span class="currency">R$</span>
+                                <span class="amount">5</span>
+                                <span class="period">,00</span>
+                            </div>
+                            <p class="price-description">
+                                Pagamento seguro via PIX. Processamento instantâneo após confirmação.
+                            </p>
+                            
+                            <div class="payment-features">
+                                <div class="payment-item">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>QR Code PIX automático</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Pagamento 100% seguro</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>Processamento instantâneo</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Related Tools -->
+                        <div class="related-tools">
+                            <h3>
+                                <i class="fas fa-tools"></i>
+                                Ferramentas Relacionadas
+                            </h3>
+                            
+                            <div class="tool-list">
+                                <a href="./pdf-to-text.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>PDF para Texto</h4>
+                                        <p>Extrair texto de PDFs</p>
+                                    </div>
+                                </a>
+                                
+                                <a href="./excel-to-pdf.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-excel"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>Excel para PDF</h4>
+                                        <p>Converter planilhas Excel</p>
+                                    </div>
+                                </a>
+                                
+                                <a href="./powerpoint-to-pdf.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-powerpoint"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>PowerPoint para PDF</h4>
+                                        <p>Converter apresentações</p>
+                                    </div>
+                                </a>
+                            </div>
+                            
+                            <a href="../index.html#tools" class="view-all-tools">
+                                <i class="fas fa-arrow-right"></i>
+                                Ver todas as ferramentas
+                            </a>
+                        </div>
+                        
+                        <!-- FAQ -->
+                        <div class="faq-section">
+                            <h3>
+                                <i class="fas fa-question-circle"></i>
+                                Perguntas Frequentes
+                            </h3>
+                            
+                            <div class="faq-list">
+                                <details class="faq-item">
+                                    <summary>Quais versões do Word são suportadas?</summary>
+                                    <p>Suportamos arquivos .doc (Word 97-2003) e .docx (Word 2007 e posteriores), incluindo Word 365.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>A formatação é preservada na conversão?</summary>
+                                    <p>Sim, mantemos 100% da formatação original incluindo fontes, cores, imagens, tabelas e layouts.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Posso proteger o PDF com senha?</summary>
+                                    <p>Sim, oferecemos opções de proteção com senha e restrições de edição e impressão.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Qual o tamanho máximo do arquivo?</summary>
+                                    <p>Suportamos documentos Word de até 50MB. Para arquivos maiores, entre em contato conosco.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Os arquivos ficam seguros?</summary>
+                                    <p>Sim, todos os arquivos são processados com criptografia e excluídos automaticamente após 24 horas.</p>
+                                </details>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <footer id="footer-container"></footer>
+    
+    <!-- Scripts -->
+    <script src="../components/common/NavbarTools.js"></script>
+    <script src="../components/common/FileUpload.js"></script>
+    <script src="../components/common/ConvertButton.js"></script>
+    <script src="../components/common/Footer.js"></script>
+    <script src="../utils/config.js"></script>
+    <script src="./word-to-pdf.js"></script>
+</body>
+</html>

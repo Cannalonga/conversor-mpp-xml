@@ -33,7 +33,7 @@
     "build": "npm ci --only=production",
     "build:docker": "docker build -f Dockerfile.scalable --target production -t conversor-app .",
     "build:worker": "docker build -f Dockerfile.scalable --target worker -t conversor-worker .",
-    "setup-dirs": "powershell -Command \"New-Item -ItemType Directory -Force uploads\\incoming, uploads\\processing, uploads\\converted, uploads\\expired, uploads\\quarantine, logs, temp, backups, src\\logs, infra\\prometheus\\data, infra\\grafana\\data\"",
+    "setup-dirs": "node scripts/setup-dirs.js",
     "cleanup": "node scripts/cleanup.js",
     "syntax-check": "node scripts/syntax-check.js",
     "security-audit": "node scripts/security-audit.js",

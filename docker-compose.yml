@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # Main API Service
   mpp-converter:
     build: .
     ports:
@@ -27,6 +28,136 @@ services:
         reservations:
           memory: 256M
 
+  # FastAPI Service
+  fastapi-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.pdf
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - API_ENV=production
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./temp:/tmp/pdf_processing
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 512M
+
+  # PDF Worker Service
+  pdf-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.pdf
+    environment:
+      - PYTHONPATH=/app
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./temp:/tmp/pdf_processing
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - postgres
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1024M
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=conversor_enterprise
+      - POSTGRES_USER=conversor_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-super_secure_password_2023}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 512M
+
+  # MinIO for File Storage
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD:-minio_admin_2023}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Flower for Celery Monitoring
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile.pdf
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER=redis://redis:6379/0
+      - FLOWER_PORT=5555
+    command: python -m celery flower -A app.tasks --broker=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
   # Optional: Nginx reverse proxy for production
   nginx:
     image: nginx:alpine
@@ -38,6 +169,7 @@ services:
       - ./ssl:/etc/nginx/ssl
     depends_on:
       - mpp-converter
+      - fastapi-service
     restart: unless-stopped
     profiles:
       - production
@@ -45,3 +177,7 @@ services:
 volumes:
   uploads:
   logs:
+  redis_data:
+  postgres_data:
+  minio_data:
+  temp:

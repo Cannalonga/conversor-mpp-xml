@@ -1,0 +1,30 @@
+{
+  "name": "conversor-arquivos-frontend",
+  "version": "1.0.0",
+  "description": "Frontend para conversão de arquivos - MPP, PDF, DOCX, XLSX, Imagens",
+  "main": "src/index.html",
+  "scripts": {
+    "dev": "live-server src --port=3000 --no-browser",
+    "build": "npm run copy-files && npm run minify",
+    "copy-files": "cp -r src/* dist/",
+    "minify": "echo 'Build process completed'",
+    "serve": "live-server dist --port=3001"
+  },
+  "keywords": [
+    "conversor",
+    "pdf",
+    "mpp",
+    "docx",
+    "xlsx",
+    "file-conversion",
+    "frontend"
+  ],
+  "author": "Cannalonga",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "dependencies": {
+    "dropzone": "^5.9.3"
+  }
+}

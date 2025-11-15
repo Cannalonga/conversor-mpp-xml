@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste PDF Converter</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .upload-area { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 20px 0; }
+        .result { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .text-output { max-height: 300px; overflow-y: auto; background: white; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>🚀 PDF Text Extractor - TESTE PRODUÇÃO</h1>
+    
+    <div class="upload-area">
+        <h3>Selecionar arquivo PDF:</h3>
+        <input type="file" id="pdfFile" accept=".pdf">
+        <br><br>
+        <button onclick="convertPDF()">Extrair Texto do PDF</button>
+    </div>
+    
+    <div id="result" class="result" style="display: none;"></div>
+    
+    <div id="loading" style="display: none;">
+        <p>⏳ Processando PDF...</p>
+    </div>
+
+    <script>
+        async function convertPDF() {
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor, selecione um arquivo PDF!');
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch('http://localhost:8000/api/convert/pdf/text', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <h3>✅ Conversão Realizada com Sucesso!</h3>
+                        <p><strong>Arquivo:</strong> ${data.filename}</p>
+                        <p><strong>Tamanho:</strong> ${(data.file_size / 1024).toFixed(1)} KB</p>
+                        <p><strong>Texto extraído:</strong> ${data.text_length} caracteres</p>
+                        <p><strong>ID:</strong> ${data.conversion_id}</p>
+                        <p><strong>Preço:</strong> ${data.price}</p>
+                        <div class="text-output">
+                            <h4>Texto extraído:</h4>
+                            <pre>${data.extracted_text}</pre>
+                        </div>
+                    `;
+                    result.style.display = 'block';
+                } else {
+                    result.innerHTML = `<h3>❌ Erro na conversão</h3><p>${data.detail || data.message}</p>`;
+                    result.style.display = 'block';
+                }
+                
+            } catch (error) {
+                result.innerHTML = `<h3>❌ Erro de conexão</h3><p>${error.message}</p>`;
+                result.style.display = 'block';
+            }
+            
+            loading.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

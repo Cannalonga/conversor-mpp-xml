@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF para Texto - Extração Profissional | ConversorPro</title>
+    <meta name="description" content="Converta PDF para texto de forma rápida e precisa. Extraia todo o conteúdo textual dos seus documentos PDF em segundos. R$ 3,00 por conversão.">
+    <meta name="keywords" content="pdf para texto, extrair texto pdf, conversão pdf, pdf to text, conversor pdf">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="../../styles/global.css">
+    <link rel="stylesheet" href="../../styles/navbar.css">
+    <link rel="stylesheet" href="../../styles/file-upload.css">
+    <link rel="stylesheet" href="../../styles/convert-page.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:text/html,📄" type="text/html">
+</head>
+<body>
+    <!-- Navigation -->
+    <div id="navbar-container"></div>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <header class="page-header">
+                <div class="header-content">
+                    <div class="header-icon">📄</div>
+                    <div class="header-text">
+                        <h1>PDF para Texto</h1>
+                        <p class="header-description">
+                            Extraia texto de arquivos PDF de forma rápida e precisa. 
+                            Nosso sistema processa documentos digitais e digitalizados com alta qualidade.
+                        </p>
+                        <div class="header-meta">
+                            <span class="meta-item">
+                                <span class="meta-icon">💰</span>
+                                <span>R$ 3,00</span>
+                            </span>
+                            <span class="meta-item">
+                                <span class="meta-icon">⚡</span>
+                                <span>Processamento rápido</span>
+                            </span>
+                            <span class="meta-item">
+                                <span class="meta-icon">🔒</span>
+                                <span>100% seguro</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-layout">
+                <!-- Conversion Form -->
+                <div class="conversion-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Selecione seu arquivo PDF</h2>
+                            <p class="card-subtitle">Arquivos até 40MB são aceitos</p>
+                        </div>
+
+                        <!-- File Upload Area -->
+                        <div id="file-upload-container"></div>
+
+                        <!-- Conversion Controls -->
+                        <div class="conversion-controls" id="conversion-controls" style="display: none;">
+                            <div class="controls-grid">
+                                <div class="control-item">
+                                    <label for="output-format">Formato de saída:</label>
+                                    <select id="output-format" class="form-select">
+                                        <option value="txt">Texto simples (.txt)</option>
+                                        <option value="formatted">Texto formatado</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="control-item">
+                                    <label for="encoding">Codificação:</label>
+                                    <select id="encoding" class="form-select">
+                                        <option value="utf-8">UTF-8</option>
+                                        <option value="ascii">ASCII</option>
+                                        <option value="latin-1">Latin-1</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="convert-button-container">
+                                <div id="convert-button-container"></div>
+                            </div>
+                        </div>
+
+                        <!-- Result Area -->
+                        <div class="result-section" id="result-section" style="display: none;">
+                            <h3>Resultado da Conversão</h3>
+                            <div id="result-content"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <!-- Tool Info -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📄 Sobre a Conversão</h3>
+                        </div>
+                        
+                        <div class="info-list">
+                            <div class="info-item">
+                                <div class="info-icon">✅</div>
+                                <div class="info-text">
+                                    <strong>Qualidade Alta</strong>
+                                    <span>Preserva formatação e estrutura do texto</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-icon">⚡</div>
+                                <div class="info-text">
+                                    <strong>Processamento Rápido</strong>
+                                    <span>Conversão em segundos</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-icon">🔒</div>
+                                <div class="info-text">
+                                    <strong>Totalmente Seguro</strong>
+                                    <span>Arquivos excluídos após processamento</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-icon">📱</div>
+                                <div class="info-text">
+                                    <strong>Todos os Dispositivos</strong>
+                                    <span>Funciona em desktop e mobile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📋 Como Usar</h3>
+                        </div>
+                        
+                        <div class="steps-list">
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-text">Selecione ou arraste seu arquivo PDF</div>
+                            </div>
+                            
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-text">Escolha o formato de saída desejado</div>
+                            </div>
+                            
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-text">Clique em "Converter" e aguarde</div>
+                            </div>
+                            
+                            <div class="step-item">
+                                <div class="step-number">4</div>
+                                <div class="step-text">Baixe o arquivo de texto gerado</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Related Tools -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🔗 Ferramentas Relacionadas</h3>
+                        </div>
+                        
+                        <div class="related-tools" id="related-tools">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>ConversorPro</h4>
+                    <p>Ferramentas profissionais de conversão de arquivos</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Ferramentas</h4>
+                    <ul>
+                        <li><a href="/convert/pdf-to-text">PDF para Texto</a></li>
+                        <li><a href="/convert/mpp-to-xml">MPP para XML</a></li>
+                        <li><a href="/convert/pdf-merge">Juntar PDFs</a></li>
+                        <li><a href="/convert/image-to-pdf">Imagem para PDF</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Suporte</h4>
+                    <ul>
+                        <li><a href="/help">Central de Ajuda</a></li>
+                        <li><a href="/contact">Contato</a></li>
+                        <li><a href="/privacy">Privacidade</a></li>
+                        <li><a href="/terms">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 ConversorPro. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../../utils/config.js"></script>
+    <script src="../../components/common/NavbarTools.js"></script>
+    <script src="../../components/common/FileUpload.js"></script>
+    <script src="../../components/common/ConvertButton.js"></script>
+    <script src="pdf-to-text.js"></script>
+</body>
+</html>

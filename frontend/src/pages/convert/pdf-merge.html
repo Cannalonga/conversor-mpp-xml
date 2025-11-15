@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juntar PDFs Online | Combinar Múltiplos PDFs</title>
+    <meta name="description" content="Junte múltiplos arquivos PDF em um único documento online. Ferramenta gratuita para combinar, organizar e mesclar PDFs de forma rápida e segura.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Juntar PDFs Online - Combinar Múltiplos PDFs">
+    <meta property="og:description" content="Combine vários arquivos PDF em um só documento. Ferramenta online profissional para juntar e organizar PDFs.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://conversor.com/convert/pdf-merge">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles/global.css">
+    <link rel="stylesheet" href="../styles/conversion.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Juntar PDFs Online",
+        "description": "Ferramenta online para combinar múltiplos arquivos PDF em um único documento",
+        "url": "https://conversor.com/convert/pdf-merge",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0.00",
+            "priceCurrency": "BRL"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar-container"></nav>
+    
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-text">
+                        <nav class="breadcrumb">
+                            <a href="../index.html">Início</a>
+                            <span class="separator">›</span>
+                            <a href="../index.html#tools">Conversores</a>
+                            <span class="separator">›</span>
+                            <span class="current">Juntar PDFs</span>
+                        </nav>
+                        
+                        <h1 class="page-title">
+                            <i class="fas fa-file-pdf page-icon"></i>
+                            Juntar PDFs
+                        </h1>
+                        
+                        <p class="page-description">
+                            Combine múltiplos arquivos PDF em um único documento. 
+                            Organize a ordem dos arquivos, mantenha a qualidade original e baixe o resultado instantaneamente.
+                        </p>
+                        
+                        <div class="page-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>Múltiplos PDFs</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-layer-group"></i>
+                                <span>PDF Combinado</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Processamento rápido</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>100% seguro</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-visual">
+                        <div class="conversion-preview">
+                            <div class="file-preview input-preview multiple">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>múltiplos.pdf</span>
+                            </div>
+                            <div class="conversion-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="file-preview output-preview">
+                                <i class="fas fa-layer-group"></i>
+                                <span>combinado.pdf</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="container">
+                <div class="content-grid">
+                    <!-- Conversion Area -->
+                    <section class="conversion-section">
+                        <div class="conversion-card">
+                            <!-- File Upload -->
+                            <div id="file-upload-container"></div>
+                            
+                            <!-- File List -->
+                            <div class="file-list" id="file-list" style="display: none;">
+                                <div class="file-list-header">
+                                    <h3>
+                                        <i class="fas fa-list"></i>
+                                        Arquivos Selecionados
+                                    </h3>
+                                    <span class="file-count">0 arquivos</span>
+                                </div>
+                                <div class="file-items" id="file-items"></div>
+                            </div>
+                            
+                            <!-- Conversion Options -->
+                            <div class="conversion-options" id="conversion-options" style="display: none;">
+                                <h3>
+                                    <i class="fas fa-cogs"></i>
+                                    Opções de Mesclagem
+                                </h3>
+                                
+                                <div class="options-grid">
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-sort"></i>
+                                            Ordem dos Arquivos
+                                        </label>
+                                        <select name="merge-order" class="select-input">
+                                            <option value="original">Ordem original de seleção</option>
+                                            <option value="alphabetical">Ordem alfabética (A-Z)</option>
+                                            <option value="alphabetical-desc">Ordem alfabética (Z-A)</option>
+                                            <option value="custom">Ordem personalizada</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-file-signature"></i>
+                                            Nome do Arquivo Final
+                                        </label>
+                                        <input type="text" name="output-filename" class="text-input" placeholder="documento-combinado" value="documento-combinado">
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-bookmark"></i>
+                                            Marcadores (Bookmarks)
+                                        </label>
+                                        <select name="bookmarks-handling" class="select-input">
+                                            <option value="preserve">Preservar marcadores originais</option>
+                                            <option value="create-files">Criar marcador por arquivo</option>
+                                            <option value="remove">Remover todos os marcadores</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-file-contract"></i>
+                                            Páginas a Incluir
+                                        </label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="include-all-pages" checked>
+                                                <span class="checkmark"></span>
+                                                Incluir todas as páginas
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="add-page-numbers">
+                                                <span class="checkmark"></span>
+                                                Adicionar numeração de páginas
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="add-file-headers">
+                                                <span class="checkmark"></span>
+                                                Adicionar nome do arquivo como cabeçalho
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Convert Button -->
+                            <div id="convert-button-container"></div>
+                            
+                            <!-- Progress -->
+                            <div class="progress-section" id="progress-section" style="display: none;">
+                                <div class="progress-header">
+                                    <h4>
+                                        <i class="fas fa-sync fa-spin"></i>
+                                        Combinando arquivos PDF...
+                                    </h4>
+                                    <span class="progress-percentage">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="step active" data-step="1">
+                                        <i class="fas fa-upload"></i>
+                                        <span>Upload</span>
+                                    </div>
+                                    <div class="step" data-step="2">
+                                        <i class="fas fa-sort"></i>
+                                        <span>Organizando</span>
+                                    </div>
+                                    <div class="step" data-step="3">
+                                        <i class="fas fa-layer-group"></i>
+                                        <span>Combinando</span>
+                                    </div>
+                                    <div class="step" data-step="4">
+                                        <i class="fas fa-download"></i>
+                                        <span>Pronto</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Results -->
+                            <div class="results-section" id="results-section" style="display: none;">
+                                <div class="results-header">
+                                    <h4>
+                                        <i class="fas fa-check-circle success"></i>
+                                        PDFs Combinados com Sucesso!
+                                    </h4>
+                                    <p>Seus arquivos PDF foram unidos em um único documento.</p>
+                                </div>
+                                
+                                <div class="results-content">
+                                    <div class="file-result">
+                                        <div class="file-info">
+                                            <div class="file-icon">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </div>
+                                            <div class="file-details">
+                                                <h5 id="output-filename">documento-combinado.pdf</h5>
+                                                <div class="file-meta">
+                                                    <span id="output-size">5.8 MB</span>
+                                                    <span class="separator">•</span>
+                                                    <span id="merge-time">1.3s</span>
+                                                    <span class="separator">•</span>
+                                                    <span class="quality excellent">Qualidade preservada</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="file-actions">
+                                            <button class="btn btn-primary" id="download-btn">
+                                                <i class="fas fa-download"></i>
+                                                Download PDF
+                                            </button>
+                                            <button class="btn btn-secondary" id="preview-btn">
+                                                <i class="fas fa-eye"></i>
+                                                Visualizar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="conversion-stats">
+                                        <div class="stat-item">
+                                            <i class="fas fa-file-pdf"></i>
+                                            <span class="stat-label">Arquivos</span>
+                                            <span class="stat-value" id="files-count">3</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-file-alt"></i>
+                                            <span class="stat-label">Total Páginas</span>
+                                            <span class="stat-value" id="total-pages">24</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-compress"></i>
+                                            <span class="stat-label">Compressão</span>
+                                            <span class="stat-value" id="compression-ratio">15%</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-bookmark"></i>
+                                            <span class="stat-label">Marcadores</span>
+                                            <span class="stat-value" id="bookmarks-count">5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="results-actions">
+                                    <button class="btn btn-outline" id="merge-more-btn">
+                                        <i class="fas fa-plus"></i>
+                                        Juntar Mais PDFs
+                                    </button>
+                                    <button class="btn btn-outline" id="share-btn">
+                                        <i class="fas fa-share"></i>
+                                        Compartilhar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- PDF Preview Modal -->
+                            <div class="modal" id="preview-modal" style="display: none;">
+                                <div class="modal-content large">
+                                    <div class="modal-header">
+                                        <h4>
+                                            <i class="fas fa-file-pdf"></i>
+                                            Prévia do PDF Combinado
+                                        </h4>
+                                        <button class="modal-close" id="close-preview">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="pdf-preview-container">
+                                            <div class="pdf-preview-info">
+                                                <div class="preview-stats">
+                                                    <div class="stat">
+                                                        <span class="label">Páginas:</span>
+                                                        <span class="value" id="preview-pages">24</span>
+                                                    </div>
+                                                    <div class="stat">
+                                                        <span class="label">Tamanho:</span>
+                                                        <span class="value" id="preview-size">5.8 MB</span>
+                                                    </div>
+                                                    <div class="stat">
+                                                        <span class="label">Arquivos unidos:</span>
+                                                        <span class="value" id="preview-files">3</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="pdf-preview-placeholder">
+                                                <i class="fas fa-file-pdf"></i>
+                                                <h5>PDF Combinado Pronto</h5>
+                                                <p>Seu arquivo foi criado com sucesso e está pronto para download.</p>
+                                                <div class="preview-file-list" id="preview-file-list">
+                                                    <!-- File list will be populated by JS -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Sidebar -->
+                    <aside class="conversion-sidebar">
+                        <!-- Info Card -->
+                        <div class="info-card">
+                            <h3>
+                                <i class="fas fa-info-circle"></i>
+                                Sobre Juntar PDFs
+                            </h3>
+                            <p>
+                                Combine múltiplos arquivos PDF em um único documento organizado. 
+                                Perfeito para consolidar relatórios, apresentações e documentos relacionados.
+                            </p>
+                            
+                            <div class="info-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Preserva qualidade original dos PDFs</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Reordena arquivos conforme necessário</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Mantém marcadores e metadados</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Processamento rápido e seguro</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing Card -->
+                        <div class="pricing-card">
+                            <h3>
+                                <i class="fas fa-gift"></i>
+                                Ferramenta Gratuita
+                            </h3>
+                            <div class="price-display">
+                                <span class="currency">R$</span>
+                                <span class="amount">0</span>
+                                <span class="period">,00</span>
+                            </div>
+                            <p class="price-description">
+                                Use nossa ferramenta de juntar PDFs gratuitamente. Sem limites de uso ou restrições.
+                            </p>
+                            
+                            <div class="payment-features">
+                                <div class="payment-item">
+                                    <i class="fas fa-infinity"></i>
+                                    <span>Uso ilimitado</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Totalmente seguro</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-zap"></i>
+                                    <span>Processamento instantâneo</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Related Tools -->
+                        <div class="related-tools">
+                            <h3>
+                                <i class="fas fa-tools"></i>
+                                Ferramentas de PDF
+                            </h3>
+                            
+                            <div class="tool-list">
+                                <a href="./pdf-to-text.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>PDF para Texto</h4>
+                                        <p>Extrair texto de PDFs</p>
+                                    </div>
+                                </a>
+                                
+                                <a href="./pdf-split.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-cut"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>Dividir PDF</h4>
+                                        <p>Separar páginas de PDF</p>
+                                    </div>
+                                </a>
+                                
+                                <a href="./pdf-compress.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-compress"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>Comprimir PDF</h4>
+                                        <p>Reduzir tamanho do PDF</p>
+                                    </div>
+                                </a>
+                            </div>
+                            
+                            <a href="../index.html#tools" class="view-all-tools">
+                                <i class="fas fa-arrow-right"></i>
+                                Ver todas as ferramentas
+                            </a>
+                        </div>
+                        
+                        <!-- FAQ -->
+                        <div class="faq-section">
+                            <h3>
+                                <i class="fas fa-question-circle"></i>
+                                Perguntas Frequentes
+                            </h3>
+                            
+                            <div class="faq-list">
+                                <details class="faq-item">
+                                    <summary>Quantos PDFs posso juntar de uma vez?</summary>
+                                    <p>Você pode combinar até 50 arquivos PDF em uma única operação, respeitando o limite total de 200MB.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>A qualidade dos PDFs é preservada?</summary>
+                                    <p>Sim, mantemos a qualidade original de todos os documentos. Não há compressão adicional a menos que solicitado.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Posso alterar a ordem dos arquivos?</summary>
+                                    <p>Sim, você pode arrastar e soltar os arquivos para reorganizá-los na ordem desejada antes de combiná-los.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Os arquivos ficam seguros?</summary>
+                                    <p>Todos os arquivos são processados com segurança e excluídos automaticamente após 1 hora.</p>
+                                </details>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <footer id="footer-container"></footer>
+    
+    <!-- Scripts -->
+    <script src="../components/common/NavbarTools.js"></script>
+    <script src="../components/common/FileUpload.js"></script>
+    <script src="../components/common/ConvertButton.js"></script>
+    <script src="../components/common/Footer.js"></script>
+    <script src="../utils/config.js"></script>
+    <script src="./pdf-merge.js"></script>
+</body>
+</html>

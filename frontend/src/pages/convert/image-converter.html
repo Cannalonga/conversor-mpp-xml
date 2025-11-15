@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Imagens Online | JPG PNG WEBP SVG</title>
+    <meta name="description" content="Converta imagens entre diferentes formatos online (JPG, PNG, WEBP, SVG, GIF, BMP, TIFF). Conversão em lote, redimensionamento, compressão e qualidade ajustável. R$ 2,00 por imagem.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Conversor de Imagens Online - JPG, PNG, WEBP, SVG">
+    <meta property="og:description" content="Converta imagens entre formatos rapidamente. Ferramenta online profissional para conversão, redimensionamento e compressão de imagens.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://conversor.com/convert/image-converter">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles/global.css">
+    <link rel="stylesheet" href="../styles/conversion.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Conversor de Imagens",
+        "description": "Ferramenta online para converter imagens entre diferentes formatos (JPG, PNG, WEBP, SVG, GIF, BMP, TIFF)",
+        "url": "https://conversor.com/convert/image-converter",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "2.00",
+            "priceCurrency": "BRL"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar-container"></nav>
+    
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-text">
+                        <nav class="breadcrumb">
+                            <a href="../index.html">Início</a>
+                            <span class="separator">›</span>
+                            <a href="../index.html#tools">Conversores</a>
+                            <span class="separator">›</span>
+                            <span class="current">Conversor de Imagens</span>
+                        </nav>
+                        
+                        <h1 class="page-title">
+                            <i class="fas fa-image page-icon"></i>
+                            Conversor de Imagens
+                        </h1>
+                        
+                        <p class="page-description">
+                            Converta suas imagens entre diferentes formatos (JPG, PNG, WEBP, SVG, GIF, BMP, TIFF). 
+                            Redimensione, comprima e otimize suas imagens com qualidade profissional.
+                        </p>
+                        
+                        <div class="page-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-images"></i>
+                                <span>Múltiplos formatos</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                                <span>Redimensionamento</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Conversão instantânea</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>100% seguro</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-visual">
+                        <div class="conversion-preview">
+                            <div class="file-preview input-preview">
+                                <i class="fas fa-image"></i>
+                                <span>imagem.jpg</span>
+                            </div>
+                            <div class="conversion-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="file-preview output-preview">
+                                <i class="fas fa-file-image"></i>
+                                <span>imagem.webp</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="container">
+                <div class="content-grid">
+                    <!-- Conversion Area -->
+                    <section class="conversion-section">
+                        <div class="conversion-card">
+                            <!-- File Upload -->
+                            <div id="file-upload-container"></div>
+                            
+                            <!-- Image Preview Gallery -->
+                            <div class="image-preview-section" id="image-preview-section" style="display: none;">
+                                <h3>
+                                    <i class="fas fa-eye"></i>
+                                    Pré-visualização das Imagens
+                                </h3>
+                                <div class="image-gallery" id="image-gallery"></div>
+                                <div class="gallery-info">
+                                    <span id="total-images">0 imagens selecionadas</span>
+                                    <span class="separator">•</span>
+                                    <span id="total-size">0 MB</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Conversion Options -->
+                            <div class="conversion-options" id="conversion-options" style="display: none;">
+                                <h3>
+                                    <i class="fas fa-cogs"></i>
+                                    Opções de Conversão
+                                </h3>
+                                
+                                <div class="options-grid">
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-file-export"></i>
+                                            Formato de Saída
+                                        </label>
+                                        <select name="output-format" class="select-input">
+                                            <option value="jpg">JPG - Melhor para fotos</option>
+                                            <option value="png">PNG - Melhor para transparência</option>
+                                            <option value="webp">WEBP - Melhor compressão</option>
+                                            <option value="svg">SVG - Vetorial escalável</option>
+                                            <option value="gif">GIF - Animações simples</option>
+                                            <option value="bmp">BMP - Sem compressão</option>
+                                            <option value="tiff">TIFF - Alta qualidade</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group" id="quality-group">
+                                        <label>
+                                            <i class="fas fa-sliders-h"></i>
+                                            Qualidade da Imagem
+                                            <span class="quality-value">85%</span>
+                                        </label>
+                                        <input type="range" name="image-quality" min="10" max="100" value="85" class="range-input">
+                                        <div class="range-labels">
+                                            <span>Menor tamanho</span>
+                                            <span>Melhor qualidade</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-expand-arrows-alt"></i>
+                                            Redimensionamento
+                                        </label>
+                                        <select name="resize-mode" class="select-input">
+                                            <option value="none">Manter tamanho original</option>
+                                            <option value="percentage">Por porcentagem</option>
+                                            <option value="dimensions">Dimensões personalizadas</option>
+                                            <option value="preset">Tamanhos predefinidos</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="option-group" id="resize-options" style="display: none;">
+                                        <div class="resize-controls">
+                                            <div class="dimension-input">
+                                                <label>Largura</label>
+                                                <input type="number" name="width" placeholder="1920">
+                                                <span class="unit">px</span>
+                                            </div>
+                                            <div class="dimension-input">
+                                                <label>Altura</label>
+                                                <input type="number" name="height" placeholder="1080">
+                                                <span class="unit">px</span>
+                                            </div>
+                                        </div>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="maintain-aspect" checked>
+                                            <span class="checkmark"></span>
+                                            Manter proporção
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="option-group" id="background-group" style="display: none;">
+                                        <label>
+                                            <i class="fas fa-palette"></i>
+                                            Cor de Fundo (para transparências)
+                                        </label>
+                                        <div class="color-picker-container">
+                                            <input type="color" name="background-color" value="#ffffff" class="color-picker">
+                                            <span class="color-label">Branco</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="option-group">
+                                        <label>
+                                            <i class="fas fa-cog"></i>
+                                            Opções Avançadas
+                                        </label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-item" id="progressive-option" style="display: none;">
+                                                <input type="checkbox" name="progressive-jpeg">
+                                                <span class="checkmark"></span>
+                                                JPEG progressivo
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="preserve-metadata">
+                                                <span class="checkmark"></span>
+                                                Preservar metadados EXIF
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="optimize">
+                                                <span class="checkmark"></span>
+                                                Otimizar para web
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Convert Button -->
+                            <div id="convert-button-container"></div>
+                            
+                            <!-- Progress -->
+                            <div class="progress-section" id="progress-section" style="display: none;">
+                                <div class="progress-header">
+                                    <h4>
+                                        <i class="fas fa-sync fa-spin"></i>
+                                        Convertendo imagens...
+                                    </h4>
+                                    <span class="progress-percentage">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="step active" data-step="1">
+                                        <i class="fas fa-upload"></i>
+                                        <span>Upload</span>
+                                    </div>
+                                    <div class="step" data-step="2">
+                                        <i class="fas fa-image"></i>
+                                        <span>Processando</span>
+                                    </div>
+                                    <div class="step" data-step="3">
+                                        <i class="fas fa-magic"></i>
+                                        <span>Convertendo</span>
+                                    </div>
+                                    <div class="step" data-step="4">
+                                        <i class="fas fa-download"></i>
+                                        <span>Pronto</span>
+                                    </div>
+                                </div>
+                                <div class="batch-progress" id="batch-progress" style="display: none;">
+                                    <p>Processando imagem <span id="current-image">1</span> de <span id="total-images-count">5</span></p>
+                                    <div class="current-file" id="current-file">imagem1.jpg</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Results -->
+                            <div class="results-section" id="results-section" style="display: none;">
+                                <div class="results-header">
+                                    <h4>
+                                        <i class="fas fa-check-circle success"></i>
+                                        Conversão Concluída!
+                                    </h4>
+                                    <p>Suas imagens foram convertidas com sucesso.</p>
+                                </div>
+                                
+                                <div class="results-content">
+                                    <div class="results-gallery" id="results-gallery"></div>
+                                    
+                                    <div class="conversion-stats">
+                                        <div class="stat-item">
+                                            <i class="fas fa-images"></i>
+                                            <span class="stat-label">Imagens</span>
+                                            <span class="stat-value" id="converted-count">5</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-compress"></i>
+                                            <span class="stat-label">Redução</span>
+                                            <span class="stat-value" id="size-reduction">65%</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span class="stat-label">Tempo</span>
+                                            <span class="stat-value" id="conversion-time">3.2s</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-star"></i>
+                                            <span class="stat-label">Qualidade</span>
+                                            <span class="stat-value excellent">Excelente</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="results-actions">
+                                    <button class="btn btn-primary" id="download-all-btn">
+                                        <i class="fas fa-download"></i>
+                                        Download Todas (ZIP)
+                                    </button>
+                                    <button class="btn btn-outline" id="convert-another-btn">
+                                        <i class="fas fa-plus"></i>
+                                        Converter Outras Imagens
+                                    </button>
+                                    <button class="btn btn-outline" id="share-btn">
+                                        <i class="fas fa-share"></i>
+                                        Compartilhar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Sidebar -->
+                    <aside class="sidebar">
+                        <!-- Info Card -->
+                        <div class="info-card">
+                            <h3>
+                                <i class="fas fa-info-circle"></i>
+                                Sobre Conversão de Imagens
+                            </h3>
+                            <p>
+                                Converta suas imagens entre diferentes formatos com qualidade profissional. 
+                                Suporte para redimensionamento, compressão e otimização para web.
+                            </p>
+                            
+                            <div class="info-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Suporte a 7+ formatos de imagem</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Conversão em lote de múltiplas imagens</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Redimensionamento inteligente</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Preservação da qualidade</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Compressão otimizada</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check"></i>
+                                    <span>Suporte para transparência</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing Card -->
+                        <div class="pricing-card">
+                            <h3>
+                                <i class="fas fa-tag"></i>
+                                Preço da Conversão
+                            </h3>
+                            <div class="price-display">
+                                <span class="currency">R$</span>
+                                <span class="amount">2</span>
+                                <span class="period">,00</span>
+                            </div>
+                            <p class="price-description">
+                                Por imagem convertida. Pagamento seguro via PIX. Processamento instantâneo.
+                            </p>
+                            
+                            <div class="payment-features">
+                                <div class="payment-item">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>QR Code PIX automático</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Pagamento 100% seguro</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>Processamento instantâneo</span>
+                                </div>
+                                <div class="payment-item">
+                                    <i class="fas fa-images"></i>
+                                    <span>Desconto em lote (5+ imagens)</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Format Guide -->
+                        <div class="format-guide">
+                            <h3>
+                                <i class="fas fa-list-ul"></i>
+                                Guia de Formatos
+                            </h3>
+                            
+                            <div class="format-list">
+                                <div class="format-item">
+                                    <div class="format-icon jpg">JPG</div>
+                                    <div class="format-info">
+                                        <h4>JPEG</h4>
+                                        <p>Ideal para fotos e imagens com muitas cores</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="format-item">
+                                    <div class="format-icon png">PNG</div>
+                                    <div class="format-info">
+                                        <h4>PNG</h4>
+                                        <p>Melhor para transparência e qualidade</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="format-item">
+                                    <div class="format-icon webp">WEBP</div>
+                                    <div class="format-info">
+                                        <h4>WebP</h4>
+                                        <p>Formato moderno com melhor compressão</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="format-item">
+                                    <div class="format-icon svg">SVG</div>
+                                    <div class="format-info">
+                                        <h4>SVG</h4>
+                                        <p>Vetorial, escalável sem perda de qualidade</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Related Tools -->
+                        <div class="related-tools">
+                            <h3>
+                                <i class="fas fa-tools"></i>
+                                Ferramentas Relacionadas
+                            </h3>
+                            
+                            <div class="tool-list">
+                                <a href="./pdf-to-text.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>PDF para Texto</h4>
+                                        <p>Extrair texto de PDFs</p>
+                                    </div>
+                                </a>
+                                
+                                <a href="./word-to-pdf.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-file-word"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>Word para PDF</h4>
+                                        <p>Converter documentos Word</p>
+                                    </div>
+                                </a>
+                                
+                                <a href="./pdf-merge.html" class="tool-item">
+                                    <div class="tool-icon">
+                                        <i class="fas fa-copy"></i>
+                                    </div>
+                                    <div class="tool-info">
+                                        <h4>Unir PDFs</h4>
+                                        <p>Combinar múltiplos PDFs</p>
+                                    </div>
+                                </a>
+                            </div>
+                            
+                            <a href="../index.html#tools" class="view-all-tools">
+                                <i class="fas fa-arrow-right"></i>
+                                Ver todas as ferramentas
+                            </a>
+                        </div>
+                        
+                        <!-- FAQ -->
+                        <div class="faq-section">
+                            <h3>
+                                <i class="fas fa-question-circle"></i>
+                                Perguntas Frequentes
+                            </h3>
+                            
+                            <div class="faq-list">
+                                <details class="faq-item">
+                                    <summary>Quais formatos de imagem são suportados?</summary>
+                                    <p>Suportamos JPG, PNG, WEBP, SVG, GIF, BMP e TIFF tanto para entrada quanto para saída.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Posso converter múltiplas imagens ao mesmo tempo?</summary>
+                                    <p>Sim! Nossa ferramenta suporta conversão em lote. Selecione várias imagens e converta todas de uma vez.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>A qualidade das imagens é preservada?</summary>
+                                    <p>Sim, você pode ajustar a qualidade de 10% a 100%. Recomendamos 85% para um equilíbrio ideal entre qualidade e tamanho.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>Qual o tamanho máximo de arquivo suportado?</summary>
+                                    <p>Suportamos imagens de até 50MB cada. Para arquivos maiores, entre em contato conosco.</p>
+                                </details>
+                                
+                                <details class="faq-item">
+                                    <summary>As imagens convertidas mantêm os metadados?</summary>
+                                    <p>Você pode escolher preservar ou remover os metadados EXIF durante a conversão.</p>
+                                </details>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Preview Modal -->
+    <div class="modal" id="image-preview-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-search-plus"></i>
+                    Comparação Antes/Depois
+                </h3>
+                <button class="close-btn" id="close-preview">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="image-comparison">
+                    <div class="comparison-item">
+                        <h4>Original</h4>
+                        <div class="image-container">
+                            <img id="original-preview" src="" alt="Imagem original">
+                            <div class="image-info">
+                                <span id="original-format">JPG</span>
+                                <span id="original-size">2.3 MB</span>
+                                <span id="original-dimensions">1920x1080</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h4>Convertida</h4>
+                        <div class="image-container">
+                            <img id="converted-preview" src="" alt="Imagem convertida">
+                            <div class="image-info">
+                                <span id="converted-format">WEBP</span>
+                                <span id="converted-size">1.2 MB</span>
+                                <span id="converted-dimensions">1920x1080</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer id="footer-container"></footer>
+    
+    <!-- Scripts -->
+    <script src="../components/common/NavbarTools.js"></script>
+    <script src="../components/common/FileUpload.js"></script>
+    <script src="../components/common/ConvertButton.js"></script>
+    <script src="../components/common/Footer.js"></script>
+    <script src="../utils/config.js"></script>
+    <script src="./image-converter.js"></script>
+</body>
+</html>
