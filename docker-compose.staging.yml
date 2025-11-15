@@ -1,0 +1,269 @@
+version: '3.8'
+
+# Conversor MPP-XML - Staging Environment
+# Configuração para ambiente de staging/desenvolvimento
+# Deploy automático via .github/workflows/deploy-staging.yml
+
+services:
+  app:
+    image: ${IMAGE_NAME:-ghcr.io/cannalonga/conversor-mpp-xml}:${IMAGE_TAG:-latest}
+    container_name: conversor-app-staging
+    restart: unless-stopped
+    
+    environment:
+      # App config
+      - NODE_ENV=staging
+      - PORT=3000
+      - INSTANCE_TYPE=staging
+      - LOG_LEVEL=debug
+      - DEBUG_ENABLED=true
+      
+      # Database (staging)
+      - DATABASE_URL=${STAGING_DATABASE_URL:-${DATABASE_URL}}
+      
+      # Mercado Pago (sandbox)
+      - MP_ACCESS_TOKEN=${MP_TEST_ACCESS_TOKEN:-${MP_ACCESS_TOKEN}}
+      - MP_PUBLIC_KEY=${MP_TEST_PUBLIC_KEY:-${MP_PUBLIC_KEY}}
+      - MP_WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - MP_SANDBOX_MODE=true
+      
+      # Storage (staging bucket)
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=conversions-staging
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/2
+      - REDIS_QUEUE_PREFIX=staging:
+      
+      # Security (relaxed for testing)
+      - SESSION_SECRET=${SESSION_SECRET:-staging-secret-key}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+      - RATE_LIMIT_ENABLED=false
+      
+      # Email (optional for staging)
+      - SMTP_HOST=${STAGING_SMTP_HOST:-${SMTP_HOST}}
+      - SMTP_USER=${STAGING_SMTP_USER:-${SMTP_USER}}
+      - SMTP_PASSWORD=${STAGING_SMTP_PASSWORD:-${SMTP_PASSWORD}}
+      
+      # Monitoring
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PREFIX=staging_
+    
+    ports:
+      - "3000:3000"
+    
+    networks:
+      - staging-network
+      - monitoring
+    
+    volumes:
+      - /tmp/conversor-staging:/tmp/uploads
+      - ./logs/staging:/app/logs
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  worker:
+    image: ${IMAGE_NAME:-ghcr.io/cannalonga/conversor-mpp-xml}:${IMAGE_TAG:-latest}
+    container_name: conversor-worker-staging
+    restart: unless-stopped
+    
+    command: ["node", "worker.js"]
+    
+    environment:
+      # Worker config
+      - NODE_ENV=staging
+      - WORKER_ID=staging-worker
+      - WORKER_TYPE=staging
+      - WORKER_CONCURRENCY=2
+      - MAX_CONVERSION_TIME=300
+      - WORKER_MEMORY_LIMIT=768
+      
+      # Database
+      - DATABASE_URL=${STAGING_DATABASE_URL:-${DATABASE_URL}}
+      
+      # Storage
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=conversions-staging
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/2
+      - REDIS_QUEUE_PREFIX=staging:
+      - REDIS_QUEUE_NAME=staging:conversions
+      
+      # Monitoring
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PREFIX=staging_worker_
+    
+    networks:
+      - staging-network
+      - monitoring
+    
+    volumes:
+      - /tmp/conversor-staging:/tmp/uploads
+      - ./logs/staging:/app/logs
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '0.75'
+        reservations:
+          memory: 384M
+          cpus: '0.25'
+
+  redis:
+    image: redis:7-alpine
+    container_name: conversor-redis-staging
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    
+    ports:
+      - "6379:6379"
+    
+    networks:
+      - staging-network
+    
+    volumes:
+      - redis-staging-data:/data
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: conversor-postgres-staging
+    restart: unless-stopped
+    
+    environment:
+      - POSTGRES_DB=conversor_staging
+      - POSTGRES_USER=conversor_staging
+      - POSTGRES_PASSWORD=${STAGING_POSTGRES_PASSWORD:-staging123}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C
+    
+    ports:
+      - "5432:5432"
+    
+    networks:
+      - staging-network
+    
+    volumes:
+      - postgres-staging-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conversor_staging -d conversor_staging"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Monitoramento simplificado para staging
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: conversor-prometheus-staging
+    restart: unless-stopped
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=7d'
+    
+    ports:
+      - "9090:9090"
+    
+    networks:
+      - monitoring
+    
+    volumes:
+      - ./monitoring/prometheus-staging.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-staging-data:/prometheus
+    
+    depends_on:
+      - app
+      - worker
+
+  # Nginx para servir arquivos estáticos e proxy
+  nginx:
+    image: nginx:alpine
+    container_name: conversor-nginx-staging
+    restart: unless-stopped
+    
+    ports:
+      - "80:80"
+    
+    networks:
+      - staging-network
+    
+    volumes:
+      - ./config/nginx-staging.conf:/etc/nginx/nginx.conf:ro
+      - ./public:/usr/share/nginx/html/public:ro
+    
+    depends_on:
+      - app
+    
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis-staging-data:
+    driver: local
+  postgres-staging-data:
+    driver: local
+  prometheus-staging-data:
+    driver: local
+
+networks:
+  staging-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/24
+  
+  monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24

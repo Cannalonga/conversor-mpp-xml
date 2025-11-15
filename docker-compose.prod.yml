@@ -1,0 +1,453 @@
+version: '3.8'
+
+# Conversor MPP-XML - Production Deployment Configuration
+# Configuração para produção completa (100% do tráfego)
+# Usado por: .github/workflows/deploy-production.yml
+
+services:
+  app:
+    image: ${IMAGE_NAME:-ghcr.io/cannalonga/conversor-mpp-xml}:${IMAGE_TAG:-latest}
+    container_name: conversor-app-prod
+    restart: unless-stopped
+    
+    environment:
+      # App config
+      - NODE_ENV=production
+      - PORT=3000
+      - INSTANCE_TYPE=production
+      - LOG_LEVEL=info
+      
+      # Database
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # Mercado Pago
+      - MP_ACCESS_TOKEN=${MP_ACCESS_TOKEN}
+      - MP_PUBLIC_KEY=${MP_PUBLIC_KEY}
+      - MP_WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      
+      # Storage
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=conversions-prod
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_QUEUE_PREFIX=prod:
+      
+      # Security
+      - SESSION_SECRET=${SESSION_SECRET}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_WINDOW=900000
+      - RATE_LIMIT_MAX=100
+      
+      # Email notifications
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM=noreply@conversormpp.com
+      
+      # Monitoring
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PREFIX=prod_
+    
+    ports:
+      - "3000:3000"
+    
+    networks:
+      - conversor-network
+      - monitoring
+    
+    volumes:
+      - /tmp/conversor-prod:/tmp/uploads
+      - ./logs/prod:/app/logs
+      - ./backups:/app/backups:ro
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 5
+        window: 120s
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.conversor-prod.rule=Host(`conversormpp.com`)"
+      - "traefik.http.routers.conversor-prod.tls=true"
+      - "traefik.http.routers.conversor-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.services.conversor-prod.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.prod-ratelimit.ratelimit.burst=50"
+      - "traefik.http.middlewares.prod-ratelimit.ratelimit.average=10"
+      - "traefik.http.routers.conversor-prod.middlewares=prod-ratelimit"
+
+  # Múltiplos workers para alta disponibilidade
+  worker-1:
+    image: ${IMAGE_NAME:-ghcr.io/cannalonga/conversor-mpp-xml}:${IMAGE_TAG:-latest}
+    container_name: conversor-worker-1
+    restart: unless-stopped
+    
+    command: ["node", "worker.js"]
+    
+    environment:
+      # Worker config
+      - NODE_ENV=production
+      - WORKER_ID=worker-1
+      - WORKER_TYPE=production
+      - WORKER_CONCURRENCY=4
+      - MAX_CONVERSION_TIME=600
+      - WORKER_MEMORY_LIMIT=1536
+      
+      # Database
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # Storage
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=conversions-prod
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_QUEUE_PREFIX=prod:
+      - REDIS_QUEUE_NAME=prod:conversions
+      
+      # Monitoring
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PREFIX=prod_worker1_
+    
+    networks:
+      - conversor-network
+      - monitoring
+    
+    volumes:
+      - /tmp/conversor-prod:/tmp/uploads
+      - ./logs/prod:/app/logs
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "node", "-e", "const Redis = require('ioredis'); const redis = new Redis(process.env.REDIS_URL); redis.ping().then(() => process.exit(0)).catch(() => process.exit(1));"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+          cpus: '1.5'
+        reservations:
+          memory: 768M
+          cpus: '0.75'
+
+  worker-2:
+    image: ${IMAGE_NAME:-ghcr.io/cannalonga/conversor-mpp-xml}:${IMAGE_TAG:-latest}
+    container_name: conversor-worker-2
+    restart: unless-stopped
+    
+    command: ["node", "worker.js"]
+    
+    environment:
+      # Worker config
+      - NODE_ENV=production
+      - WORKER_ID=worker-2
+      - WORKER_TYPE=production
+      - WORKER_CONCURRENCY=4
+      - MAX_CONVERSION_TIME=600
+      - WORKER_MEMORY_LIMIT=1536
+      
+      # Database
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # Storage
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=conversions-prod
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_QUEUE_PREFIX=prod:
+      - REDIS_QUEUE_NAME=prod:conversions
+      
+      # Monitoring
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PREFIX=prod_worker2_
+    
+    networks:
+      - conversor-network
+      - monitoring
+    
+    volumes:
+      - /tmp/conversor-prod:/tmp/uploads
+      - ./logs/prod:/app/logs
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "node", "-e", "const Redis = require('ioredis'); const redis = new Redis(process.env.REDIS_URL); redis.ping().then(() => process.exit(0)).catch(() => process.exit(1));"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+          cpus: '1.5'
+        reservations:
+          memory: 768M
+          cpus: '0.75'
+
+  # Infraestrutura compartilhada
+  redis:
+    image: redis:7-alpine
+    container_name: conversor-redis-prod
+    restart: unless-stopped
+    
+    command: redis-server /usr/local/etc/redis/redis.conf
+    
+    ports:
+      - "6379:6379"
+    
+    networks:
+      - conversor-network
+      - monitoring
+    
+    volumes:
+      - redis-data:/data
+      - ./config/redis-prod.conf:/usr/local/etc/redis/redis.conf:ro
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: conversor-postgres-prod
+    restart: unless-stopped
+    
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-conversor}
+      - POSTGRES_USER=${POSTGRES_USER:-conversor}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    
+    ports:
+      - "5432:5432"
+    
+    networks:
+      - conversor-network
+      - monitoring
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./backups:/backups
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-conversor} -d ${POSTGRES_DB:-conversor}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # Load balancer / Reverse proxy
+  traefik:
+    image: traefik:v3.0
+    container_name: conversor-traefik
+    restart: unless-stopped
+    
+    command:
+      - --api.dashboard=false
+      - --api.insecure=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=admin@conversormpp.com
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --global.sendanonymoususage=false
+      - --log.level=WARN
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    networks:
+      - conversor-network
+    
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./acme.json:/acme.json
+    
+    depends_on:
+      - app
+    
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
+  # Monitoramento produção
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: conversor-prometheus-prod
+    restart: unless-stopped
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.external-url=http://conversormpp.com:9090/'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+    
+    ports:
+      - "9090:9090"
+    
+    networks:
+      - monitoring
+    
+    volumes:
+      - ./monitoring/prometheus-prod.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/rules/:/etc/prometheus/rules/:ro
+      - prometheus-data:/prometheus
+    
+    depends_on:
+      - app
+      - worker-1
+      - worker-2
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: conversor-grafana-prod
+    restart: unless-stopped
+    
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+      - GF_SERVER_DOMAIN=conversormpp.com
+      - GF_SERVER_ROOT_URL=http://conversormpp.com:3000/grafana/
+    
+    ports:
+      - "3000:3000"
+    
+    networks:
+      - monitoring
+    
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    
+    depends_on:
+      - prometheus
+
+  # Backup automático
+  backup:
+    image: postgres:15-alpine
+    container_name: conversor-backup
+    restart: "no"
+    
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-conversor}
+      - POSTGRES_USER=${POSTGRES_USER:-conversor}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - BACKUP_SCHEDULE=0 2 * * *
+    
+    networks:
+      - conversor-network
+    
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    
+    entrypoint: ["/backup.sh"]
+    
+    depends_on:
+      - postgres
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  conversor-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/24
+  
+  monitoring:
+    driver: bridge
+    ipam:
+      driver: default  
+      config:
+        - subnet: 172.22.0.0/24

@@ -1,0 +1,246 @@
+version: '3.8'
+
+# Conversor MPP-XML - Canary Deployment Configuration
+# Configuração para deploy canary (10% do tráfego)
+# Usado por: .github/workflows/deploy-production.yml
+
+services:
+  app-canary:
+    image: ${IMAGE_NAME:-ghcr.io/cannalonga/conversor-mpp-xml}:${IMAGE_TAG:-latest}
+    container_name: conversor-app-canary
+    restart: unless-stopped
+    
+    environment:
+      # App config
+      - NODE_ENV=production
+      - PORT=3001
+      - INSTANCE_TYPE=canary
+      - CANARY_PERCENTAGE=${CANARY_PERCENTAGE:-10}
+      
+      # Database
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # Mercado Pago
+      - MP_ACCESS_TOKEN=${MP_ACCESS_TOKEN}
+      - MP_PUBLIC_KEY=${MP_PUBLIC_KEY}
+      - MP_WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      
+      # Storage
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=conversions-canary
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/1
+      - REDIS_QUEUE_PREFIX=canary:
+      
+      # Security
+      - SESSION_SECRET=${SESSION_SECRET}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+      
+      # Monitoring
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PREFIX=canary_
+    
+    ports:
+      - "3001:3001"
+    
+    networks:
+      - conversor-network
+      - monitoring
+    
+    volumes:
+      - /tmp/conversor-canary:/tmp/uploads
+      - ./logs/canary:/app/logs
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.conversor-canary.rule=Host(`conversormpp.com`) && HeadersRegexp(`X-Canary-Test`, `true|1`) || Host(`conversormpp.com`) && Query(`canary=true`)"
+      - "traefik.http.routers.conversor-canary.tls=true"
+      - "traefik.http.routers.conversor-canary.tls.certresolver=letsencrypt"
+      - "traefik.http.services.conversor-canary.loadbalancer.server.port=3001"
+      - "traefik.http.middlewares.canary-headers.headers.customrequestheaders.X-Canary-Version=${IMAGE_TAG:-latest}"
+
+  worker-canary:
+    image: ${IMAGE_NAME:-ghcr.io/cannalonga/conversor-mpp-xml}:${IMAGE_TAG:-latest}
+    container_name: conversor-worker-canary
+    restart: unless-stopped
+    
+    command: ["node", "worker.js"]
+    
+    environment:
+      # Worker config
+      - NODE_ENV=production
+      - WORKER_TYPE=canary
+      - WORKER_CONCURRENCY=2
+      - MAX_CONVERSION_TIME=300
+      
+      # Database
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # Storage  
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=conversions-canary
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/1
+      - REDIS_QUEUE_PREFIX=canary:
+      - REDIS_QUEUE_NAME=canary:conversions
+      
+      # Monitoring
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PREFIX=canary_worker_
+    
+    networks:
+      - conversor-network
+      - monitoring
+    
+    volumes:
+      - /tmp/conversor-canary:/tmp/uploads
+      - ./logs/canary:/app/logs
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # Shared services (usa mesmo Redis/Postgres da produção)
+  redis:
+    image: redis:7-alpine
+    container_name: conversor-redis
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+    ports:
+      - "6379:6379"
+    
+    networks:
+      - conversor-network
+    
+    volumes:
+      - redis-data:/data
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: conversor-postgres
+    restart: unless-stopped
+    
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-conversor}
+      - POSTGRES_USER=${POSTGRES_USER:-conversor}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C
+    
+    ports:
+      - "5432:5432"
+    
+    networks:
+      - conversor-network
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-conversor} -d ${POSTGRES_DB:-conversor}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Monitoring específico para canary
+  prometheus-canary:
+    image: prom/prometheus:latest
+    container_name: prometheus-canary
+    restart: unless-stopped
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.external-url=http://conversormpp.com:9091/'
+    
+    ports:
+      - "9091:9090"
+    
+    networks:
+      - monitoring
+    
+    volumes:
+      - ./monitoring/prometheus-canary.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/rules/:/etc/prometheus/rules/:ro
+      - prometheus-canary-data:/prometheus
+    
+    depends_on:
+      - app-canary
+      - worker-canary
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-canary-data:
+    driver: local
+
+networks:
+  conversor-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  
+  monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
