@@ -58,22 +58,23 @@ pm2 status
 - **Admin Panel:** http://localhost:3000/admin
 - **Health Check:** http://localhost:3000/api/health
 
-## 🔐 Credenciais de Admin
+## 🔐 Autenticação de Admin
 
-### Acesso do Proprietário
-```
-Usuário: Alcap0ne
-Senha: C@rolin@36932025
-Email 2FA: rafaelcannalonga2@hotmail.com
-```
-
-### Recursos de Segurança
-- **Autenticação personalizada** - Credenciais exclusivas do proprietário
-- **2FA via Email** - Notificações de login para rafaelcannalonga2@hotmail.com
+### Sistema de Segurança
+- **Autenticação personalizada** - Credenciais configuradas via variáveis de ambiente
+- **2FA via Email** - Notificações de login configuráveis
 - **Logs de acesso** - Monitoramento completo de tentativas de login
 - **Sessão segura** - Token-based authentication com timeout
 
-> ⚠️ **SEGURANÇA:** Credenciais configuradas exclusivamente para o proprietário Rafael Cannalonga
+### Configuração de Credenciais
+```bash
+# Configure suas credenciais via variáveis de ambiente
+export ADMIN_USER="seu_usuario_admin"
+export ADMIN_PASS="sua_senha_super_forte"
+export ADMIN_EMAIL="seu_email_2fa@exemplo.com"
+```
+
+> ⚠️ **SEGURANÇA:** Nunca exponha credenciais em código. Use sempre variáveis de ambiente ou secrets manager.
 
 ## 🏗️ Estrutura do Projeto
 
