@@ -8,6 +8,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const helmet = require('helmet'); // 🔐 Security headers
 const QRCode = require('qrcode'); // Biblioteca para QR codes PIX
 const SecureAuthSystem = require('./secure-auth');
 
@@ -32,8 +33,31 @@ const PORT = 3000;
 console.log('🛡️ Iniciando servidor ultra-seguro...');
 console.log('🔐 Sistema de autenticação carregado');
 
+// 🔐 Security Headers - SEMPRE PRIMEIRO
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"],
+        },
+    },
+    crossOriginEmbedderPolicy: false, // Para compatibilidade
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+    }
+}));
+
 // Middlewares básicos
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
 app.use('/admin', express.static('admin')); // Servir arquivos da pasta admin
 
@@ -188,6 +212,17 @@ app.post('/api/payment/pix', async (req, res) => {
         
         // Dados do PIX (use suas configurações reais)
         const pixKey = process.env.PIX_KEY || 'canna.vendasonline@gmail.com';
+        
+        // 🔐 SECURITY: Validate PIX key against allowlist
+        const allowedPixKeys = ['02038351740', 'canna.vendasonline@gmail.com'];
+        if (!allowedPixKeys.includes(pixKey)) {
+            console.error('🚨 Tentativa de uso de PIX key não autorizada:', pixKey);
+            return res.status(400).json({
+                success: false,
+                error: 'Configuração PIX inválida'
+            });
+        }
+        
         const merchantName = process.env.PIX_MERCHANT_NAME || 'Rafael Cannalonga';
         const merchantCity = process.env.PIX_MERCHANT_CITY || 'São Paulo';
         
@@ -212,15 +247,19 @@ app.post('/api/payment/pix', async (req, res) => {
             }
         });
         
-        res.json({
+        // 🔐 SECURITY: Structured response to prevent object injection
+        const secureResponse = {
             success: true,
             qrCode: qrCodeImage,
             pixCode: pixCode,
-            amount: amount,
+            amount: parseFloat(amount),
             pixKey: pixKey,
             merchantName: merchantName,
-            expiresIn: '15 minutos'
-        });
+            expiresIn: '15 minutos',
+            timestamp: new Date().toISOString()
+        };
+        
+        res.status(200).json(secureResponse);
         
     } catch (error) {
         console.error('❌ Erro ao gerar QR Code PIX:', error);
