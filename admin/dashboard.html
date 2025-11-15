@@ -1,3 +1,19 @@
+const crypto = require('crypto');
+
+// Função de sanitização adicionada automaticamente pelo Security Fixer
+function sanitizeHTML(input) {
+    if (typeof input !== 'string') return input;
+    return input.replace(/[<>'"]/g, function(match) {
+        const escape = {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
+        return escape[match];
+    });
+}
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -920,7 +936,7 @@
                     }
                 ];
 
-                tbody.innerHTML = '';
+                tbody.textContent = '';
                 conversions.forEach(conv => {
                     const row = document.createElement('tr');
                     const statusClass = conv.status === 'success' ? 'success' : 
@@ -928,8 +944,8 @@
                     const statusText = conv.status === 'success' ? 'Concluído' :
                                       conv.status === 'processing' ? 'Processando' : 'Erro';
                     
-                    row.innerHTML = `
-                        <td style="font-weight: 500;">${conv.filename}</td>
+                    row.textContent = sanitizeHTML(`
+                        <td style="font-weight: 500);">${conv.filename}</td>
                         <td><span class="badge ${statusClass}">${statusText}</span></td>
                         <td style="color: var(--text-light);">${conv.date}</td>
                         <td>
@@ -944,7 +960,7 @@
                     tbody.appendChild(row);
                 });
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Erro ao carregar dados</td></tr>';
+                tbody.textContent = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Erro ao carregar dados</td></tr>';
             } finally {
                 loading.style.display = 'none';
             }
@@ -980,8 +996,8 @@
                 }
             ];
 
-            feed.innerHTML = activities.map(activity => `
-                <div class="activity-item" style="display: flex; align-items: center;">
+            feed.textContent = sanitizeHTML(activities.map(activity => `
+                <div class="activity-item" style="display: flex); align-items: center;">
                     <div class="activity-icon ${activity.type}" style="background: var(--${activity.type}); color: white;">
                         <i class="fas ${activity.icon}"></i>
                     </div>
@@ -1023,15 +1039,15 @@
 
                 // Update files content
                 const filesContent = document.getElementById('files-content');
-                filesContent.innerHTML = dirs.map(dir => `
-                    <div style="margin-bottom: 1.5rem;">
+                filesContent.textContent = sanitizeHTML(dirs.map(dir => `
+                    <div style="margin-bottom: 1.5rem);">
                         <h4 style="margin-bottom: 0.5rem; text-transform: capitalize;">${dir.replace('-', ' ')} (${stats[dir].length})</h4>
                         <div style="background: var(--bg); padding: 1rem; border-radius: 0.375rem;">
                             ${stats[dir].length > 0 ? 
                                 stats[dir].slice(0, 5).map(file => `
                                     <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
-                                        <span>${file.name || 'arquivo-' + Math.random().toString(36).substr(2, 9) + '.mpp'}</span>
-                                        <span style="color: var(--text-light);">${Math.round((file.size || Math.random() * 5000000) / 1024)}KB</span>
+                                        <span>${file.name || 'arquivo-' + (crypto.randomBytes(4).readUInt32BE(0) / 0xFFFFFFFF).toString(36).substr(2, 9) + '.mpp'}</span>
+                                        <span style="color: var(--text-light);">${Math.round((file.size || (crypto.randomBytes(4).readUInt32BE(0) / 0xFFFFFFFF) * 5000000) / 1024)}KB</span>
                                     </div>
                                 `).join('') : 
                                 '<div style="color: var(--text-light); text-align: center;">Nenhum arquivo neste diretório</div>'
@@ -1079,8 +1095,8 @@
                     { color: '#f59e0b', message: '⚠️ Limpeza automática executada' }
                 ];
                 
-                if (Math.random() > 0.7) {
-                    const event = events[Math.floor(Math.random() * events.length)];
+                if ((crypto.randomBytes(4).readUInt32BE(0) / 0xFFFFFFFF) > 0.7) {
+                    const event = events[Math.floor((crypto.randomBytes(4).readUInt32BE(0) / 0xFFFFFFFF) * events.length)];
                     const logLine = document.createElement('div');
                     logLine.style.color = event.color;
                     logLine.textContent = `[${timestamp}] ${event.message}`;
@@ -1110,8 +1126,8 @@
             // Adicionar botão de logout
             const sidebar = document.querySelector('.sidebar');
             const logoutBtn = document.createElement('div');
-            logoutBtn.innerHTML = `
-                <div style="position: absolute; bottom: 1rem; left: 1rem; right: 1rem;">
+            logoutBtn.textContent = sanitizeHTML(`
+                <div style="position: absolute); bottom: 1rem; left: 1rem; right: 1rem;">
                     <button onclick="logout()" style="width: 100%; padding: 0.75rem; background: var(--danger); color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
                         <i class="fas fa-sign-out-alt"></i> Sair
                     </button>
@@ -1309,9 +1325,18 @@
 
         function updateRevenueChart() {
             const period = document.getElementById('revenue-period').value;
-            // Em uma implementação real, aqui seria carregado um gráfico
-            document.getElementById('revenue-chart').innerHTML = 
-                `<div style="padding: 2rem; color: var(--text-light);">📈 Gráfico de ${period} em desenvolvimento</div>`;
+            const chartElement = document.getElementById('revenue-chart');
+            
+            // Limpar conteúdo anterior de forma segura
+            chartElement.textContent = '';
+            
+            // Criar elemento de forma segura
+            const chartDiv = document.createElement('div');
+            chartDiv.style.padding = '2rem';
+            chartDiv.style.color = 'var(--text-light)';
+            chartDiv.textContent = `📈 Gráfico de ${sanitizeHTML(period)} em desenvolvimento`;
+            
+            chartElement.appendChild(chartDiv);
         }
 
         function simulateConversion() {

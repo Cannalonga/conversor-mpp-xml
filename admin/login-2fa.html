@@ -1,3 +1,18 @@
+
+// Função de sanitização adicionada automaticamente pelo Security Fixer
+function sanitizeHTML(input) {
+    if (typeof input !== 'string') return input;
+    return input.replace(/[<>'"]/g, function(match) {
+        const escape = {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
+        return escape[match];
+    });
+}
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -313,7 +328,7 @@
             const loginBtn = document.getElementById('loginBtn');
             
             // Mostrar loading
-            loginBtn.innerHTML = '<span class="loading"></span> Verificando...';
+            loginBtn.textContent = '<span class="loading"></span> Verificando...';
             loginBtn.disabled = true;
             
             try {
@@ -330,7 +345,7 @@
                 if (result.success && result.requiresCode) {
                     currentEmail = result.email;
                     
-                    messageDiv.innerHTML = `
+                    messageDiv.textContent = sanitizeHTML(`
                         <div class="success">
                             ✅ ${result.message}
                             ${result.devCode ? `
@@ -340,7 +355,7 @@
                                 </div>
                             ` : ''}
                         </div>
-                    `;
+                    `);
                     
                     // Transição para etapa 2
                     document.getElementById('loginStep').classList.remove('active');
@@ -353,7 +368,7 @@
                     }, 500);
                     
                 } else if (result.success) {
-                    messageDiv.innerHTML = `<div class="success">✅ ${result.message}</div>`;
+                    messageDiv.textContent = sanitizeHTML(`<div class="success">✅ ${result.message}</div>`);
                     localStorage.setItem('adminToken', 'admin-authenticated');
                     localStorage.setItem('adminUser', result.user);
                     
@@ -361,13 +376,13 @@
                         window.location.href = '/admin/dashboard.html';
                     }, 1500);
                 } else {
-                    messageDiv.innerHTML = `<div class="error">❌ ${result.message}</div>`;
+                    messageDiv.textContent = sanitizeHTML(`<div class="error">❌ ${result.message}</div>`);
                 }
             } catch (error) {
                 console.error('Erro no login:', error);
-                messageDiv.innerHTML = '<div class="error">❌ Erro de conexão com o servidor</div>';
+                messageDiv.textContent = '<div class="error">❌ Erro de conexão com o servidor</div>';
             } finally {
-                loginBtn.innerHTML = '🚀 Continuar para 2FA';
+                loginBtn.textContent = '🚀 Continuar para 2FA';
                 loginBtn.disabled = false;
                 loginInProgress = false;
             }
@@ -385,7 +400,7 @@
             const codeBtn = document.getElementById('codeBtn');
             
             // Mostrar loading
-            codeBtn.innerHTML = '<span class="loading"></span> Verificando código...';
+            codeBtn.textContent = '<span class="loading"></span> Verificando código...';
             codeBtn.disabled = true;
             
             try {
@@ -400,13 +415,13 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    messageDiv.innerHTML = `
+                    messageDiv.textContent = sanitizeHTML(`
                         <div class="success">
                             ✅ ${result.message}<br>
                             🔐 Autenticação 2FA completa!<br>
                             🚀 Redirecionando...
                         </div>
-                    `;
+                    `);
                     
                     localStorage.setItem('adminToken', result.token);
                     localStorage.setItem('adminUser', result.user);
@@ -416,7 +431,7 @@
                         window.location.href = '/admin/dashboard.html';
                     }, 2000);
                 } else {
-                    messageDiv.innerHTML = `<div class="error">❌ ${result.message}</div>`;
+                    messageDiv.textContent = sanitizeHTML(`<div class="error">❌ ${result.message}</div>`);
                     
                     if (result.message.includes('Faça login novamente') || 
                         result.message.includes('expirado') || 
@@ -429,9 +444,9 @@
                 }
             } catch (error) {
                 console.error('Erro na validação:', error);
-                messageDiv.innerHTML = '<div class="error">❌ Erro de conexão com o servidor</div>';
+                messageDiv.textContent = '<div class="error">❌ Erro de conexão com o servidor</div>';
             } finally {
-                codeBtn.innerHTML = '✅ Verificar e Entrar';
+                codeBtn.textContent = '✅ Verificar e Entrar';
                 codeBtn.disabled = false;
                 loginInProgress = false;
             }
@@ -442,7 +457,7 @@
             document.getElementById('codeStep').classList.remove('active');
             document.getElementById('loginStep').classList.add('active');
             document.getElementById('verificationCode').value = '';
-            document.getElementById('message').innerHTML = '';
+            document.getElementById('message').textContent = '';
             document.getElementById('username').focus();
             currentEmail = '';
         });

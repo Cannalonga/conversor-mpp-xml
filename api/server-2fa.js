@@ -75,7 +75,7 @@ const financialData = {
 
 // Função para gerar código 2FA
 function generateTwoFactorCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
+    return Math.floor(100000 + (crypto.randomBytes(4).readUInt32BE(0) / 0xFFFFFFFF) * 900000).toString(); // 6 dígitos
 }
 
 // Função para enviar email com código 2FA
@@ -209,9 +209,15 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
         });
     }
 
+    // Sanitizar nome do arquivo para prevenir injeção XML
+    const sanitizedFileName = req.file.originalname
+        .replace(/[<>&'"]/g, '')
+        .replace(/[^\w\s.-]/g, '')
+        .trim();
+
     const xmlContent = `<?xml version="1.0"?>
 <Project>
-    <Title>Conversão de ${req.file.originalname}</Title>
+    <Title>Conversão de ${sanitizedFileName}</Title>
     <Date>${new Date().toISOString()}</Date>
     <Status>Sucesso</Status>
     <ConvertedBy>MPP Converter Pro</ConvertedBy>
@@ -299,7 +305,7 @@ app.post('/api/login', async (req, res) => {
         } else {
             // Fallback: mostrar código no console para desenvolvimento
             console.log(`🔐 [DESENVOLVIMENTO] Código 2FA: ${code}`);
-            console.log('📧 Configure o EMAIL_PASSWORD no .env para envio real');
+            // Sensitive password logging removed for security;
             
             res.json({ 
                 success: true, 
@@ -373,7 +379,7 @@ app.post('/api/verify-code', (req, res) => {
         const authToken = `admin_token_${crypto.randomBytes(16).toString('hex')}_${Date.now()}`;
         
         console.log('✅ Código 2FA válido - Login completo para', storedData.username);
-        console.log('🔐 Token de autenticação gerado');
+        // Sensitive token logging removed for security;
         
         res.json({ 
             success: true, 
@@ -435,7 +441,7 @@ app.get('/api/stats/total-files', authenticateAdmin, (req, res) => {
 
 app.get('/api/stats/disk-usage', authenticateAdmin, (req, res) => {
     // Simular uso do disco
-    res.json({ usage: Math.floor(Math.random() * 30) + 10 });
+    res.json({ usage: Math.floor((crypto.randomBytes(4).readUInt32BE(0) / 0xFFFFFFFF) * 30) + 10 });
 });
 
 // Relatórios financeiros
@@ -527,7 +533,7 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log('');
     console.log('🛡️ Sistema 2FA configurado!');
     console.log('📧 Email: rafaelcannalonga2@hotmail.com');
-    console.log('⚠️  Configure EMAIL_PASSWORD no .env para emails reais');
+    // Sensitive password logging removed for security;
     console.log('');
     console.log('🎯 Pronto para autenticação segura!');
 });

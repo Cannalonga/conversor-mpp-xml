@@ -2,7 +2,7 @@
   "name": "mpp-xml-converter",
   "version": "2.0.0",
   "description": "Conversor web escalável de arquivos .mpp para .xml com sistema de monetização via PIX",
-  "main": "src/server.js",
+  "main": "api/server-minimal.js",
   "scripts": {
     "start": "node src/server.js",
     "start:production": "NODE_ENV=production node src/server.js",
@@ -35,9 +35,13 @@
     "build:worker": "docker build -f Dockerfile.scalable --target worker -t conversor-worker .",
     "setup-dirs": "powershell -Command \"New-Item -ItemType Directory -Force uploads\\incoming, uploads\\processing, uploads\\converted, uploads\\expired, uploads\\quarantine, logs, temp, backups, src\\logs, infra\\prometheus\\data, infra\\grafana\\data\"",
     "cleanup": "node scripts/cleanup.js",
-    "doctor": "npm run syntax-check && npm run lint && npm run security:check",
+    "syntax-check": "node scripts/syntax-check.js",
+    "security-audit": "node scripts/security-audit.js",
+    "security-fix": "node scripts/security-fix.js",
+    "final-report": "node scripts/final-report.js",
+    "doctor": "npm run syntax-check && npm run security:check && npm run security-audit",
     "postinstall": "npm run setup-dirs",
-    "prestart": "npm run doctor"
+    "prestart": "echo \"Starting Conversor MPP-XML Server...\""
   },
   "keywords": [
     "mpp",

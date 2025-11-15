@@ -112,13 +112,19 @@ app.post('/api/upload', uploadLimiter, upload.single('file'), async (req, res) =
         const convertedPath = path.join(__dirname, '../uploads/converted', req.file.filename.replace(path.extname(req.file.filename), '.xml'));
         fs.writeFileSync(convertedPath, mockXmlContent);
 
+        // Sanitizar nome do arquivo para URL segura
+        const sanitizedFileName = req.file.filename
+            .replace(/[<>&'"]/g, '')
+            .replace(/[^\w.-]/g, '')
+            .trim();
+            
         // Responder com sucesso
         res.json({
             success: true,
             message: 'Arquivo convertido com sucesso!',
             originalName: req.file.originalname,
             fileName: req.file.filename,
-            downloadUrl: `/api/download/${req.file.filename.replace(path.extname(req.file.filename), '.xml')}`,
+            downloadUrl: `/api/download/${sanitizedFileName.replace(path.extname(sanitizedFileName), '.xml')}`,
             size: req.file.size
         });
 

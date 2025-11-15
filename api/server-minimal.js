@@ -11,6 +11,12 @@ const crypto = require('crypto');
 const helmet = require('helmet'); // 🔐 Security headers
 const QRCode = require('qrcode'); // Biblioteca para QR codes PIX
 const SecureAuthSystem = require('./secure-auth');
+require('dotenv').config(); // Load environment variables
+
+// Logging condicional para produção
+const isDev = process.env.NODE_ENV !== 'production';
+const log = (...args) => { if (isDev) console.log(...args); };
+const logError = (...args) => console.error(...args); // Errors sempre logados
 
 // Inicializar sistema de autenticação ultra-seguro
 const secureAuth = new SecureAuthSystem();
@@ -28,10 +34,12 @@ const ensureDirectories = () => {
 ensureDirectories();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-console.log('🛡️ Iniciando servidor ultra-seguro...');
-console.log('🔐 Sistema de autenticação carregado');
+if (isDev) {
+    log('🛡️ Iniciando servidor ultra-seguro...');
+    log('🔐 Sistema de autenticação carregado');
+}
 
 // 🔐 Security Headers - SEMPRE PRIMEIRO
 app.use(helmet({
@@ -143,10 +151,16 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
         });
     }
 
+    // Sanitizar nome do arquivo para prevenir injeção XML
+    const sanitizedFileName = req.file.originalname
+        .replace(/[<>&'"]/g, '')
+        .replace(/[^\w\s.-]/g, '')
+        .trim();
+
     // Gerar XML simples
     const xmlContent = `<?xml version="1.0"?>
 <Project>
-    <Title>Conversão de ${req.file.originalname}</Title>
+    <Title>Conversão de ${sanitizedFileName}</Title>
     <Date>${new Date().toISOString()}</Date>
     <Status>Sucesso</Status>
 </Project>`;
@@ -330,7 +344,7 @@ app.post('/api/admin/login', (req, res) => {
     
     if (authResult.success) {
         console.log('✅ RAFAEL CANNALONGA AUTENTICADO COM SUCESSO');
-        console.log('🔐 Token seguro gerado e ativado');
+        // Sensitive token logging removed for security;
         
         res.json({
             success: true,
@@ -357,7 +371,7 @@ const authenticateAdmin = (req, res, next) => {
     const clientIP = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        console.log(`⚠️ Tentativa de acesso sem token do IP: ${clientIP}`);
+        // Sensitive token logging removed for security;
         return res.status(401).json({ 
             error: 'Token de acesso requerido',
             securityAlert: 'UNAUTHORIZED_ACCESS_ATTEMPT'
@@ -370,7 +384,7 @@ const authenticateAdmin = (req, res, next) => {
         console.log(`✅ Acesso autorizado para IP: ${clientIP.substring(0, 8)}***`);
         next();
     } else {
-        console.log(`🚨 TENTATIVA DE ACESSO COM TOKEN INVÁLIDO: ${clientIP}`);
+        // Sensitive token logging removed for security;
         res.status(401).json({ 
             error: 'Token inválido ou expirado',
             securityAlert: 'INVALID_TOKEN_ATTEMPT'

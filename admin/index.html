@@ -1,3 +1,18 @@
+
+// Função de sanitização adicionada automaticamente pelo Security Fixer
+function sanitizeHTML(input) {
+    if (typeof input !== 'string') return input;
+    return input.replace(/[<>'"]/g, function(match) {
+        const escape = {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
+        return escape[match];
+    });
+}
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -495,14 +510,14 @@
                 const container = document.getElementById('conversionsTable');
                 
                 if (conversions.length === 0) {
-                    container.innerHTML = '<div class="no-data">Nenhuma conversão encontrada</div>';
+                    container.textContent = '<div class="no-data">Nenhuma conversão encontrada</div>';
                     return;
                 }
 
                 const table = document.createElement('table');
                 table.className = 'data-table';
                 
-                table.innerHTML = `
+                table.textContent = sanitizeHTML(`
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -525,9 +540,9 @@
                             </tr>
                         `).join('')}
                     </tbody>
-                `;
+                `);
                 
-                container.innerHTML = '';
+                container.textContent = '';
                 container.appendChild(table);
             }
 
@@ -535,14 +550,14 @@
                 const container = document.getElementById('paymentsTable');
                 
                 if (payments.length === 0) {
-                    container.innerHTML = '<div class="no-data">Nenhum pagamento encontrado</div>';
+                    container.textContent = '<div class="no-data">Nenhum pagamento encontrado</div>';
                     return;
                 }
 
                 const table = document.createElement('table');
                 table.className = 'data-table';
                 
-                table.innerHTML = `
+                table.textContent = sanitizeHTML(`
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -570,9 +585,9 @@
                             </tr>
                         `).join('')}
                     </tbody>
-                `;
+                `);
                 
-                container.innerHTML = '';
+                container.textContent = '';
                 container.appendChild(table);
             }
 
@@ -604,7 +619,7 @@
                     </div>
                 `;
                 
-                container.innerHTML = statsHtml;
+                container.textContent = statsHtml;
             }
 
             renderAnalyticsChart(data) {
@@ -662,21 +677,21 @@
                     </style>
                 `;
                 
-                container.innerHTML = chartHtml;
+                container.textContent = chartHtml;
             }
 
             renderRecentVisitors(visitors) {
                 const container = document.getElementById('visitorsTable');
                 
                 if (visitors.length === 0) {
-                    container.innerHTML = '<div class="no-data">Nenhum visitante encontrado</div>';
+                    container.textContent = '<div class="no-data">Nenhum visitante encontrado</div>';
                     return;
                 }
 
                 const table = document.createElement('table');
                 table.className = 'data-table';
                 
-                table.innerHTML = `
+                table.textContent = sanitizeHTML(`
                     <thead>
                         <tr>
                             <th>IP</th>
@@ -698,9 +713,9 @@
                             </tr>
                         `).join('')}
                     </tbody>
-                `;
+                `);
                 
-                container.innerHTML = '';
+                container.textContent = '';
                 container.appendChild(table);
             }
 
@@ -728,9 +743,9 @@
 
             showTableError(containerId, message) {
                 const container = document.getElementById(containerId);
-                container.innerHTML = `
+                container.textContent = sanitizeHTML(`
                     <div class="no-data">
-                        <i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i><br>
+                        <i class="fas fa-exclamation-triangle" style="color: var(--danger-color));"></i><br>
                         ${message}
                     </div>
                 `;

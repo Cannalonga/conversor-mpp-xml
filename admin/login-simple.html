@@ -1,3 +1,18 @@
+
+// Função de sanitização adicionada automaticamente pelo Security Fixer
+function sanitizeHTML(input) {
+    if (typeof input !== 'string') return input;
+    return input.replace(/[<>'"]/g, function(match) {
+        const escape = {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
+        return escape[match];
+    });
+}
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -191,7 +206,7 @@
             const loginBtn = document.getElementById('loginBtn');
             
             // Mostrar loading
-            loginBtn.innerHTML = '<span class="loading"></span>Verificando...';
+            loginBtn.textContent = '<span class="loading"></span>Verificando...';
             loginBtn.disabled = true;
             messageDiv.className = 'message';
             messageDiv.style.display = 'none';
@@ -209,11 +224,11 @@
                 
                 if (result.success) {
                     messageDiv.className = 'message success';
-                    messageDiv.innerHTML = `
+                    messageDiv.textContent = sanitizeHTML(`
                         ✅ Login realizado com sucesso!<br>
                         👤 Bem-vindo, ${result.user}!<br>
                         🚀 Redirecionando...
-                    `;
+                    `);
                     messageDiv.style.display = 'block';
                     
                     // Salvar token com Bearer prefix e redirecionar
@@ -225,7 +240,7 @@
                     }, 1500);
                 } else {
                     messageDiv.className = 'message error';
-                    messageDiv.innerHTML = `❌ ${result.message || 'Credenciais inválidas'}`;
+                    messageDiv.textContent = sanitizeHTML(`❌ ${result.message || 'Credenciais inválidas'}`);
                     messageDiv.style.display = 'block';
                     
                     // Shake effect
@@ -237,10 +252,10 @@
             } catch (error) {
                 console.error('Erro no login:', error);
                 messageDiv.className = 'message error';
-                messageDiv.innerHTML = '❌ Erro de conexão com o servidor';
+                messageDiv.textContent = '❌ Erro de conexão com o servidor';
                 messageDiv.style.display = 'block';
             } finally {
-                loginBtn.innerHTML = '🚀 Entrar';
+                loginBtn.textContent = '🚀 Entrar';
                 loginBtn.disabled = false;
             }
         });

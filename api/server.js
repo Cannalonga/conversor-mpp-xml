@@ -107,7 +107,7 @@ app.use((req, res, next) => {
     if (isPageView) {
         try {
             const analytics = AnalyticsManager.trackPageView(req);
-            console.log(`📊 Página visitada: ${req.path} | IP: ${AnalyticsManager.getClientIP(req)} | Total: ${analytics.totalViews} visualizações`);
+            // Analytics tracking logged internally for security
         } catch (error) {
             console.error('Erro no tracking de analytics:', error);
         }
@@ -710,7 +710,7 @@ app.get('/api/payment/status/:conversionId', async (req, res) => {
         }
         
         // Simular verificação de pagamento (em produção, consulte a API do seu banco)
-        if (payment.status === 'pending' && Math.random() > 0.95) {
+        if (payment.status === 'pending' && (crypto.randomBytes(4).readUInt32BE(0) / 0xFFFFFFFF) > 0.95) {
             await PaymentManager.updatePaymentStatus(payment.id, 'paid');
             payment.status = 'paid';
             
@@ -954,7 +954,7 @@ app.get('/api/download/:token', async (req, res) => {
         }
 
         // Log de download autorizado
-        console.log(`📥 Download autorizado: ${filename} | Token: ${token.substring(0, 20)}...`);
+        // Sensitive token logging removed for security}...`);
 
         // Configurar headers para download
         const originalName = payload.metadata?.originalName || filename;

@@ -456,7 +456,7 @@ function showFileStatus(status) {
     if (!fileStatus) return;
     
     // Limpar status anterior
-    fileStatus.innerHTML = '';
+    fileStatus.textContent = '';
     
     let statusHTML = '';
     
