@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor MPP → XML - Planos e Preços | Conversão Profissional Microsoft Project</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Converta arquivos MPP para XML com segurança e rapidez. Planos flexíveis para freelancers, PMEs e empresas. Conversão em segundos, suporte 24/7.">
+    <meta name="keywords" content="converter mpp xml, microsoft project, conversão arquivos, mpp para xml, project management">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://conversor.com/precos">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Conversor MPP → XML - Planos e Preços">
+    <meta property="og:description" content="Converta arquivos MPP para XML com segurança e rapidez. Planos flexíveis para todos os perfis.">
+    <meta property="og:image" content="/static/images/og-pricing.jpg">
+    <meta property="og:url" content="https://conversor.com/precos">
+    <meta property="og:type" content="website">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-accent: #eff6ff;
+            --border-color: #e5e7eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--bg-accent) 0%, var(--bg-secondary) 100%);
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero .cta-badge {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        /* Pricing Plans */
+        .pricing {
+            padding: 4rem 0;
+        }
+
+        .pricing h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .pricing-toggle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: var(--border-color);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: var(--primary-color);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(30px);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .pricing-card {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card.featured {
+            border-color: var(--primary-color);
+            background: var(--bg-accent);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: 'MAIS POPULAR';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-description {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .price-currency {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-right: 0.25rem;
+        }
+
+        .price-period {
+            color: var(--text-secondary);
+            margin-left: 0.5rem;
+        }
+
+        .price-original {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-left: 0.5rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .plan-features li::before {
+            content: '✓';
+            color: var(--secondary-color);
+            font-weight: 700;
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .plan-features li.unavailable {
+            color: var(--text-muted);
+        }
+
+        .plan-features li.unavailable::before {
+            content: '✗';
+            color: var(--text-muted);
+        }
+
+        .plan-cta {
+            width: 100%;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .plan-cta.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .plan-cta.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .plan-cta.secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .plan-cta.secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            background: var(--bg-secondary);
+            padding: 3rem 0;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .payment-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .payment-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .pix-icon {
+            background: #32bcad;
+            color: white;
+        }
+
+        .card-icon {
+            background: #1565c0;
+            color: white;
+        }
+
+        .boleto-icon {
+            background: #ff6b35;
+            color: white;
+        }
+
+        /* FAQ Section */
+        .faq {
+            padding: 4rem 0;
+        }
+
+        .faq-grid {
+            display: grid;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .faq-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border: none;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-answer {
+            padding: 1.5rem;
+            display: none;
+            color: var(--text-secondary);
+        }
+
+        .faq-answer.active {
+            display: block;
+        }
+
+        /* CTA Final */
+        .final-cta {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .final-cta h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .final-cta p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .final-cta .cta-button {
+            background: white;
+            color: var(--primary-color);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .final-cta .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">📊 ConversorMPP</a>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="/">Início</a></li>
+                        <li><a href="/precos">Preços</a></li>
+                        <li><a href="/sobre">Sobre</a></li>
+                        <li><a href="/suporte">Suporte</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="cta-badge">✨ Conversão instantânea e segura</div>
+            <h1>Planos para todos os perfis</h1>
+            <p>Escolha o plano ideal para suas necessidades de conversão MPP → XML. 
+               Pagamento seguro, processamento rápido e suporte especializado.</p>
+        </div>
+    </section>
+
+    <section class="pricing">
+        <div class="container">
+            <h2>Escolha seu plano</h2>
+            <p class="pricing-subtitle">Flexibilidade e transparência em cada conversão</p>
+
+            <div class="pricing-toggle">
+                <span>Pagar por uso</span>
+                <div class="toggle-switch" id="pricingToggle"></div>
+                <span>Planos mensais <span style="color: var(--secondary-color);">(-25%)</span></span>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Plano Pay-per-use -->
+                <div class="pricing-card" id="payPerUse">
+                    <div class="plan-name">Pay-per-use</div>
+                    <div class="plan-description">Ideal para uso esporádico</div>
+                    <div class="plan-price">
+                        <span class="price-currency">R$</span>
+                        <span class="price-value">12</span>
+                        <span class="price-period">por conversão</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>Conversão instantânea</li>
+                        <li>Arquivos até 50MB</li>
+                        <li>Download por 7 dias</li>
+                        <li>Suporte por email</li>
+                        <li class="unavailable">API Access</li>
+                        <li class="unavailable">Conversão em lote</li>
+                    </ul>
+                    <button class="plan-cta secondary" onclick="selectPlan('payperuse')">
+                        Converter agora
+                    </button>
+                </div>
+
+                <!-- Plano Freelancer -->
+                <div class="pricing-card featured" id="freelancer">
+                    <div class="plan-name">Freelancer</div>
+                    <div class="plan-description">Para profissionais independentes</div>
+                    <div class="plan-price">
+                        <span class="price-currency">R$</span>
+                        <span class="price-value" id="freelancerPrice">47</span>
+                        <span class="price-period">/mês</span>
+                        <span class="price-original" id="freelancerOriginal" style="display: none;">R$ 63/mês</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>50 conversões/mês incluídas</li>
+                        <li>Conversões extras: R$ 8,00</li>
+                        <li>Arquivos até 100MB</li>
+                        <li>Download por 30 dias</li>
+                        <li>Suporte prioritário</li>
+                        <li>API básica (100 req/h)</li>
+                        <li class="unavailable">Conversão em lote</li>
+                    </ul>
+                    <button class="plan-cta primary" onclick="selectPlan('freelancer')">
+                        Começar agora
+                    </button>
+                </div>
+
+                <!-- Plano Business -->
+                <div class="pricing-card" id="business">
+                    <div class="plan-name">Business</div>
+                    <div class="plan-description">Para pequenas e médias empresas</div>
+                    <div class="plan-price">
+                        <span class="price-currency">R$</span>
+                        <span class="price-value" id="businessPrice">147</span>
+                        <span class="price-period">/mês</span>
+                        <span class="price-original" id="businessOriginal" style="display: none;">R$ 196/mês</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>200 conversões/mês incluídas</li>
+                        <li>Conversões extras: R$ 6,00</li>
+                        <li>Arquivos até 500MB</li>
+                        <li>Download por 90 dias</li>
+                        <li>Suporte 24/7 por WhatsApp</li>
+                        <li>API completa (1000 req/h)</li>
+                        <li>Conversão em lote (até 10 arquivos)</li>
+                        <li>Relatórios de uso</li>
+                    </ul>
+                    <button class="plan-cta secondary" onclick="selectPlan('business')">
+                        Começar teste grátis
+                    </button>
+                </div>
+
+                <!-- Plano Enterprise -->
+                <div class="pricing-card" id="enterprise">
+                    <div class="plan-name">Enterprise</div>
+                    <div class="plan-description">Para grandes empresas e integrações</div>
+                    <div class="plan-price">
+                        <span class="price-currency">R$</span>
+                        <span class="price-value" id="enterprisePrice">497</span>
+                        <span class="price-period">/mês</span>
+                        <span class="price-original" id="enterpriseOriginal" style="display: none;">R$ 663/mês</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>1000 conversões/mês incluídas</li>
+                        <li>Conversões extras: R$ 4,00</li>
+                        <li>Arquivos até 2GB</li>
+                        <li>Download ilimitado</li>
+                        <li>Suporte dedicado + Phone</li>
+                        <li>API enterprise (10k req/h)</li>
+                        <li>Conversão em lote ilimitada</li>
+                        <li>SLA 99.9% de uptime</li>
+                        <li>White label disponível</li>
+                        <li>Consultoria de integração</li>
+                    </ul>
+                    <button class="plan-cta secondary" onclick="selectPlan('enterprise')">
+                        Falar com consultor
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="payment-methods">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 1rem;">Formas de pagamento</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">
+                Pagamento 100% seguro através do Mercado Pago
+            </p>
+            
+            <div class="payment-grid">
+                <div class="payment-card">
+                    <div class="payment-icon pix-icon">₿</div>
+                    <h3>PIX Instantâneo</h3>
+                    <p>Aprovação em segundos<br><strong>Sem taxas adicionais</strong></p>
+                </div>
+                <div class="payment-card">
+                    <div class="payment-icon card-icon">💳</div>
+                    <h3>Cartão de Crédito</h3>
+                    <p>Visa, Mastercard, Elo<br><strong>Parcelamento disponível</strong></p>
+                </div>
+                <div class="payment-card">
+                    <div class="payment-icon boleto-icon">📄</div>
+                    <h3>Boleto Bancário</h3>
+                    <p>Compensação em 1-2 dias úteis<br><strong>Para empresas</strong></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 1rem;">Perguntas frequentes</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">
+                Tire suas dúvidas sobre nossos planos e serviços
+            </p>
+            
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Como funciona o pay-per-use? <span>+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Você paga apenas pelas conversões que utilizar. Não há mensalidade ou compromisso. 
+                        Ideal para uso esporádico ou testes. O pagamento é feito por PIX, cartão ou boleto.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Posso cancelar meu plano a qualquer momento? <span>+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Sim! Todos os planos mensais podem ser cancelados a qualquer momento. 
+                        Você continua com acesso até o final do período pago. Sem multas ou burocracias.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Há limite de tamanho dos arquivos? <span>+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Os limites variam por plano: Pay-per-use (50MB), Freelancer (100MB), 
+                        Business (500MB), Enterprise (2GB). Para arquivos maiores, entre em contato.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Como funciona a conversão em lote? <span>+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Disponível nos planos Business e Enterprise. Você pode enviar múltiplos arquivos 
+                        MPP simultaneamente e receber um ZIP com todos os XMLs convertidos.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Meus dados estão seguros? <span>+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Absolutamente! Usamos criptografia end-to-end, servidores no Brasil, 
+                        e deletamos automaticamente seus arquivos após o período de download. 
+                        Somos certificados LGPD.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        Vocês emitem nota fiscal? <span>+</span>
+                    </button>
+                    <div class="faq-answer">
+                        Sim! Emitimos NFe para todos os pagamentos. Para empresas, 
+                        oferecemos também contrato de prestação de serviços e faturamento personalizado.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="final-cta">
+        <div class="container">
+            <h3>Pronto para converter com segurança?</h3>
+            <p>Junte-se a milhares de profissionais que confiam em nossa plataforma</p>
+            <a href="#" class="cta-button" onclick="selectPlan('freelancer')">
+                🚀 Começar agora - Teste grátis
+            </a>
+        </div>
+    </section>
+
+    <script>
+        // Toggle de preços
+        const pricingToggle = document.getElementById('pricingToggle');
+        let isMonthly = false;
+
+        pricingToggle.addEventListener('click', () => {
+            isMonthly = !isMonthly;
+            pricingToggle.classList.toggle('active');
+            updatePricing();
+        });
+
+        function updatePricing() {
+            const prices = {
+                freelancer: { monthly: 47, original: 63 },
+                business: { monthly: 147, original: 196 },
+                enterprise: { monthly: 497, original: 663 }
+            };
+
+            Object.keys(prices).forEach(plan => {
+                const priceElement = document.getElementById(`${plan}Price`);
+                const originalElement = document.getElementById(`${plan}Original`);
+                
+                if (isMonthly) {
+                    priceElement.textContent = prices[plan].monthly;
+                    originalElement.style.display = 'inline';
+                    originalElement.textContent = `R$ ${prices[plan].original}/mês`;
+                } else {
+                    priceElement.textContent = Math.round(prices[plan].original);
+                    originalElement.style.display = 'none';
+                }
+            });
+        }
+
+        // FAQ Toggle
+        function toggleFaq(element) {
+            const answer = element.nextElementSibling;
+            const icon = element.querySelector('span');
+            
+            answer.classList.toggle('active');
+            icon.textContent = answer.classList.contains('active') ? '-' : '+';
+        }
+
+        // Plan Selection
+        function selectPlan(planType) {
+            // Enviar dados para o checkout
+            const planData = {
+                type: planType,
+                isMonthly: isMonthly,
+                timestamp: Date.now()
+            };
+
+            // Salvar no localStorage para o checkout
+            localStorage.setItem('selectedPlan', JSON.stringify(planData));
+
+            // Redirecionar para checkout ou abrir modal
+            if (planType === 'enterprise') {
+                window.open('mailto:contato@conversor.com?subject=Consulta Enterprise&body=Gostaria de mais informações sobre o plano Enterprise.', '_blank');
+            } else {
+                window.location.href = `/checkout?plan=${planType}&monthly=${isMonthly}`;
+            }
+        }
+
+        // Analytics tracking
+        function trackEvent(eventName, eventData) {
+            if (window.gtag) {
+                gtag('event', eventName, eventData);
+            }
+            
+            if (window.fbq) {
+                fbq('track', eventName, eventData);
+            }
+        }
+
+        // Track plan selections
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('plan-cta')) {
+                const planCard = e.target.closest('.pricing-card');
+                const planName = planCard.querySelector('.plan-name').textContent;
+                
+                trackEvent('begin_checkout', {
+                    'plan_name': planName,
+                    'plan_type': isMonthly ? 'monthly' : 'annual'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

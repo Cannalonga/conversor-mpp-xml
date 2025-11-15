@@ -1,0 +1,417 @@
+name: 🚀 Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, release/* ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 1. 🔍 Análise de Código e Testes
+  code-analysis:
+    name: 🔍 Code Analysis & Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history para SonarCloud
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: |
+          npm ci
+          npm install -g npm@latest
+
+      - name: 🧹 Lint Check
+        run: |
+          npm run lint
+          npm run lint:security
+
+      - name: 🔒 Security Audit
+        run: |
+          npm audit --audit-level high
+          npm run security:check
+
+      - name: 🧪 Unit Tests
+        run: |
+          npm run test:unit
+          npm run test:coverage
+
+      - name: 📊 Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+
+      - name: 🔐 SAST Analysis (CodeQL)
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+          
+      - name: 🔐 SAST Analysis (Build)
+        uses: github/codeql-action/analyze@v3
+
+      - name: 🛡️ Dependency Vulnerability Scan
+        uses: actions/dependency-review-action@v3
+        if: github.event_name == 'pull_request'
+
+  # 2. 🏗️ Build e Registry
+  build-and-push:
+    name: 🏗️ Build & Push Images
+    runs-on: ubuntu-latest
+    needs: code-analysis
+    if: github.event_name != 'pull_request'
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Build and Push Application Image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.scalable
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          
+      - name: 🏗️ Build and Push Worker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.scalable
+          target: worker
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-worker
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  # 3. 🔬 Testes de Integração
+  integration-tests:
+    name: 🔬 Integration Tests
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: conversor_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin123
+        ports:
+          - 9000:9000
+          - 9001:9001
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 30s
+          --health-timeout 20s
+          --health-retries 3
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔧 Setup Test Environment
+        run: |
+          cp .env.test .env
+          npm run db:migrate:test
+          npm run db:seed:test
+
+      - name: 🧪 Run Integration Tests
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test:test123@localhost:5432/conversor_test
+          REDIS_URL: redis://localhost:6379/1
+          MINIO_ENDPOINT: localhost
+          MINIO_PORT: 9000
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin123
+        run: |
+          npm run test:integration
+          npm run test:e2e
+
+      - name: 📊 Upload Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: |
+            test-results/
+            coverage/
+
+  # 4. ⚡ Performance Testing
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy Test Environment
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          sleep 30  # Aguardar inicialização
+
+      - name: 🏃 Install K6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: ⚡ Run Performance Tests
+        run: |
+          cd infra/k6
+          k6 run --vus 50 --duration 5m --env BASE_URL=http://localhost:3000 load-test.js
+
+      - name: 📊 Upload Performance Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-test-results
+          path: infra/k6/test-results/
+
+      - name: 🧹 Cleanup Test Environment
+        if: always()
+        run: docker-compose -f docker-compose.test.yml down -v
+
+  # 5. 🔒 Security Scanning
+  security-scan:
+    name: 🔒 Security Scanning
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🛡️ Container Security Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build-and-push.outputs.image-tag }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 📤 Upload Trivy Results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: 🔍 Docker Scout Scan
+        if: github.event_name != 'pull_request'
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{ needs.build-and-push.outputs.image-tag }}
+
+  # 6. 🚀 Deploy para Staging
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [integration-tests, security-scan]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Configure Staging Deployment
+        env:
+          KUBECONFIG: ${{ secrets.STAGING_KUBECONFIG }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
+        run: |
+          # Deploy usando Kubernetes ou Docker Compose
+          envsubst < k8s/staging.yaml | kubectl apply -f -
+          
+          # Aguardar deployment
+          kubectl rollout status deployment/conversor-app -n staging
+          kubectl rollout status deployment/conversor-worker -n staging
+
+      - name: 🧪 Staging Smoke Tests
+        run: |
+          npm run test:smoke -- --base-url https://staging.conversor.com
+
+      - name: 📢 Notify Deployment
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: "🚀 Staging deployment completed: ${{ needs.build-and-push.outputs.image-tag }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # 7. 🌟 Deploy para Production
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [integration-tests, security-scan, performance-tests]
+    if: github.event_name == 'release' && github.event.action == 'published'
+    environment: production
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure Production Secrets
+        run: |
+          echo "${{ secrets.PRODUCTION_ENV }}" > .env.production
+
+      - name: 🚀 Blue-Green Deployment
+        env:
+          KUBECONFIG: ${{ secrets.PRODUCTION_KUBECONFIG }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
+        run: |
+          # Deploy versão green
+          envsubst < k8s/production-green.yaml | kubectl apply -f -
+          
+          # Aguardar green estar healthy
+          kubectl rollout status deployment/conversor-app-green -n production
+          kubectl rollout status deployment/conversor-worker-green -n production
+          
+          # Health check da versão green
+          kubectl exec -n production deployment/conversor-app-green -- curl -f http://localhost:3000/health
+          
+          # Switch traffic para green
+          kubectl patch service conversor-service -n production -p '{"spec":{"selector":{"version":"green"}}}'
+          
+          # Aguardar estabilização
+          sleep 120
+          
+          # Remove versão blue se tudo OK
+          kubectl delete deployment conversor-app-blue -n production --ignore-not-found
+          kubectl delete deployment conversor-worker-blue -n production --ignore-not-found
+
+      - name: 📊 Post-Deploy Health Check
+        run: |
+          npm run test:production-health
+
+      - name: 📢 Production Deployment Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            🌟 **PRODUCTION DEPLOYMENT SUCCESSFUL** 🌟
+            Version: ${{ github.event.release.tag_name }}
+            Image: ${{ needs.build-and-push.outputs.image-tag }}
+            Commit: ${{ github.sha }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # 8. 🧹 Cleanup
+  cleanup:
+    name: 🧹 Cleanup Old Images
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [deploy-production, deploy-staging]
+    
+    steps:
+      - name: 🗑️ Delete Old Container Images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: ${{ env.IMAGE_NAME }}
+          package-type: container
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: true
+
+# Configuração de notificações globais
+notifications:
+  slack:
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [code-analysis, build-and-push, integration-tests, performance-tests, security-scan]
+    steps:
+      - name: 📢 Pipeline Status Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            Pipeline Status: ${{ job.status }}
+            Branch: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

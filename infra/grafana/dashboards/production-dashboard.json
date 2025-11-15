@@ -1,0 +1,379 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "conversor-mpp-production",
+    "title": "🚀 Conversor MPP → XML - Production Dashboard",
+    "tags": ["conversor", "production", "business"],
+    "timezone": "America/Sao_Paulo",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "💰 Revenue Metrics",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(increase(conversor_payments_total{status=\"approved\"}[1h])) * 47",
+            "refId": "A",
+            "legendFormat": "Hourly Revenue"
+          },
+          {
+            "expr": "sum(increase(conversor_payments_total{status=\"approved\"}[24h])) * 47",
+            "refId": "B",
+            "legendFormat": "Daily Revenue"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"displayMode": "basic"},
+            "unit": "currencyBRL"
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "calcs": ["lastNotNull"],
+            "fields": "",
+            "values": false
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "📊 Conversion Funnel",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(increase(conversor_uploads_total[1h]))",
+            "refId": "A",
+            "legendFormat": "Uploads"
+          },
+          {
+            "expr": "sum(increase(conversor_payments_total{status=\"approved\"}[1h]))",
+            "refId": "B",
+            "legendFormat": "Payments"
+          },
+          {
+            "expr": "sum(increase(conversor_conversions_total{status=\"completed\"}[1h]))",
+            "refId": "C",
+            "legendFormat": "Conversions"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "green", "value": 50}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "⚡ System Performance",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "P95 Latency"
+          },
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "refId": "B",
+            "legendFormat": "Error Rate %"
+          },
+          {
+            "expr": "avg(conversor_queue_length)",
+            "refId": "C",
+            "legendFormat": "Queue Length"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 0.5},
+                {"color": "red", "value": 2.0}
+              ]
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "🎯 SLA & Uptime",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "avg_over_time(up{job=\"conversor-app\"}[24h]) * 100",
+            "refId": "A",
+            "legendFormat": "Uptime %"
+          },
+          {
+            "expr": "1 - (sum(rate(conversor_conversions_total{status=\"failed\"}[24h])) / sum(rate(conversor_conversions_total[24h])))",
+            "refId": "B",
+            "legendFormat": "Success Rate %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 95},
+                {"color": "green", "value": 99}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "📈 Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[1m])",
+            "refId": "A",
+            "legendFormat": "{{method}} {{route}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [100], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "2m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "High Request Rate Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 6,
+        "title": "⚙️ Worker Performance",
+        "type": "graph",
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(conversor_conversion_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "P95 Conversion Time"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(conversor_conversion_duration_seconds_bucket[5m]))",
+            "refId": "B",
+            "legendFormat": "P50 Conversion Time"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [30], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "5m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "Slow Conversion Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 7,
+        "title": "💾 Queue Status",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 17},
+        "targets": [
+          {
+            "expr": "conversor_queue_length{queue=\"conversion\"}",
+            "refId": "A",
+            "legendFormat": "Conversion Queue"
+          },
+          {
+            "expr": "conversor_queue_length{queue=\"cleanup\"}",
+            "refId": "B",
+            "legendFormat": "Cleanup Queue"
+          },
+          {
+            "expr": "conversor_queue_length{queue=\"notification\"}",
+            "refId": "C",
+            "legendFormat": "Notification Queue"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Jobs",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [100], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "5m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "Queue Backlog Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 8,
+        "title": "🖥️ Resource Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 17},
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+            "refId": "A",
+            "legendFormat": "CPU %"
+          },
+          {
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "refId": "B",
+            "legendFormat": "Memory MB"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Usage",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "🚨 Error Breakdown",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 17},
+        "targets": [
+          {
+            "expr": "sum by (error_type) (increase(conversor_errors_total[1h]))",
+            "refId": "A",
+            "legendFormat": "{{error_type}}"
+          }
+        ],
+        "options": {
+          "pieType": "donut",
+          "tooltip": {"mode": "single"},
+          "legend": {
+            "displayMode": "visible",
+            "placement": "right",
+            "values": ["percent"]
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "📋 Business Metrics",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 25},
+        "targets": [
+          {
+            "expr": "sum(increase(conversor_payments_total{status=\"approved\"}[24h]))",
+            "refId": "A",
+            "format": "table",
+            "legendFormat": "Daily Payments"
+          },
+          {
+            "expr": "sum(increase(conversor_conversions_total{status=\"completed\"}[24h]))",
+            "refId": "B",
+            "format": "table",
+            "legendFormat": "Daily Conversions"
+          },
+          {
+            "expr": "sum(increase(conversor_uploads_total[24h]))",
+            "refId": "C",
+            "format": "table",
+            "legendFormat": "Daily Uploads"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge",
+            "options": {}
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}

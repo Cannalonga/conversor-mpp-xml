@@ -1,0 +1,72 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://conversormpp.com/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/private/
+Disallow: /uploads/
+Disallow: /config/
+Disallow: /logs/
+
+# Disallow checkout confirmation and payment processing pages
+Disallow: /checkout/success
+Disallow: /checkout/cancel
+Disallow: /payment/webhook
+
+# Disallow search and filtering parameters
+Disallow: /*?search=*
+Disallow: /*?filter=*
+Disallow: /*?utm_*
+
+# Allow important crawling paths
+Allow: /api/docs
+Allow: /status
+Allow: /blog/
+
+# Crawl delay for bots
+Crawl-delay: 1
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Crawl-delay: 0
+Allow: /
+
+User-agent: Bingbot
+Crawl-delay: 2
+Allow: /
+
+User-agent: Slurp
+Crawl-delay: 3
+Allow: /
+
+# Block abusive bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+# Allow social media bots for rich previews
+User-agent: facebookexternalhit/
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+# Additional SEO optimizations
+Host: https://conversormpp.com

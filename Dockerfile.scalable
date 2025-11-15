@@ -1,0 +1,94 @@
+# =============================================================================
+# Multi-Stage Dockerfile para Conversor MPP XML Escalável
+# Otimizado para produção com Node.js + Workers assíncronos
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Build Dependencies
+# -----------------------------------------------------------------------------
+FROM node:18-alpine AS builder
+
+WORKDIR /build
+
+# Instalar dependências do sistema para build
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    openssl-dev
+
+# Copiar package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# -----------------------------------------------------------------------------
+# Stage 2: Application Base
+# -----------------------------------------------------------------------------
+FROM node:18-alpine AS base
+
+# Criar usuário não-privilegiado
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S conversor -u 1001 -G nodejs
+
+# Instalar dependências do sistema para runtime
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# Copiar dependências do stage builder
+COPY --from=builder /build/node_modules ./node_modules
+COPY --chown=conversor:nodejs . .
+
+# Criar diretórios necessários
+RUN mkdir -p logs temp uploads/incoming uploads/converted uploads/processing src && \
+    chown -R conversor:nodejs logs temp uploads src
+
+# -----------------------------------------------------------------------------
+# Stage 3: Production Application Server
+# -----------------------------------------------------------------------------
+FROM base AS production
+
+USER conversor
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/api/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Start application
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "src/api/server.js"]
+
+# -----------------------------------------------------------------------------
+# Stage 4: Worker Process
+# -----------------------------------------------------------------------------
+FROM base AS worker
+
+USER conversor
+
+# Health check for worker
+HEALTHCHECK --interval=60s --timeout=10s --start-period=15s --retries=3 \
+  CMD node src/workers/health-check.js || exit 1
+
+# Start worker
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "src/workers/conversion-worker.js"]
+
+# -----------------------------------------------------------------------------
+# Labels para metadata
+# -----------------------------------------------------------------------------
+LABEL maintainer="Rafael Cannalonga <rafaelcannalonga2@hotmail.com>"
+LABEL description="Conversor MPP para XML - Sistema Escalável de Produção"
+LABEL version="3.0.0"
+LABEL org.opencontainers.image.source="https://github.com/Cannalonga/conversor-mpp-xml"

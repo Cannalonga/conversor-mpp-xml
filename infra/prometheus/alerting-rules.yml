@@ -1,0 +1,375 @@
+# Alerting Rules para Conversor MPP → XML Production
+# Configuração de alertas críticos e de negócio
+
+groups:
+  - name: conversor.business.rules
+    interval: 30s
+    rules:
+      # 💰 BUSINESS ALERTS
+      - alert: RevenueDropAlert
+        expr: |
+          (
+            sum(increase(conversor_payments_total{status="approved"}[1h])) 
+            < 
+            sum(increase(conversor_payments_total{status="approved"}[1h] offset 24h)) * 0.5
+          )
+        for: 15m
+        labels:
+          severity: critical
+          team: business
+          category: revenue
+        annotations:
+          summary: "📉 Significant revenue drop detected"
+          description: |
+            Revenue in the last hour ({{ $value }}) is less than 50% of the same period yesterday.
+            This may indicate payment issues, system problems, or other business-critical issues.
+
+      - alert: ConversionRateDropAlert
+        expr: |
+          (
+            (sum(increase(conversor_payments_total{status="approved"}[1h])) / sum(increase(conversor_uploads_total[1h])))
+            <
+            (sum(increase(conversor_payments_total{status="approved"}[1h] offset 24h)) / sum(increase(conversor_uploads_total[1h] offset 24h))) * 0.7
+          ) and sum(increase(conversor_uploads_total[1h])) > 10
+        for: 10m
+        labels:
+          severity: warning
+          team: business
+          category: conversion
+        annotations:
+          summary: "🎯 Conversion rate significantly decreased"
+          description: |
+            Current conversion rate ({{ $value | humanizePercentage }}) is 30% lower than yesterday's same period.
+            Current uploads: {{ query "sum(increase(conversor_uploads_total[1h]))" | first | value }}
+            Current payments: {{ query "sum(increase(conversor_payments_total{status=\"approved\"}[1h]))" | first | value }}
+
+      - alert: NoPaymentsAlert
+        expr: sum(increase(conversor_payments_total{status="approved"}[2h])) == 0
+        for: 2h
+        labels:
+          severity: critical
+          team: business
+          category: payments
+        annotations:
+          summary: "💳 No payments received in 2 hours"
+          description: |
+            No approved payments have been received in the last 2 hours during business hours (8AM-10PM BRT).
+            This may indicate payment gateway issues or system problems.
+
+  - name: conversor.technical.rules
+    interval: 15s
+    rules:
+      # 🚨 SYSTEM ALERTS
+      - alert: HighErrorRateAlert
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) / 
+            sum(rate(http_requests_total[5m])) * 100
+          ) > 5
+        for: 2m
+        labels:
+          severity: critical
+          team: engineering
+          category: errors
+        annotations:
+          summary: "🚨 High error rate detected"
+          description: |
+            Error rate is {{ $value | humanizePercentage }} for the last 5 minutes.
+            Threshold: 5%
+            
+      - alert: HighLatencyAlert
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 3m
+        labels:
+          severity: warning
+          team: engineering
+          category: performance
+        annotations:
+          summary: "⏱️ High response latency detected"
+          description: |
+            95th percentile latency is {{ $value }}s for the last 5 minutes.
+            Threshold: 2s
+
+      - alert: ApplicationDownAlert
+        expr: up{job="conversor-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: engineering
+          category: availability
+        annotations:
+          summary: "🔴 Application is down"
+          description: |
+            Conversor application is not responding to health checks.
+            Instance: {{ $labels.instance }}
+
+      - alert: WorkerDownAlert
+        expr: up{job="conversor-worker"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: engineering
+          category: availability
+        annotations:
+          summary: "⚙️ Conversion worker is down"
+          description: |
+            Conversion worker is not responding.
+            Instance: {{ $labels.instance }}
+            This will prevent file conversions from being processed.
+
+      - alert: DatabaseConnectionAlert
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: engineering
+          category: database
+        annotations:
+          summary: "🗄️ Database connection failed"
+          description: "Cannot connect to PostgreSQL database."
+
+      - alert: RedisConnectionAlert
+        expr: up{job="redis-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: engineering
+          category: cache
+        annotations:
+          summary: "🔴 Redis connection failed"
+          description: "Cannot connect to Redis. This will affect queues and caching."
+
+      # 📊 QUEUE ALERTS
+      - alert: QueueBacklogAlert
+        expr: conversor_queue_length{queue="conversion"} > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+          category: queues
+        annotations:
+          summary: "📈 Conversion queue backlog building up"
+          description: |
+            Conversion queue has {{ $value }} jobs pending for more than 5 minutes.
+            This may indicate worker performance issues or high load.
+
+      - alert: QueueProcessingStoppedAlert
+        expr: |
+          (
+            increase(conversor_queue_processed_total{queue="conversion"}[10m]) == 0
+          ) and conversor_queue_length{queue="conversion"} > 0
+        for: 10m
+        labels:
+          severity: critical
+          team: engineering
+          category: queues
+        annotations:
+          summary: "🛑 Queue processing appears to have stopped"
+          description: |
+            No jobs have been processed from conversion queue in 10 minutes, 
+            but {{ query "conversor_queue_length{queue=\"conversion\"}" | first | value }} jobs are waiting.
+
+      # 💾 RESOURCE ALERTS
+      - alert: HighMemoryUsageAlert
+        expr: |
+          (
+            process_resident_memory_bytes{job="conversor-app"} / 1024 / 1024
+          ) > 1024
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+          category: resources
+        annotations:
+          summary: "🧠 High memory usage detected"
+          description: |
+            Application memory usage is {{ $value }}MB.
+            Instance: {{ $labels.instance }}
+            Threshold: 1024MB
+
+      - alert: HighCPUUsageAlert
+        expr: |
+          rate(process_cpu_seconds_total{job="conversor-app"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+          category: resources
+        annotations:
+          summary: "🔥 High CPU usage detected"
+          description: |
+            CPU usage is {{ $value | humanizePercentage }} for the last 5 minutes.
+            Instance: {{ $labels.instance }}
+            Threshold: 80%
+
+      - alert: DiskSpaceLowAlert
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"} / 
+            node_filesystem_size_bytes{mountpoint="/"} * 100
+          ) < 15
+        for: 5m
+        labels:
+          severity: critical
+          team: engineering
+          category: resources
+        annotations:
+          summary: "💾 Low disk space"
+          description: |
+            Available disk space is {{ $value | humanizePercentage }}.
+            Instance: {{ $labels.instance }}
+            Threshold: 15%
+
+  - name: conversor.business.sla.rules
+    interval: 60s
+    rules:
+      # 📈 SLA METRICS
+      - alert: SLAViolationUptimeAlert
+        expr: |
+          (
+            avg_over_time(up{job="conversor-app"}[24h]) * 100
+          ) < 99.9
+        for: 5m
+        labels:
+          severity: critical
+          team: engineering
+          category: sla
+        annotations:
+          summary: "📊 SLA violation: Uptime below 99.9%"
+          description: |
+            24-hour uptime is {{ $value | humanizePercentage }}.
+            SLA requirement: 99.9%
+
+      - alert: SLAViolationConversionTimeAlert
+        expr: |
+          histogram_quantile(0.95, rate(conversor_conversion_duration_seconds_bucket[1h])) > 30
+        for: 10m
+        labels:
+          severity: warning
+          team: engineering
+          category: sla
+        annotations:
+          summary: "⏱️ SLA violation: Slow conversion times"
+          description: |
+            95th percentile conversion time is {{ $value }}s in the last hour.
+            SLA requirement: < 30s
+
+      - alert: SLAViolationSuccessRateAlert
+        expr: |
+          (
+            1 - (
+              sum(rate(conversor_conversions_total{status="failed"}[24h])) / 
+              sum(rate(conversor_conversions_total[24h]))
+            )
+          ) * 100 < 99
+        for: 15m
+        labels:
+          severity: critical
+          team: engineering
+          category: sla
+        annotations:
+          summary: "❌ SLA violation: Success rate below 99%"
+          description: |
+            24-hour success rate is {{ $value | humanizePercentage }}.
+            SLA requirement: > 99%
+
+  - name: conversor.security.rules
+    interval: 30s
+    rules:
+      # 🔐 SECURITY ALERTS
+      - alert: HighFailedAuthAttemptsAlert
+        expr: |
+          sum(rate(conversor_auth_failures_total[5m])) > 10
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+          category: authentication
+        annotations:
+          summary: "🔐 High number of authentication failures"
+          description: |
+            {{ $value }} authentication failures per second in the last 5 minutes.
+            This may indicate a brute force attack.
+
+      - alert: SuspiciousFileUploadAlert
+        expr: |
+          sum(rate(conversor_suspicious_files_total[5m])) > 5
+        for: 1m
+        labels:
+          severity: warning
+          team: security
+          category: files
+        annotations:
+          summary: "📁 Suspicious file uploads detected"
+          description: |
+            {{ $value }} suspicious file uploads detected in the last 5 minutes.
+            Files have been quarantined for review.
+
+      - alert: UnauthorizedAPIAccessAlert
+        expr: |
+          sum(rate(http_requests_total{status="401"}[5m])) > 20
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+          category: authorization
+        annotations:
+          summary: "🚫 High number of unauthorized API access attempts"
+          description: |
+            {{ $value }} unauthorized access attempts per second in the last 5 minutes.
+            Source IPs should be investigated.
+
+  - name: conversor.financial.rules
+    interval: 300s  # 5 minutes
+    rules:
+      # 💳 FINANCIAL ALERTS
+      - alert: PaymentGatewayIssueAlert
+        expr: |
+          (
+            sum(rate(conversor_payment_attempts_total[15m])) > 0
+          ) and (
+            sum(rate(conversor_payments_total{status="approved"}[15m])) / 
+            sum(rate(conversor_payment_attempts_total[15m]))
+          ) < 0.8
+        for: 10m
+        labels:
+          severity: critical
+          team: business
+          category: payments
+        annotations:
+          summary: "💳 Payment gateway issues detected"
+          description: |
+            Payment success rate is {{ $value | humanizePercentage }} in the last 15 minutes.
+            Expected rate: > 80%
+
+      - alert: HighChargebackRateAlert
+        expr: |
+          sum(increase(conversor_chargebacks_total[24h])) > 3
+        for: 1h
+        labels:
+          severity: warning
+          team: business
+          category: payments
+        annotations:
+          summary: "📈 High chargeback rate detected"
+          description: |
+            {{ $value }} chargebacks in the last 24 hours.
+            Investigate payment issues and customer satisfaction.
+
+      - alert: RevenueDiscrepancyAlert
+        expr: |
+          abs(
+            sum(increase(conversor_payments_total{status="approved"}[1h])) * 47 -
+            sum(increase(conversor_revenue_total[1h]))
+          ) > 100
+        for: 15m
+        labels:
+          severity: warning
+          team: business
+          category: revenue
+        annotations:
+          summary: "💰 Revenue tracking discrepancy detected"
+          description: |
+            Discrepancy of R$ {{ $value }} between payment count and recorded revenue.
+            Manual reconciliation may be required.
