@@ -13,10 +13,21 @@ pids
 node_modules/
 jspm_packages/
 
-# Environment files
+# ==============================================
+# SECURITY: Secrets and Environment Files (UPDATED)
+# ==============================================
 .env
+.env.*
 .env.local
+.env.secure
 .env.production
+.env.development
+.env.staging
+secrets.json
+config.json
+credentials.json
+auth.json
+keys.json
 
 # Python
 __pycache__/
