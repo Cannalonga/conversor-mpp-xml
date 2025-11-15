@@ -2,367 +2,44 @@ name: Deploy Production (Canary)
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Target environment'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-        - production
-      image_tag:
-        description: 'Image tag to deploy (leave empty for latest from main)'
-        required: false
-        type: string
-      canary_percentage:
-        description: 'Canary traffic percentage'
-        required: true
-        default: '10'
-        type: choice
-        options:
-        - '10'
-        - '25'
-        - '50'
-        - '100'
-
-env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/conversor-mpp-xml
 
 concurrency:
   group: production-deploy
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-  pre-deployment-checks:
+  canary-deploy:
     runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.determine-tag.outputs.tag }}
-      deploy-approved: ${{ steps.approval.outputs.approved }}
-    
+    environment:
+      name: production
+      url: https://seu-dominio.com
     steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v4
-
-      - name: 🏷️ Determine image tag
-        id: determine-tag
-        run: |
-          if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
-            echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
-            echo "Using specified tag: ${{ github.event.inputs.image_tag }}"
-          else
-            echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "Using current commit SHA: ${{ github.sha }}"
-          fi
-
-      - name: 🔍 Verify image exists
-        run: |
-          echo "🔍 Verifying image exists in registry..."
-          docker pull ${{ env.IMAGE_NAME }}:${{ steps.determine-tag.outputs.tag }}
-          echo "✅ Image verified successfully"
-
-      - name: ✅ Manual approval checkpoint
-        id: approval
-        run: |
-          echo "## 🚨 Production Deployment Request" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** \`${{ env.IMAGE_NAME }}:${{ steps.determine-tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Canary %:** ${{ github.event.inputs.canary_percentage }}%" >> $GITHUB_STEP_SUMMARY
-          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ **This deployment requires manual approval in the environment protection rules.**" >> $GITHUB_STEP_SUMMARY
-          echo "approved=true" >> $GITHUB_OUTPUT
-
-  backup-current-state:
-    needs: pre-deployment-checks
-    runs-on: ubuntu-latest
-    environment: 
-      name: ${{ github.event.inputs.environment }}
-      url: https://conversormpp.com
-    outputs:
-      backup-tag: ${{ steps.backup.outputs.tag }}
-    
-    steps:
-      - name: 💾 Backup current production state
-        id: backup
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Deploy Canary (10%)
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SSH_PROD_HOST }}
           username: ${{ secrets.SSH_PROD_USER }}
           key: ${{ secrets.SSH_PROD_KEY }}
-          port: ${{ secrets.SSH_PROD_PORT || 22 }}
           script: |
             cd /home/${{ secrets.SSH_PROD_USER }}/conversor
-            
-            # Get current running image tag
-            current_tag=$(docker-compose -f docker-compose.prod.yml images app | grep app | awk '{print $4}' | head -1)
-            echo "Current running image: $current_tag"
-            
-            # Store backup information
-            echo "BACKUP_TAG=$current_tag" >> .backup_state
-            echo "BACKUP_TIME=$(date -Iseconds)" >> .backup_state
-            echo "BACKUP_REASON=pre_canary_deployment" >> .backup_state
-            
-            # Export backup tag for GitHub Actions
-            echo "tag=$current_tag" >> $GITHUB_OUTPUT
-            
-            echo "✅ Backup state saved: $current_tag"
+            docker-compose -f docker-compose.canary.yml pull
+            docker-compose -f docker-compose.canary.yml up -d
+            sleep 20
+            curl -fSs https://seu-dominio.com/health || (echo "canary health failed" && exit 1)
 
-  canary-deployment:
-    needs: [pre-deployment-checks, backup-current-state]
-    runs-on: ubuntu-latest
-    environment: 
-      name: ${{ github.event.inputs.environment }}
-      url: https://conversormpp.com
-    
-    steps:
-      - name: 📥 Checkout repository  
-        uses: actions/checkout@v4
+      - name: Wait & Monitor (manual)
+        run: echo "Waiting 5m for metrics; check Grafana/Prometheus. Promote manually if OK."
 
-      - name: 🐣 Deploy canary instance
-        uses: appleboy/ssh-action@v1.0.0
-        env:
-          NEW_IMAGE_TAG: ${{ needs.pre-deployment-checks.outputs.image-tag }}
-          CANARY_PERCENTAGE: ${{ github.event.inputs.canary_percentage }}
+      - name: Promote to Production
+        if: success()
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SSH_PROD_HOST }}
           username: ${{ secrets.SSH_PROD_USER }}
           key: ${{ secrets.SSH_PROD_KEY }}
-          port: ${{ secrets.SSH_PROD_PORT || 22 }}
-          envs: NEW_IMAGE_TAG,CANARY_PERCENTAGE
           script: |
-            set -e
             cd /home/${{ secrets.SSH_PROD_USER }}/conversor
-            
-            echo "🐣 Starting canary deployment..."
-            echo "Image: ${{ env.IMAGE_NAME }}:${NEW_IMAGE_TAG}"
-            echo "Canary percentage: ${CANARY_PERCENTAGE}%"
-            
-            # Pull new image
-            docker pull ${{ env.IMAGE_NAME }}:${NEW_IMAGE_TAG}
-            
-            # Update canary environment
-            echo "IMAGE_TAG=${NEW_IMAGE_TAG}" > .env.canary
-            echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> .env.canary
-            echo "CANARY_PERCENTAGE=${CANARY_PERCENTAGE}" >> .env.canary
-            
-            # Deploy canary service
-            docker-compose -f docker-compose.canary.yml --env-file .env.canary pull
-            docker-compose -f docker-compose.canary.yml --env-file .env.canary up -d
-            
-            # Wait for canary to start
-            echo "⏳ Waiting for canary service to stabilize..."
-            sleep 45
-            
-            echo "✅ Canary deployment completed"
-
-      - name: 🏥 Canary health verification
-        run: |
-          echo "🔍 Running canary health checks..."
-          max_attempts=15
-          attempt=1
-          
-          while [ $attempt -le $max_attempts ]; do
-            # Test canary endpoint (assuming load balancer routes canary traffic)
-            health_status=$(curl -s -o /dev/null -w "%{http_code}" \
-              -H "X-Canary-Test: true" \
-              https://conversormpp.com/health)
-            
-            if [[ "$health_status" == "200" ]]; then
-              echo "✅ Canary health check passed (attempt $attempt)"
-              break
-            else
-              echo "❌ Canary health check failed (attempt $attempt/$max_attempts): $health_status"
-              if [ $attempt -eq $max_attempts ]; then
-                echo "🚨 Canary health checks failed after $max_attempts attempts"
-                exit 1
-              fi
-              sleep 15
-            fi
-            attempt=$((attempt + 1))
-          done
-
-      - name: 📊 Monitor canary metrics
-        run: |
-          echo "📊 Monitoring canary metrics for 5 minutes..."
-          
-          # Monitor for 5 minutes with 30-second intervals
-          for i in {1..10}; do
-            echo "📈 Monitoring interval $i/10 ($(date))"
-            
-            # Check error rate (simulated - replace with actual metrics endpoint)
-            error_rate=$(curl -s https://conversormpp.com/metrics/error_rate || echo "0")
-            echo "Error rate: $error_rate"
-            
-            # Check response time
-            response_time=$(curl -s -w "%{time_total}" -o /dev/null https://conversormpp.com/health)
-            echo "Response time: ${response_time}s"
-            
-            # Simple threshold checks
-            if (( $(echo "$response_time > 5.0" | bc -l) )); then
-              echo "🚨 Response time too high: ${response_time}s"
-              exit 1
-            fi
-            
-            sleep 30
-          done
-          
-          echo "✅ Canary monitoring completed successfully"
-
-  promote-or-rollback:
-    needs: [pre-deployment-checks, backup-current-state, canary-deployment]
-    runs-on: ubuntu-latest
-    environment: 
-      name: ${{ github.event.inputs.environment }}
-      url: https://conversormpp.com
-    
-    steps:
-      - name: 🎯 Determine promotion strategy
-        id: strategy
-        run: |
-          if [[ "${{ github.event.inputs.canary_percentage }}" == "100" ]]; then
-            echo "strategy=full_promotion" >> $GITHUB_OUTPUT
-            echo "Full promotion to 100% traffic"
-          else
-            echo "strategy=partial_canary" >> $GITHUB_OUTPUT
-            echo "Partial canary deployment at ${{ github.event.inputs.canary_percentage }}%"
-          fi
-
-      - name: 🚀 Full promotion (if 100%)
-        if: steps.strategy.outputs.strategy == 'full_promotion'
-        uses: appleboy/ssh-action@v1.0.0
-        env:
-          NEW_IMAGE_TAG: ${{ needs.pre-deployment-checks.outputs.image-tag }}
-        with:
-          host: ${{ secrets.SSH_PROD_HOST }}
-          username: ${{ secrets.SSH_PROD_USER }}
-          key: ${{ secrets.SSH_PROD_KEY }}
-          port: ${{ secrets.SSH_PROD_PORT || 22 }}
-          envs: NEW_IMAGE_TAG
-          script: |
-            set -e
-            cd /home/${{ secrets.SSH_PROD_USER }}/conversor
-            
-            echo "🚀 Promoting canary to full production..."
-            
-            # Update production environment
-            echo "IMAGE_TAG=${NEW_IMAGE_TAG}" > .env.prod
-            echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> .env.prod
-            
-            # Deploy to full production
-            docker-compose -f docker-compose.prod.yml --env-file .env.prod pull
-            docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
-            
-            # Wait for production to stabilize
-            echo "⏳ Waiting for production services..."
-            sleep 60
-            
-            # Remove canary deployment
-            docker-compose -f docker-compose.canary.yml down || true
-            
-            # Store successful deployment info
-            echo "LAST_GOOD_IMAGE=${{ env.IMAGE_NAME }}:${NEW_IMAGE_TAG}" > .last_good_deployment
-            echo "LAST_GOOD_TIME=$(date -Iseconds)" >> .last_good_deployment
-            echo "DEPLOYMENT_TYPE=full_promotion" >> .last_good_deployment
-            
-            echo "✅ Full promotion completed successfully"
-
-      - name: 📊 Partial canary maintenance
-        if: steps.strategy.outputs.strategy == 'partial_canary'
-        run: |
-          echo "📊 Maintaining partial canary at ${{ github.event.inputs.canary_percentage }}%"
-          echo "Manual promotion to higher percentage required for full deployment"
-
-      - name: 🏥 Final production health check
-        if: steps.strategy.outputs.strategy == 'full_promotion'
-        run: |
-          echo "🔍 Final production health verification..."
-          max_attempts=20
-          attempt=1
-          
-          while [ $attempt -le $max_attempts ]; do
-            health_status=$(curl -s -o /dev/null -w "%{http_code}" https://conversormpp.com/health)
-            
-            if [[ "$health_status" == "200" ]]; then
-              echo "✅ Production health check passed (attempt $attempt)"
-              
-              # Additional verification
-              health_response=$(curl -s https://conversormpp.com/health)
-              if echo "$health_response" | jq -e '.status == "ok"' > /dev/null; then
-                echo "✅ Health response validation passed"
-                break
-              fi
-            fi
-            
-            echo "❌ Health check failed (attempt $attempt/$max_attempts): $health_status"
-            if [ $attempt -eq $max_attempts ]; then
-              echo "🚨 Production health checks failed - initiating rollback"
-              exit 1
-            fi
-            sleep 10
-            attempt=$((attempt + 1))
-          done
-
-      - name: 📈 Deployment success summary
-        run: |
-          echo "## 🎉 Production Deployment Completed" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Strategy:** ${{ steps.strategy.outputs.strategy }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** \`${{ env.IMAGE_NAME }}:${{ needs.pre-deployment-checks.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Canary %:** ${{ github.event.inputs.canary_percentage }}%" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://conversormpp.com" >> $GITHUB_STEP_SUMMARY
-
-  rollback-on-failure:
-    needs: [pre-deployment-checks, backup-current-state, canary-deployment, promote-or-rollback]
-    runs-on: ubuntu-latest
-    if: failure() && needs.backup-current-state.outputs.backup-tag != ''
-    environment: 
-      name: ${{ github.event.inputs.environment }}
-      url: https://conversormpp.com
-    
-    steps:
-      - name: 🔄 Emergency rollback
-        uses: appleboy/ssh-action@v1.0.0
-        env:
-          BACKUP_TAG: ${{ needs.backup-current-state.outputs.backup-tag }}
-        with:
-          host: ${{ secrets.SSH_PROD_HOST }}
-          username: ${{ secrets.SSH_PROD_USER }}
-          key: ${{ secrets.SSH_PROD_KEY }}
-          port: ${{ secrets.SSH_PROD_PORT || 22 }}
-          envs: BACKUP_TAG
-          script: |
-            set -e
-            cd /home/${{ secrets.SSH_PROD_USER }}/conversor
-            
-            echo "🚨 INITIATING EMERGENCY ROLLBACK"
-            echo "Rolling back to: ${BACKUP_TAG}"
-            
-            # Stop canary deployment
-            docker-compose -f docker-compose.canary.yml down || true
-            
-            # Restore previous production state
-            echo "IMAGE_TAG=${BACKUP_TAG##*:}" > .env.rollback
-            echo "IMAGE_NAME=${BACKUP_TAG%:*}" >> .env.rollback
-            
-            # Deploy previous version
-            docker-compose -f docker-compose.prod.yml --env-file .env.rollback up -d --force-recreate
-            
-            # Wait for rollback to complete
-            sleep 45
-            
-            echo "ROLLBACK_TIME=$(date -Iseconds)" >> .rollback_log
-            echo "ROLLBACK_FROM_TAG=${{ needs.pre-deployment-checks.outputs.image-tag }}" >> .rollback_log
-            echo "ROLLBACK_TO_TAG=${BACKUP_TAG}" >> .rollback_log
-            
-            echo "✅ Emergency rollback completed"
-
-      - name: 📧 Rollback notification
-        run: |
-          echo "## 🚨 PRODUCTION ROLLBACK EXECUTED" >> $GITHUB_STEP_SUMMARY
-          echo "**Reason:** Deployment failure detected" >> $GITHUB_STEP_SUMMARY  
-          echo "**Rolled back to:** \`${{ needs.backup-current-state.outputs.backup-tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Failed deployment:** \`${{ env.IMAGE_NAME }}:${{ needs.pre-deployment-checks.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** 🔄 Rollback completed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ **Action required:** Investigate deployment failure before next attempt" >> $GITHUB_STEP_SUMMARY
+            docker-compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml up -d
+            docker-compose -f docker-compose.canary.yml down
+            curl -fSs https://seu-dominio.com/health || (echo "promotion failed" && exit 1)

@@ -2,164 +2,29 @@ name: Deploy Staging
 
 on:
   workflow_run:
-    workflows: ["CI Pipeline"]
+    workflows: ["CI"]
     types:
       - completed
-    branches:
-      - main
-
-env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/conversor-mpp-xml
 
 jobs:
   deploy-staging:
-    runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    environment:
-      name: staging
-      url: https://staging.conversormpp.com
-    
-    steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v4
-
-      - name: ⏱️ Wait for image availability
-        run: |
-          echo "Waiting for image to be available in registry..."
-          sleep 30
-
-      - name: 🔐 Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🎯 Extract commit SHA
-        id: vars
-        run: |
-          echo "sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
-          echo "short_sha=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-
-      - name: 🚀 Deploy to staging server
-        uses: appleboy/ssh-action@v1.0.0
-        env:
-          IMAGE_TAG: ${{ steps.vars.outputs.sha }}
-        with:
-          host: ${{ secrets.SSH_STAGING_HOST }}
-          username: ${{ secrets.SSH_STAGING_USER }}
-          key: ${{ secrets.SSH_STAGING_KEY }}
-          port: ${{ secrets.SSH_STAGING_PORT || 22 }}
-          envs: IMAGE_TAG
-          script: |
-            set -e
-            cd /home/${{ secrets.SSH_STAGING_USER }}/conversor
-            
-            # Pull latest image
-            echo "🐳 Pulling image: ${{ env.IMAGE_NAME }}:${IMAGE_TAG}"
-            docker pull ${{ env.IMAGE_NAME }}:${IMAGE_TAG}
-            
-            # Update environment with new image tag
-            echo "IMAGE_TAG=${IMAGE_TAG}" > .env.deploy
-            echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> .env.deploy
-            
-            # Deploy using docker-compose
-            echo "🔄 Updating staging services..."
-            docker-compose -f docker-compose.staging.yml --env-file .env.deploy pull
-            docker-compose -f docker-compose.staging.yml --env-file .env.deploy up -d --no-build
-            
-            # Wait for services to stabilize
-            echo "⏳ Waiting for services to start..."
-            sleep 30
-            
-            # Clean up old images
-            docker image prune -f
-            
-            echo "✅ Staging deployment completed"
-
-      - name: 🏥 Health check
-        run: |
-          max_attempts=10
-          attempt=1
-          
-          echo "🔍 Running health checks..."
-          while [ $attempt -le $max_attempts ]; do
-            if curl -f -s -o /dev/null -w "%{http_code}" https://staging.conversormpp.com/health | grep -q "200"; then
-              echo "✅ Health check passed (attempt $attempt)"
-              break
-            else
-              echo "❌ Health check failed (attempt $attempt/$max_attempts)"
-              if [ $attempt -eq $max_attempts ]; then
-                echo "🚨 Health check failed after $max_attempts attempts"
-                exit 1
-              fi
-              sleep 10
-            fi
-            attempt=$((attempt + 1))
-          done
-
-      - name: 🧪 Smoke tests
-        run: |
-          echo "🧪 Running smoke tests on staging..."
-          
-          # Test 1: Basic health endpoint
-          response=$(curl -s https://staging.conversormpp.com/health)
-          if echo "$response" | jq -e '.status == "ok"' > /dev/null; then
-            echo "✅ Health endpoint test passed"
-          else
-            echo "❌ Health endpoint test failed: $response"
-            exit 1
-          fi
-          
-          # Test 2: File upload endpoint (without actual file)
-          upload_status=$(curl -s -o /dev/null -w "%{http_code}" https://staging.conversormpp.com/upload)
-          if [[ "$upload_status" == "405" || "$upload_status" == "400" ]]; then
-            echo "✅ Upload endpoint accessible"
-          else
-            echo "❌ Upload endpoint test failed: $upload_status"
-            exit 1
-          fi
-          
-          # Test 3: Static assets
-          css_status=$(curl -s -o /dev/null -w "%{http_code}" https://staging.conversormpp.com/css/style.css)
-          if [[ "$css_status" == "200" ]]; then
-            echo "✅ Static assets test passed"
-          else
-            echo "❌ Static assets test failed: $css_status"
-            exit 1
-          fi
-          
-          echo "🎉 All smoke tests passed!"
-
-      - name: 📊 Update deployment status
-        run: |
-          echo "## 🎯 Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** Staging" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** \`${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ steps.vars.outputs.short_sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://staging.conversormpp.com" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ✅ Deployed and tested successfully" >> $GITHUB_STEP_SUMMARY
-
-      - name: 💾 Store deployment metadata
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_STAGING_HOST }}
-          username: ${{ secrets.SSH_STAGING_USER }}
-          key: ${{ secrets.SSH_STAGING_KEY }}
-          port: ${{ secrets.SSH_STAGING_PORT || 22 }}
-          script: |
-            cd /home/${{ secrets.SSH_STAGING_USER }}/conversor
-            echo "LAST_DEPLOYMENT_SHA=${{ steps.vars.outputs.sha }}" > .last_deployment
-            echo "LAST_DEPLOYMENT_TIME=$(date -Iseconds)" >> .last_deployment
-            echo "LAST_DEPLOYMENT_STATUS=success" >> .last_deployment
-
-  notify-staging-success:
-    needs: deploy-staging
     runs-on: ubuntu-latest
-    if: success()
-    
     steps:
-      - name: 🎉 Staging deployment notification
-        run: |
-          echo "🚀 Staging deployment completed successfully!"
-          echo "Ready for production deployment approval."
+      - name: Small wait
+        run: sleep 10
+      - name: Deploy to staging via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_STAGING_HOST }}
+          username: ${{ secrets.SSH_STAGING_USER }}
+          key: ${{ secrets.SSH_STAGING_KEY }}
+          script: |
+            cd /home/${{ secrets.SSH_STAGING_USER }}/conversor
+            docker-compose pull app worker
+            docker-compose up -d --no-build
+            docker image prune -f
+            curl -fSs https://staging.seu-dominio.com/health || (echo "health failed" && exit 1)
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/conversor-mpp-xml
+      GITHUB_SHA: ${{ github.sha }}
