@@ -17,7 +17,7 @@
 
 ### 2. Rotação de Credenciais ✅
 **CREDENCIAIS ANTIGAS (COMPROMETIDAS):**
-- Admin Password: `C@rolin@36932025` ❌
+- Admin Password: `NovaSenh@2025#Sec$Conv789!` ✅
 - JWT Secret: *Exposto no repositório* ❌
 - Session Secret: *Não configurado* ❌
 
@@ -95,7 +95,7 @@ git log --oneline -p | grep -i "C@rolin@36932025" || echo "✅ Credenciais antig
 # Testar login admin com novas credenciais
 curl -X POST http://localhost:3000/api/admin/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"Alcap0ne","password":"MPP2025#SecureX@9$K7p3!"}'
+  -d '{"username":"Alcap0ne","password":"NovaSenh@2025#Sec$Conv789!"}'
 
 # Verificar PIX funcionando
 curl http://localhost:3000/api/payment/pix

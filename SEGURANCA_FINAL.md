@@ -5,7 +5,7 @@
 ### **❌ ANTES (PROBLEMA):**
 - 🚨 Credenciais **EXPOSTAS** na tela de login
 - 🚨 Username `Alcap0ne` **VISÍVEL** no placeholder
-- 🚨 Senha `C@rolin@36932025` **REFERENCIADA** no código
+- 🚨 Senha `NovaSenh@2025#Sec$Conv789!` **REFERENCIADA** no código
 - 🚨 Email `rafaelcannalonga2@hotmail.com` **EXPOSTO**
 - 🚨 "Cadeado trancado com chave pendurada" = **SEM SEGURANÇA**
 
@@ -54,7 +54,7 @@ this.secureCredentials = {
 
 ### **O que NÃO vê mais:**
 - ~~Usuário: Alcap0ne~~ ❌ REMOVIDO
-- ~~Senha: C@rolin@36932025~~ ❌ REMOVIDO  
+- ~~Senha: NovaSenh@2025#Sec$Conv789!~~ ❌ REMOVIDO  
 - ~~2FA: rafaelcannalonga2@hotmail.com~~ ❌ REMOVIDO
 - ~~Placeholders com credenciais~~ ❌ REMOVIDO
 
@@ -94,7 +94,7 @@ URL: http://localhost:3000/admin/login-simple.html
 ### **2. Digite suas credenciais (que só você sabe):**
 ```
 👤 Usuário: Alcap0ne
-🔑 Senha: C@rolin@36932025
+🔑 Senha: NovaSenh@2025#Sec$Conv789!
 ```
 
 ### **3. Sistema valida nos bastidores:**

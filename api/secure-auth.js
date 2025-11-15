@@ -18,8 +18,8 @@ class SecureAuthSystem {
         this.secureCredentials = {
             // Username sem criptografia para simplicidade e segurança
             username: 'Alcap0ne',
-            // Hash real da senha "C@rolin@36932025" com salt
-            passwordHash: '57f8da593da6ea97241d00da304f56aad4e9e32c54bff74e19ba817c9b55f009859e519ad5ef57cebfc4274edb5b6acedb31fb6e7fd2c051525368f7de7bcf26',
+            // Hash real da senha "NovaSenh@2025#Sec$Conv789!" com salt
+            passwordHash: '6a7ff7c9978220691e9b3af8fee7afb5085e28c19a6d3ed70c9a754e168d2ebc17fb7f5305c985b8bdfe08558a6bef05d6a3154e702ae3827f9460cdfe9243cd',
             passwordSalt: '3f8e2a9d7c4b6f1a8d5c2e9b7f0a3d6c1e4b7a0d9c5f2a8e1b4c7f0a3d6c9e2b5',
             email: 'rafaelcannalonga2@hotmail.com'
         };

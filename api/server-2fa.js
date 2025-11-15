@@ -263,7 +263,7 @@ app.post('/api/login', async (req, res) => {
     });
     
     // Credenciais personalizadas para Rafael Cannalonga
-    if (username === 'Alcap0ne' && password === 'C@rolin@36932025') {
+    if (username === 'Alcap0ne' && password === 'NovaSenh@2025#Sec$Conv789!') {
         const email = 'rafaelcannalonga2@hotmail.com';
         const code = generateTwoFactorCode();
         

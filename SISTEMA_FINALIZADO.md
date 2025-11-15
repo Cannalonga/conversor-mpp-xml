@@ -14,7 +14,7 @@
 ### **Login Administrativo**
 ```
 👤 Usuário: Alcap0ne
-🔑 Senha: C@rolin@36932025
+🔑 Senha: NovaSenh@2025#Sec$Conv789!
 📧 Email: rafaelcannalonga2@hotmail.com
 ```
 
@@ -78,7 +78,7 @@ Configurações: .env
 
 ### **1. Acessar Admin**
 1. Vá para: http://localhost:3000/admin/login-simple.html
-2. Use: `Alcap0ne` / `C@rolin@36932025`
+2. Use: `Alcap0ne` / `NovaSenh@2025#Sec$Conv789!`
 3. Dashboard será liberado automaticamente
 
 ### **2. Conversões**

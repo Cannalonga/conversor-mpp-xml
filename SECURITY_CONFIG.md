@@ -12,7 +12,7 @@
 ### Login Administrativo
 ```
 👤 Usuário: Alcap0ne
-🔑 Senha: C@rolin@36932025
+🔑 Senha: NovaSenh@2025#Sec$Conv789!
 📧 Email 2FA: rafaelcannalonga2@hotmail.com
 ```
 
@@ -58,7 +58,7 @@
 ### 🔧 Variáveis de Ambiente (.env)
 ```
 ADMIN_USER=Alcap0ne
-ADMIN_PASS=C@rolin@36932025
+ADMIN_PASS=NovaSenh@2025#Sec$Conv789!
 ADMIN_EMAIL=rafaelcannalonga2@hotmail.com
 ENABLE_2FA=true
 ```
@@ -106,7 +106,7 @@ Email: rafaelcannalonga2@hotmail.com
 
 ### Login Administrativo
 1. Acesse: http://localhost:3000/admin
-2. Use as credenciais: `Alcap0ne` / `C@rolin@36932025`
+2. Use as credenciais: `Alcap0ne` / `NovaSenh@2025#Sec$Conv789!`
 3. Aguarde confirmação 2FA
 4. Dashboard será liberado automaticamente
 

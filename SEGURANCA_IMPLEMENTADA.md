@@ -66,7 +66,7 @@
 
 ## 🔒 **DADOS PROTEGIDOS:**
 
-### **Sua Senha:** `C@rolin@36932025`
+### **Sua Senha:** `NovaSenh@2025#Sec$Conv789!`
 - ❌ **NUNCA** armazenada em texto puro
 - ✅ **Hash PBKDF2** com 100k iterações
 - ✅ **Salt único** exclusivo para você
@@ -90,7 +90,7 @@
 ```
 URL: http://localhost:3000/admin/login-simple.html
 Usuário: Alcap0ne
-Senha: C@rolin@36932025
+Senha: NovaSenh@2025#Sec$Conv789!
 ```
 
 ### **2. 🛡️ O que acontece nos bastidores:**
