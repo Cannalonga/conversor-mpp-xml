@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor Universal - Produção</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .pricing-banner {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .price-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .main-content {
+            padding: 40px;
+        }
+        .upload-section {
+            margin-bottom: 40px;
+        }
+        .upload-area {
+            border: 3px dashed #007bff;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+            transform: translateY(-2px);
+        }
+        .upload-icon {
+            font-size: 4rem;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        .file-input { display: none; }
+        .btn {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #e83e8c);
+        }
+        .status {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+        }
+        .status.info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        .status.success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .status.error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .status.warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .file-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        .payment-section {
+            background: #fff;
+            border: 2px solid #28a745;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            display: none;
+            text-align: center;
+        }
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #6c757d;
+            background: #f8f9fa;
+        }
+        .pix-code {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .timer {
+            font-size: 1.5rem;
+            color: #dc3545;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .progress {
+            margin: 20px 0;
+            display: none;
+        }
+        .progress-bar {
+            background: #e9ecef;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            display: none;
+        }
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .step {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        .step.active {
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,123,255,0.2);
+        }
+        .step.completed {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .step-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .log {
+            background: #1a1a1a;
+            color: #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .processing { animation: pulse 2s infinite; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔄 Conversor Universal</h1>
+            <p>PDF, MPP, DOC, XLS → Texto | Pagamento via PIX</p>
+        </div>
+
+        <!-- Pricing Banner -->
+        <div class="pricing-banner">
+            <h3>💰 Preços Transparentes</h3>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <strong>PDF</strong><br>
+                    R$ 3,00
+                </div>
+                <div class="price-card">
+                    <strong>DOC/DOCX</strong><br>
+                    R$ 5,00
+                </div>
+                <div class="price-card">
+                    <strong>XLS/XLSX</strong><br>
+                    R$ 7,00
+                </div>
+                <div class="price-card">
+                    <strong>MPP</strong><br>
+                    R$ 10,00
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Steps -->
+            <div class="steps">
+                <div class="step active" id="step1">
+                    <div class="step-icon">📁</div>
+                    <h4>1. Upload</h4>
+                    <p>Escolha seu arquivo</p>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-icon">💳</div>
+                    <h4>2. Pagamento</h4>
+                    <p>PIX instantâneo</p>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-icon">⚙️</div>
+                    <h4>3. Conversão</h4>
+                    <p>Processamento automático</p>
+                </div>
+                <div class="step" id="step4">
+                    <div class="step-icon">📥</div>
+                    <h4>4. Download</h4>
+                    <p>Resultado pronto</p>
+                </div>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Arraste seu arquivo aqui</h3>
+                    <p>ou clique para selecionar</p>
+                    <p><small>Suporte: PDF, MPP, DOC, DOCX, XLS, XLSX | Máximo 50MB</small></p>
+                    <input type="file" class="file-input" id="fileInput" 
+                           accept=".pdf,.mpp,.doc,.docx,.xls,.xlsx">
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <h4>📋 Arquivo Selecionado</h4>
+                    <p><strong>Nome:</strong> <span id="fileName"></span></p>
+                    <p><strong>Tamanho:</strong> <span id="fileSize"></span></p>
+                    <p><strong>Tipo:</strong> <span id="fileType"></span></p>
+                    <p><strong>Preço:</strong> <span id="filePrice"></span></p>
+                </div>
+
+                <div style="text-align: center;">
+                    <button class="btn" id="createOrderBtn" disabled>💰 Criar Pedido</button>
+                    <button class="btn btn-danger" id="clearBtn">🗑️ Limpar</button>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="status" id="status"></div>
+
+            <!-- Payment Section -->
+            <div class="payment-section" id="paymentSection">
+                <h3>💳 Pagamento PIX</h3>
+                <p>Escaneie o QR Code ou copie o código PIX</p>
+                
+                <div class="qr-code" id="qrCode">
+                    QR Code será gerado aqui
+                </div>
+                
+                <div class="pix-code" id="pixCode">
+                    Código PIX será gerado aqui
+                </div>
+                
+                <p><strong>Valor:</strong> <span id="paymentAmount"></span></p>
+                <div class="timer" id="paymentTimer">15:00</div>
+                <p><small>Tempo para pagamento</small></p>
+
+                <button class="btn btn-success" id="checkPaymentBtn">✅ Verificar Pagamento</button>
+                <button class="btn btn-warning" id="simulatePaymentBtn">🎯 Simular Pagamento (TESTE)</button>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress" id="progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">Aguardando...</div>
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div class="result-section" id="resultSection">
+                <h3>🎉 Conversão Concluída!</h3>
+                <div id="resultContent"></div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-success" id="downloadBtn">📥 Baixar Resultado</button>
+                    <button class="btn" id="newConversionBtn">🔄 Nova Conversão</button>
+                </div>
+            </div>
+
+            <!-- Log -->
+            <div class="log" id="log">
+                === LOG DO SISTEMA ===<br>
+                <span id="logContent">Sistema pronto para uso...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURAÇÃO =====
+        const API_BASE = 'http://localhost:8000';
+        
+        // ===== VARIÁVEIS GLOBAIS =====
+        let selectedFile = null;
+        let currentOrder = null;
+        let paymentTimer = null;
+        let statusPolling = null;
+        
+        // ===== ELEMENTOS DOM =====
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileType = document.getElementById('fileType');
+        const filePrice = document.getElementById('filePrice');
+        const createOrderBtn = document.getElementById('createOrderBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const status = document.getElementById('status');
+        const paymentSection = document.getElementById('paymentSection');
+        const qrCode = document.getElementById('qrCode');
+        const pixCode = document.getElementById('pixCode');
+        const paymentAmount = document.getElementById('paymentAmount');
+        const paymentTimer = document.getElementById('paymentTimer');
+        const checkPaymentBtn = document.getElementById('checkPaymentBtn');
+        const simulatePaymentBtn = document.getElementById('simulatePaymentBtn');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const resultSection = document.getElementById('resultSection');
+        const resultContent = document.getElementById('resultContent');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const newConversionBtn = document.getElementById('newConversionBtn');
+        const logContent = document.getElementById('logContent');
+        
+        // ===== FUNÇÕES UTILITÁRIAS =====
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `<br>[${timestamp}] ${message}`;
+            document.getElementById('log').scrollTop = document.getElementById('log').scrollHeight;
+        }
+        
+        function showStatus(message, type = 'info') {
+            status.className = `status ${type}`;
+            status.innerHTML = message;
+            status.style.display = 'block';
+            log(`STATUS: ${message}`);
+        }
+        
+        function hideStatus() {
+            status.style.display = 'none';
+        }
+        
+        function updateStep(stepNumber, state = 'active') {
+            // state: active, completed, processing
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('active', 'completed', 'processing');
+                if (index < stepNumber - 1) {
+                    step.classList.add('completed');
+                } else if (index === stepNumber - 1) {
+                    step.classList.add(state);
+                }
+            });
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function calculatePrice(size, type) {
+            const basePrices = {
+                'pdf': 3.00,
+                'mpp': 10.00,
+                'doc': 5.00,
+                'docx': 5.00,
+                'xls': 7.00,
+                'xlsx': 7.00
+            };
+            
+            const basePrice = basePrices[type.toLowerCase()] || 10.00;
+            const extraSize = Math.max(0, (size - 10*1024*1024) / (1024*1024));
+            const sizeSurcharge = extraSize * 0.50;
+            
+            return (basePrice + sizeSurcharge).toFixed(2);
+        }
+        
+        // ===== EVENT LISTENERS =====
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+        
+        createOrderBtn.addEventListener('click', createOrder);
+        clearBtn.addEventListener('click', clearAll);
+        checkPaymentBtn.addEventListener('click', checkPayment);
+        simulatePaymentBtn.addEventListener('click', simulatePayment);
+        downloadBtn.addEventListener('click', downloadResult);
+        newConversionBtn.addEventListener('click', clearAll);
+        
+        // ===== FUNÇÕES PRINCIPAIS =====
+        
+        function handleFileSelection(file) {
+            log(`Arquivo selecionado: ${file.name}`);
+            
+            // Validar tipo
+            const supportedTypes = ['pdf', 'mpp', 'doc', 'docx', 'xls', 'xlsx'];
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            
+            if (!supportedTypes.includes(fileExt)) {
+                showStatus('❌ Tipo de arquivo não suportado!', 'error');
+                return;
+            }
+            
+            // Validar tamanho (50MB)
+            if (file.size > 50 * 1024 * 1024) {
+                showStatus('❌ Arquivo muito grande! Máximo 50MB.', 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            const price = calculatePrice(file.size, fileExt);
+            
+            // Mostrar informações
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileType.textContent = fileExt.toUpperCase();
+            filePrice.textContent = `R$ ${price}`;
+            fileInfo.style.display = 'block';
+            
+            createOrderBtn.disabled = false;
+            hideStatus();
+            
+            log(`✅ Arquivo válido: ${file.name} (${formatFileSize(file.size)}) - R$ ${price}`);
+        }
+        
+        async function createOrder() {
+            if (!selectedFile) return;
+            
+            log('🚀 Criando pedido...');
+            createOrderBtn.disabled = true;
+            showStatus('📤 Criando pedido e gerando PIX...', 'info');
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                
+                const response = await fetch(`${API_BASE}/api/orders/create`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentOrder = data;
+                    showPayment(data);
+                    updateStep(2);
+                    log(`✅ Pedido criado: ${data.order_id}`);
+                } else {
+                    showStatus(`❌ Erro: ${data.detail}`, 'error');
+                    createOrderBtn.disabled = false;
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Erro de conexão: ${error.message}`, 'error');
+                createOrderBtn.disabled = false;
+            }
+        }
+        
+        function showPayment(orderData) {
+            // Mostrar seção de pagamento
+            paymentSection.style.display = 'block';
+            
+            // QR Code (simulado)
+            qrCode.innerHTML = `
+                <div style="background: #000; color: #fff; padding: 20px; border-radius: 10px;">
+                    <div style="font-size: 24px;">█▀▀█▀▀█</div>
+                    <div style="font-size: 18px;">█ QR █</div>
+                    <div style="font-size: 14px;">${orderData.order_id}</div>
+                    <div style="font-size: 24px;">█▄▄█▄▄█</div>
+                </div>
+            `;
+            
+            // Código PIX
+            pixCode.textContent = orderData.payment.pix_code;
+            paymentAmount.textContent = orderData.price;
+            
+            // Iniciar timer
+            startPaymentTimer(15 * 60); // 15 minutos
+            
+            // Iniciar polling de status
+            startStatusPolling();
+        }
+        
+        function startPaymentTimer(seconds) {
+            let remaining = seconds;
+            
+            paymentTimer = setInterval(() => {
+                const minutes = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                paymentTimer.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                remaining--;
+                
+                if (remaining < 0) {
+                    clearInterval(paymentTimer);
+                    paymentTimer.textContent = "EXPIRADO";
+                    showStatus('⏰ Tempo de pagamento expirado!', 'error');
+                    stopStatusPolling();
+                }
+            }, 1000);
+        }
+        
+        function startStatusPolling() {
+            statusPolling = setInterval(async () => {
+                if (!currentOrder) return;
+                
+                try {
+                    const response = await fetch(`${API_BASE}/api/orders/${currentOrder.order_id}`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'paid') {
+                        stopStatusPolling();
+                        clearInterval(paymentTimer);
+                        handlePaymentConfirmed();
+                    } else if (data.status === 'completed') {
+                        stopStatusPolling();
+                        handleConversionCompleted(data);
+                    }
+                    
+                } catch (error) {
+                    log(`Erro no polling: ${error.message}`);
+                }
+            }, 2000);
+        }
+        
+        function stopStatusPolling() {
+            if (statusPolling) {
+                clearInterval(statusPolling);
+                statusPolling = null;
+            }
+        }
+        
+        async function checkPayment() {
+            if (!currentOrder) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/orders/${currentOrder.order_id}`);
+                const data = await response.json();
+                
+                log(`Status atual: ${data.status}`);
+                
+                if (data.status === 'paid') {
+                    handlePaymentConfirmed();
+                } else if (data.status === 'completed') {
+                    handleConversionCompleted(data);
+                } else {
+                    showStatus('⏳ Pagamento ainda não identificado', 'warning');
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Erro ao verificar: ${error.message}`, 'error');
+            }
+        }
+        
+        async function simulatePayment() {
+            if (!currentOrder) return;
+            
+            log('🎯 Simulando pagamento...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/orders/${currentOrder.order_id}/confirm-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ simulated: true })
+                });
+                
+                if (response.ok) {
+                    log('✅ Pagamento simulado confirmado');
+                    setTimeout(() => {
+                        handlePaymentConfirmed();
+                    }, 1000);
+                } else {
+                    showStatus('❌ Erro na simulação', 'error');
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        async function handlePaymentConfirmed() {
+            log('💰 Pagamento confirmado!');
+            showStatus('✅ Pagamento confirmado! Iniciando conversão...', 'success');
+            
+            // Ocultar pagamento
+            paymentSection.style.display = 'none';
+            
+            // Mostrar progresso
+            updateStep(3, 'processing');
+            progress.style.display = 'block';
+            progressFill.textContent = 'Processando conversão...';
+            progressFill.style.width = '50%';
+            
+            // Iniciar conversão
+            try {
+                const response = await fetch(`${API_BASE}/api/orders/${currentOrder.order_id}/process`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    handleConversionCompleted(data);
+                } else {
+                    showStatus(`❌ Erro na conversão: ${data.detail}`, 'error');
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        function handleConversionCompleted(data) {
+            log('🎉 Conversão concluída!');
+            
+            // Atualizar progresso
+            progressFill.textContent = 'Concluído!';
+            progressFill.style.width = '100%';
+            
+            // Mostrar resultado
+            updateStep(4, 'completed');
+            resultContent.innerHTML = `
+                <p><strong>✅ Conversão realizada com sucesso!</strong></p>
+                <p>📄 Texto extraído: ${data.result?.text_length || 'N/A'} caracteres</p>
+                <p>⏱️ Processamento concluído</p>
+            `;
+            resultSection.style.display = 'block';
+            
+            showStatus('🎉 Conversão concluída! Faça o download do resultado.', 'success');
+        }
+        
+        async function downloadResult() {
+            if (!currentOrder) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/orders/${currentOrder.order_id}/download`);
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `${selectedFile.name}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    log('📥 Download iniciado');
+                } else {
+                    showStatus('❌ Erro no download', 'error');
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearAll() {
+            // Resetar variáveis
+            selectedFile = null;
+            currentOrder = null;
+            
+            // Parar timers
+            if (paymentTimer) clearInterval(paymentTimer);
+            stopStatusPolling();
+            
+            // Resetar UI
+            fileInfo.style.display = 'none';
+            paymentSection.style.display = 'none';
+            progress.style.display = 'none';
+            resultSection.style.display = 'none';
+            hideStatus();
+            
+            // Resetar botões
+            createOrderBtn.disabled = true;
+            fileInput.value = '';
+            
+            // Resetar steps
+            updateStep(1);
+            
+            log('🗑️ Sistema resetado');
+        }
+        
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🎯 Sistema de conversão inicializado');
+            log('📡 API Base: ' + API_BASE);
+            
+            // Testar conectividade
+            fetch(`${API_BASE}/health`)
+                .then(response => response.json())
+                .then(data => {
+                    log('✅ API conectada: ' + JSON.stringify(data.status));
+                    showStatus('🌐 Sistema online e funcionando!', 'success');
+                })
+                .catch(error => {
+                    log('❌ API indisponível: ' + error.message);
+                    showStatus('⚠️ Verifique se a API está rodando', 'error');
+                });
+        });
+    </script>
+</body>
+</html>

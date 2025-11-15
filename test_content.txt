@@ -1,0 +1,17 @@
+TESTE PDF SIMPLES
+        
+Data: 15/11/2025 14:49:16
+
+Este é um documento PDF de teste criado automaticamente.
+
+TEXTO DE TESTE:
+- Linha 1: Funcionalidade básica
+- Linha 2: Acentos (ção, não, são)
+- Linha 3: Números (123456)
+- Linha 4: Símbolos (!@#$%*)
+
+CONTEÚDO PARA CONVERSÃO:
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed do eiusmod tempor incididunt ut labore et dolore.
+
+FIM DO DOCUMENTO
