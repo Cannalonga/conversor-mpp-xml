@@ -42,6 +42,7 @@
   "author": "Seu Nome <seu.email@exemplo.com>",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bull": "^4.16.5",
     "bullmq": "^5.63.1",
     "compression": "^1.8.1",
