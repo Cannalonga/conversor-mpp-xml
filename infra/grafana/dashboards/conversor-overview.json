@@ -1,0 +1,366 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Conversor MPP → XML - Overview",
+    "tags": ["conversor", "business", "operations"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Revenue Today",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(revenue_total[24h]))",
+            "legendFormat": "Revenue (R$)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currency",
+            "decimals": 2,
+            "color": {"mode": "value"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 100},
+                {"color": "green", "value": 500}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Conversions Today",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(conversions_completed_total[24h]))",
+            "legendFormat": "Conversions"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "value"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "green", "value": 50}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "(sum(increase(conversions_completed_total[24h])) / sum(increase(conversions_started_total[24h]))) * 100",
+            "legendFormat": "Success %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 1,
+            "color": {"mode": "value"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 85},
+                {"color": "green", "value": 95}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Active Users",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(unique_visitors_total[24h]))",
+            "legendFormat": "Visitors"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "value"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 100},
+                {"color": "green", "value": 500}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Revenue Trend (7 days)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(revenue_total[1h]))",
+            "legendFormat": "Revenue/hour (R$)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currency",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 20
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "Conversion Volume",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(conversions_completed_total[5m]))",
+            "legendFormat": "Completed/min"
+          },
+          {
+            "expr": "sum(rate(conversions_started_total[5m]))",
+            "legendFormat": "Started/min"
+          },
+          {
+            "expr": "sum(rate(conversions_failed_total[5m]))",
+            "legendFormat": "Failed/min"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 7,
+        "title": "Payment Methods",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (payment_method) (increase(payments_completed_total[24h]))",
+            "legendFormat": "{{payment_method}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "hideFrom": {"legend": false, "tooltip": false, "vis": false}
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16}
+      },
+      {
+        "id": 8,
+        "title": "System Health",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "up{job=\"conversor-app\"}",
+            "legendFormat": "App Status",
+            "format": "table"
+          },
+          {
+            "expr": "up{job=\"conversor-worker\"}",
+            "legendFormat": "Worker Status",
+            "format": "table"
+          },
+          {
+            "expr": "up{job=\"postgres\"}",
+            "legendFormat": "Database Status",
+            "format": "table"
+          },
+          {
+            "expr": "up{job=\"redis\"}",
+            "legendFormat": "Redis Status",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "center",
+              "cellOptions": {"type": "color-background"},
+              "inspect": false
+            },
+            "mappings": [
+              {"options": {"0": {"color": "red", "text": "DOWN"}}, "type": "value"},
+              {"options": {"1": {"color": "green", "text": "UP"}}, "type": "value"}
+            ]
+          }
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 16}
+      },
+      {
+        "id": 9,
+        "title": "Error Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "(sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))) * 100",
+            "legendFormat": "Error %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 16}
+      },
+      {
+        "id": 10,
+        "title": "Queue Depth",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(conversion_queue_pending)",
+            "legendFormat": "Pending Jobs"
+          },
+          {
+            "expr": "sum(conversion_queue_processing)",
+            "legendFormat": "Processing"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "bars",
+              "barAlignment": 0
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 11,
+        "title": "Top File Sizes",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(file_size_bytes_bucket[24h])) by (le))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(file_size_bytes_bucket[24h])) by (le))",
+            "legendFormat": "Median"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "custom": {
+              "orientation": "horizontal"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 12,
+        "title": "User Geography (Top 10)",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum by (country) (increase(unique_visitors_total[24h])))",
+            "legendFormat": "{{country}}",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "left",
+              "cellOptions": {"type": "auto"}
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 32}
+      },
+      {
+        "id": 13,
+        "title": "Conversion Time Distribution",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "sum(rate(conversion_duration_seconds_bucket[5m])) by (le)",
+            "legendFormat": "{{le}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "hideFrom": {"legend": false, "tooltip": false, "vis": false}
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 16, "x": 8, "y": 32}
+      }
+    ],
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deploys",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "enable": true,
+          "expr": "changes(deployment_timestamp[1h])",
+          "iconColor": "blue",
+          "name": "Deployments",
+          "titleFormat": "Deploy: {{version}}"
+        }
+      ]
+    }
+  },
+  "overwrite": false
+}
