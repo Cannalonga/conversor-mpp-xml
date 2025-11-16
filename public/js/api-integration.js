@@ -98,6 +98,124 @@ class ConversorAPI {
         }
     }
 
+    // ===== CONVERSÃO EXCEL =====
+
+    async convertExcelDirect(file, outputFormat = 'csv', options = {}) {
+        console.log('📊 Convertendo Excel diretamente:', file.name, 'para', outputFormat);
+        
+        try {
+            this.showStatus('⚙️ Processando conversão Excel...', 'info');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('output_format', outputFormat);
+            
+            // Adicionar opções avançadas se fornecidas
+            if (options.compression) formData.append('compression', options.compression);
+            if (options.chunk_size) formData.append('chunk_size', options.chunk_size);
+            if (options.normalize_columns !== undefined) formData.append('normalize_columns', options.normalize_columns);
+            if (options.remove_empty_rows !== undefined) formData.append('remove_empty_rows', options.remove_empty_rows);
+            if (options.sheets_to_convert) {
+                options.sheets_to_convert.forEach(sheet => {
+                    formData.append('sheets_to_convert', sheet);
+                });
+            }
+            
+            const response = await fetch(`${this.baseURL}/api/excel/convert`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                console.log('✅ Conversão Excel concluída:', data.output_filename);
+                this.showExcelConversionResult(data);
+                return data;
+            } else {
+                throw new Error(data.detail || 'Erro na conversão Excel');
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro na conversão Excel:', error);
+            this.showStatus(`❌ Erro: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    async convertExcelAsync(file, outputFormat = 'csv', options = {}) {
+        console.log('🔄 Iniciando conversão Excel assíncrona:', file.name);
+        
+        try {
+            this.showStatus('📤 Enviando arquivo para conversão...', 'info');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('output_format', outputFormat);
+            if (options.compression) formData.append('compression', options.compression);
+            
+            const response = await fetch(`${this.baseURL}/api/excel/convert-async`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                console.log('✅ Conversão em fila:', data.task_id);
+                this.showExcelAsyncStart(data);
+                this.startExcelPolling(data.task_id);
+                return data;
+            } else {
+                throw new Error(data.detail || 'Erro ao iniciar conversão');
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro:', error);
+            this.showStatus(`❌ Erro: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    async getExcelFormats() {
+        try {
+            const response = await fetch(`${this.baseURL}/api/excel/formats`);
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('❌ Erro ao obter formatos Excel:', error);
+            return null;
+        }
+    }
+
+    async getExcelFileInfo(file) {
+        try {
+            this.showStatus('🔍 Analisando arquivo Excel...', 'info');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch(`${this.baseURL}/api/excel/info`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                console.log('📊 Informações do Excel:', data);
+                return data;
+            } else {
+                throw new Error(data.detail || 'Erro ao analisar arquivo');
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro:', error);
+            this.showStatus(`❌ Erro: ${error.message}`, 'error');
+            return null;
+        }
+    }
+
     // ===== MONITORAMENTO DE PEDIDOS =====
     
     async checkOrderStatus(orderId) {
@@ -406,6 +524,305 @@ ${resultData.extracted_text}
         
         console.log('🔄 Sistema resetado');
     }
+
+    // ===== INTERFACE EXCEL (MÉTODOS DA CLASSE) =====
+
+    showExcelConversionResult(resultData) {
+        console.log('📊 Mostrando resultado da conversão Excel');
+        
+        const result = `
+            <div class="excel-conversion-result">
+                <h3>📊 Conversão Excel Concluída!</h3>
+                <p><strong>Arquivo:</strong> ${resultData.output_filename}</p>
+                <p><strong>Formato:</strong> ${resultData.output_format.toUpperCase()}</p>
+                <p><strong>Compressão:</strong> ${resultData.compression_used || 'Nenhuma'}</p>
+                
+                <div class="file-stats">
+                    <h4>📈 Estatísticas do Arquivo:</h4>
+                    <ul>
+                        <li><strong>Planilhas:</strong> ${resultData.file_info.sheets_count}</li>
+                        <li><strong>Linhas processadas:</strong> ${resultData.parsing_stats.total_rows_written}</li>
+                        <li><strong>Tempo de processamento:</strong> ${resultData.parsing_stats.processing_time_seconds.toFixed(2)}s</li>
+                        <li><strong>Pico de memória:</strong> ${resultData.parsing_stats.memory_peak_mb.toFixed(1)}MB</li>
+                    </ul>
+                </div>
+                
+                <div class="security-check">
+                    <h4>🔒 Verificação de Segurança:</h4>
+                    <p><strong>Nível de risco:</strong> <span class="risk-${resultData.security_check.security_risk_level}">${resultData.security_check.security_risk_level.toUpperCase()}</span></p>
+                    <p><strong>Macros:</strong> ${resultData.security_check.is_macro_enabled ? '⚠️ Detectadas' : '✅ Não detectadas'}</p>
+                </div>
+                
+                <button onclick="conversorAPI.downloadExcelResult('${resultData.download_url}', '${resultData.output_filename}')" 
+                        class="btn-download excel-download">
+                    📥 Baixar ${resultData.output_format.toUpperCase()}
+                </button>
+            </div>
+        `;
+        
+        this.updateResultArea(result);
+        this.addExcelStyles();
+    }
+
+    showExcelAsyncStart(taskData) {
+        console.log('⏳ Mostrando início da conversão assíncrona');
+        
+        const result = `
+            <div class="excel-async-progress">
+                <h3>⏳ Conversão Excel em Progresso</h3>
+                <p><strong>ID da Tarefa:</strong> ${taskData.task_id}</p>
+                <p><strong>Status:</strong> <span id="async-status">${taskData.status}</span></p>
+                <p><strong>Tempo estimado:</strong> ${taskData.estimated_time_minutes} minutos</p>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span id="progress-text">0%</span>
+                </div>
+                
+                <div id="current-step" class="current-step">
+                    Aguardando na fila...
+                </div>
+            </div>
+        `;
+        
+        this.updateResultArea(result);
+        this.addProgressStyles();
+    }
+
+    startExcelPolling(taskId) {
+        console.log('🔄 Iniciando polling para tarefa:', taskId);
+        
+        this.pollingInterval = setInterval(async () => {
+            try {
+                const response = await fetch(`${this.baseURL}/api/excel/status/${taskId}`);
+                const statusData = await response.json();
+                
+                console.log('📊 Status Excel:', statusData);
+                
+                this.updateExcelProgress(statusData);
+                
+                // Parar polling se concluído
+                if (statusData.status === 'completed' || statusData.status === 'failed') {
+                    clearInterval(this.pollingInterval);
+                    
+                    if (statusData.status === 'completed') {
+                        this.showExcelAsyncCompleted(statusData);
+                    } else {
+                        this.showExcelAsyncFailed(statusData);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro no polling Excel:', error);
+            }
+        }, 2000);
+    }
+
+    updateExcelProgress(statusData) {
+        // Atualizar status
+        const statusElement = document.getElementById('async-status');
+        if (statusElement) {
+            statusElement.textContent = statusData.status;
+        }
+        
+        // Atualizar progresso
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        if (progressFill && progressText) {
+            progressFill.style.width = `${statusData.progress_percentage}%`;
+            progressText.textContent = `${statusData.progress_percentage.toFixed(1)}%`;
+        }
+        
+        // Atualizar etapa atual
+        const stepElement = document.getElementById('current-step');
+        if (stepElement) {
+            stepElement.textContent = statusData.current_step;
+        }
+    }
+
+    showExcelAsyncCompleted(statusData) {
+        this.showStatus('🎉 Conversão Excel concluída!', 'success');
+        
+        const result = `
+            <div class="excel-async-completed">
+                <h3>🎉 Conversão Excel Concluída!</h3>
+                <p><strong>ID:</strong> ${statusData.task_id}</p>
+                <p><strong>Tempo total:</strong> ${statusData.processing_time?.toFixed(2) || 'N/A'}s</p>
+                
+                <button onclick="window.open('${this.baseURL}${statusData.result_url}', '_blank')" 
+                        class="btn-download excel-download">
+                    📥 Baixar Resultado
+                </button>
+            </div>
+        `;
+        
+        this.updateResultArea(result);
+    }
+
+    showExcelAsyncFailed(statusData) {
+        this.showStatus('❌ Falha na conversão Excel', 'error');
+        
+        const result = `
+            <div class="excel-async-failed">
+                <h3>❌ Erro na Conversão</h3>
+                <p><strong>ID:</strong> ${statusData.task_id}</p>
+                <p><strong>Erro:</strong> ${statusData.error_message}</p>
+                
+                <button onclick="location.reload()" class="btn-retry">
+                    🔄 Tentar Novamente
+                </button>
+            </div>
+        `;
+        
+        this.updateResultArea(result);
+    }
+
+    async downloadExcelResult(downloadUrl, filename) {
+        try {
+            this.showStatus('📥 Baixando arquivo...', 'info');
+            
+            const response = await fetch(`${this.baseURL}${downloadUrl}`);
+            
+            if (!response.ok) {
+                throw new Error('Erro no download');
+            }
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            this.showStatus('✅ Download concluído!', 'success');
+            
+        } catch (error) {
+            console.error('❌ Erro no download:', error);
+            this.showStatus('❌ Erro no download', 'error');
+        }
+    }
+
+    addExcelStyles() {
+        if (!document.getElementById('excel-styles')) {
+            const style = document.createElement('style');
+            style.id = 'excel-styles';
+            style.textContent = `
+                .excel-conversion-result {
+                    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 10px 0;
+                }
+                
+                .file-stats ul {
+                    list-style: none;
+                    padding: 0;
+                }
+                
+                .file-stats li {
+                    background: #fff;
+                    margin: 5px 0;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    border-left: 4px solid #007bff;
+                }
+                
+                .security-check {
+                    background: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin: 10px 0;
+                }
+                
+                .risk-low { color: #28a745; font-weight: bold; }
+                .risk-medium { color: #ffc107; font-weight: bold; }
+                .risk-high { color: #dc3545; font-weight: bold; }
+                
+                .excel-download {
+                    background: linear-gradient(45deg, #28a745, #20c997);
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                
+                .excel-download:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    addProgressStyles() {
+        if (!document.getElementById('progress-styles')) {
+            const style = document.createElement('style');
+            style.id = 'progress-styles';
+            style.textContent = `
+                .excel-async-progress {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 10px 0;
+                }
+                
+                .progress-container {
+                    margin: 15px 0;
+                    text-align: center;
+                }
+                
+                .progress-bar {
+                    width: 100%;
+                    height: 20px;
+                    background: rgba(255,255,255,0.2);
+                    border-radius: 10px;
+                    overflow: hidden;
+                    margin-bottom: 10px;
+                }
+                
+                .progress-fill {
+                    height: 100%;
+                    background: linear-gradient(45deg, #28a745, #20c997);
+                    transition: width 0.5s ease;
+                    border-radius: 10px;
+                }
+                
+                .current-step {
+                    background: rgba(255,255,255,0.1);
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                    margin-top: 15px;
+                    text-align: center;
+                    font-style: italic;
+                }
+                
+                .btn-retry {
+                    background: linear-gradient(45deg, #6c757d, #495057);
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
 }
 
 // ===== INICIALIZAÇÃO GLOBAL =====
@@ -465,6 +882,208 @@ function resetConverter() {
     // Limpar inputs de arquivo
     const fileInputs = document.querySelectorAll('input[type="file"]');
     fileInputs.forEach(input => input.value = '');
+}
+
+// ===== FUNÇÕES ESPECÍFICAS EXCEL =====
+
+/**
+ * Converter arquivo Excel com opções
+ */
+async function convertExcel(file, outputFormat = 'csv', options = {}) {
+    if (!conversorAPI) {
+        console.error('❌ API não inicializada');
+        return;
+    }
+    
+    try {
+        // Para arquivos pequenos (< 10MB), usar conversão direta
+        if (file.size < 10 * 1024 * 1024) {
+            return await conversorAPI.convertExcelDirect(file, outputFormat, options);
+        } else {
+            // Para arquivos grandes, usar conversão assíncrona
+            return await conversorAPI.convertExcelAsync(file, outputFormat, options);
+        }
+    } catch (error) {
+        console.error('❌ Erro na conversão Excel:', error);
+    }
+}
+
+/**
+ * Obter informações do arquivo Excel antes da conversão
+ */
+async function analyzeExcelFile(file) {
+    if (!conversorAPI) {
+        console.error('❌ API não inicializada');
+        return null;
+    }
+    
+    return await conversorAPI.getExcelFileInfo(file);
+}
+
+/**
+ * Obter formatos suportados para Excel
+ */
+async function getExcelFormats() {
+    if (!conversorAPI) {
+        console.error('❌ API não inicializada');
+        return null;
+    }
+    
+    return await conversorAPI.getExcelFormats();
+}
+
+/**
+ * Interface interativa para Excel
+ */
+function createExcelInterface() {
+    const interface_html = `
+        <div id="excel-interface" class="converter-interface">
+            <h3>📊 Conversor Excel</h3>
+            
+            <div class="file-upload-section">
+                <label for="excel-file">Selecionar arquivo Excel/CSV:</label>
+                <input type="file" id="excel-file" accept=".xlsx,.xls,.csv,.tsv" />
+                <div class="file-info" id="excel-file-info" style="display: none;"></div>
+            </div>
+            
+            <div class="conversion-options" id="excel-options" style="display: none;">
+                <h4>Opções de Conversão:</h4>
+                
+                <div class="option-group">
+                    <label for="output-format">Formato de Saída:</label>
+                    <select id="output-format">
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                        <option value="xml">XML</option>
+                        <option value="tsv">TSV</option>
+                        <option value="parquet">Parquet</option>
+                    </select>
+                </div>
+                
+                <div class="option-group">
+                    <label for="compression-type">Compressão:</label>
+                    <select id="compression-type">
+                        <option value="none">Nenhuma</option>
+                        <option value="gzip">GZIP</option>
+                        <option value="zip">ZIP</option>
+                        <option value="bzip2">BZIP2</option>
+                    </select>
+                </div>
+                
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="normalize-columns" checked /> 
+                        Normalizar nomes de colunas
+                    </label>
+                </div>
+                
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="remove-empty-rows" checked /> 
+                        Remover linhas vazias
+                    </label>
+                </div>
+                
+                <div class="option-group">
+                    <label for="chunk-size">Tamanho do chunk (linhas):</label>
+                    <input type="number" id="chunk-size" value="50000" min="1000" max="1000000" />
+                </div>
+                
+                <button id="convert-excel-btn" class="btn-convert">
+                    🔄 Converter Excel
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Adicionar interface à página
+    const container = document.getElementById('conversionInterface') || document.body;
+    container.insertAdjacentHTML('beforeend', interface_html);
+    
+    // Configurar event listeners
+    setupExcelEventListeners();
+}
+
+function setupExcelEventListeners() {
+    const fileInput = document.getElementById('excel-file');
+    const convertBtn = document.getElementById('convert-excel-btn');
+    const optionsDiv = document.getElementById('excel-options');
+    
+    // Upload de arquivo
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        console.log('📊 Arquivo Excel selecionado:', file.name);
+        
+        // Mostrar informações do arquivo
+        const fileInfo = await analyzeExcelFile(file);
+        if (fileInfo) {
+            showExcelFileInfo(fileInfo);
+            optionsDiv.style.display = 'block';
+        }
+    });
+    
+    // Botão de conversão
+    convertBtn.addEventListener('click', async () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('Por favor, selecione um arquivo Excel/CSV');
+            return;
+        }
+        
+        const options = {
+            compression: document.getElementById('compression-type').value,
+            normalize_columns: document.getElementById('normalize-columns').checked,
+            remove_empty_rows: document.getElementById('remove-empty-rows').checked,
+            chunk_size: parseInt(document.getElementById('chunk-size').value)
+        };
+        
+        const outputFormat = document.getElementById('output-format').value;
+        
+        console.log('🚀 Iniciando conversão:', { file: file.name, outputFormat, options });
+        
+        await convertExcel(file, outputFormat, options);
+    });
+}
+
+function showExcelFileInfo(fileInfo) {
+    const infoDiv = document.getElementById('excel-file-info');
+    
+    const securityColor = {
+        'low': 'green',
+        'medium': 'orange', 
+        'high': 'red'
+    }[fileInfo.security_check.security_risk_level];
+    
+    infoDiv.innerHTML = `
+        <div class="file-analysis">
+            <h4>📋 Análise do Arquivo:</h4>
+            <ul>
+                <li><strong>Planilhas:</strong> ${fileInfo.file_info.sheets_count}</li>
+                <li><strong>Total de linhas:</strong> ${fileInfo.file_info.total_rows}</li>
+                <li><strong>Colunas:</strong> ${fileInfo.file_info.total_columns}</li>
+                <li><strong>Macros:</strong> ${fileInfo.file_info.has_macros ? '⚠️ Detectadas' : '✅ Não detectadas'}</li>
+                <li><strong>Segurança:</strong> <span style="color: ${securityColor}; font-weight: bold;">
+                    ${fileInfo.security_check.security_risk_level.toUpperCase()}
+                </span></li>
+            </ul>
+            
+            <div class="sheets-list">
+                <strong>Planilhas encontradas:</strong>
+                <ul>
+                    ${fileInfo.file_info.sheets_names.map(name => `<li>${name}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div class="recommendations">
+                <strong>💡 Recomendações:</strong>
+                <p>Chunk size recomendado: ${fileInfo.recommended_chunk_size} linhas</p>
+            </div>
+        </div>
+    `;
+    
+    infoDiv.style.display = 'block';
 }
 
 /**
