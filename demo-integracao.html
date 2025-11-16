@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Integração API - Conversor Universal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .content {
+            padding: 40px;
+        }
+        .upload-wrapper {
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 3px dashed #007bff;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+            transform: translateY(-2px);
+        }
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        .file-input { display: none; }
+        .btn {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-success { background: linear-gradient(135deg, #28a745, #20c997); }
+        .btn-danger { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+        .file-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        .status-section {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .log-area {
+            background: #1a1a1a;
+            color: #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+        }
+        .section h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .format-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .format-card:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+        }
+        .format-card.supported {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔌 Demo Integração API</h1>
+            <p>Teste completo do sistema de conversão</p>
+        </div>
+
+        <div class="content">
+            <!-- Status de Conectividade -->
+            <div class="section">
+                <h3>🌐 Status da API</h3>
+                <div class="status-section" id="apiStatus">
+                    <p>Verificando conectividade...</p>
+                </div>
+                <div class="test-buttons">
+                    <button class="btn" onclick="testConnection()">🔍 Testar Conexão</button>
+                    <button class="btn" onclick="getAPIStats()">📊 Estatísticas</button>
+                    <button class="btn" onclick="checkContainers()">🐳 Docker Status</button>
+                </div>
+            </div>
+
+            <!-- Formatos Suportados -->
+            <div class="section">
+                <h3>📁 Formatos Suportados</h3>
+                <div class="format-grid">
+                    <div class="format-card supported">
+                        <strong>PDF</strong><br>
+                        R$ 3,00<br>
+                        <small>Conversão direta</small>
+                    </div>
+                    <div class="format-card">
+                        <strong>MPP</strong><br>
+                        R$ 10,00<br>
+                        <small>Microsoft Project</small>
+                    </div>
+                    <div class="format-card">
+                        <strong>DOC/DOCX</strong><br>
+                        R$ 5,00<br>
+                        <small>Word Documents</small>
+                    </div>
+                    <div class="format-card">
+                        <strong>XLS/XLSX</strong><br>
+                        R$ 7,00<br>
+                        <small>Excel Spreadsheets</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload e Conversão -->
+            <div class="section">
+                <h3>📤 Upload e Conversão</h3>
+                
+                <div class="upload-wrapper">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📁</div>
+                        <h3>Arraste um arquivo aqui</h3>
+                        <p>ou clique para selecionar</p>
+                        <p><small>PDF, MPP, DOC, XLS - Máximo 50MB</small></p>
+                        <input type="file" class="file-input" id="fileInput" 
+                               accept=".pdf,.mpp,.doc,.docx,.xls,.xlsx">
+                    </div>
+
+                    <div class="file-info" id="fileInfo">
+                        <h4>📋 Arquivo Selecionado</h4>
+                        <p><strong>Nome:</strong> <span id="fileName"></span></p>
+                        <p><strong>Tamanho:</strong> <span id="fileSize"></span></p>
+                        <p><strong>Tipo:</strong> <span id="fileType"></span></p>
+                        <p><strong>Preço estimado:</strong> <span id="filePrice"></span></p>
+                    </div>
+                </div>
+
+                <div class="test-buttons">
+                    <button class="btn" id="convertBtn" disabled onclick="startConversion()">
+                        🚀 Iniciar Conversão
+                    </button>
+                    <button class="btn btn-success" onclick="simulatePayment()" id="paymentBtn" disabled>
+                        💰 Simular Pagamento
+                    </button>
+                    <button class="btn btn-danger" onclick="resetDemo()">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Log em Tempo Real -->
+            <div class="section">
+                <h3>📡 Log do Sistema</h3>
+                <div class="log-area" id="logArea">
+                    === DEMO INTEGRAÇÃO API ===<br>
+                    <span id="logContent">Sistema iniciando...</span>
+                </div>
+                <button class="btn" onclick="clearLog()">🗑️ Limpar Log</button>
+            </div>
+
+            <!-- Resultado -->
+            <div id="resultSection" style="display: none;">
+                <!-- Resultado será inserido aqui dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api-integration.js"></script>
+    
+    <script>
+        // ===== VARIÁVEIS GLOBAIS =====
+        let selectedFile = null;
+        let currentOrder = null;
+        
+        // ===== ELEMENTOS DOM =====
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileType = document.getElementById('fileType');
+        const filePrice = document.getElementById('filePrice');
+        const convertBtn = document.getElementById('convertBtn');
+        const paymentBtn = document.getElementById('paymentBtn');
+        const logContent = document.getElementById('logContent');
+        const logArea = document.getElementById('logArea');
+        
+        // ===== FUNÇÕES DE LOG =====
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `<br>[${timestamp}] ${message}`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        function clearLog() {
+            logContent.innerHTML = 'Log limpo...';
+        }
+        
+        // ===== FUNÇÕES DE TESTE =====
+        async function testConnection() {
+            log('🔍 Testando conexão com API...');
+            
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    log(`✅ API conectada: ${data.status}`);
+                    document.getElementById('apiStatus').innerHTML = `
+                        <p style="color: #28a745;">✅ <strong>API Online</strong></p>
+                        <p>Status: ${data.status}</p>
+                        <p>Timestamp: ${data.timestamp}</p>
+                        <p>Serviços: ${Object.keys(data.services).length} ativos</p>
+                    `;
+                } else {
+                    throw new Error('Status não saudável');
+                }
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`);
+                document.getElementById('apiStatus').innerHTML = `
+                    <p style="color: #dc3545;">❌ <strong>API Offline</strong></p>
+                    <p>Erro: ${error.message}</p>
+                `;
+            }
+        }
+        
+        async function getAPIStats() {
+            log('📊 Buscando estatísticas...');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/stats');
+                const data = await response.json();
+                
+                log(`✅ Estatísticas: ${JSON.stringify(data)}`);
+                
+                alert(`📊 Estatísticas da API:
+                
+Versão: ${data.api_version}
+Formatos: ${data.supported_formats.join(', ')}
+Tamanho máximo: ${data.max_file_size}
+Funcionalidades: ${data.features.length} disponíveis`);
+            } catch (error) {
+                log(`❌ Erro nas estatísticas: ${error.message}`);
+            }
+        }
+        
+        async function checkContainers() {
+            log('🐳 Simulando verificação Docker...');
+            
+            // Simular check de containers (na vida real usaria API Docker)
+            setTimeout(() => {
+                log('✅ Containers verificados: PDF-API e Redis ativos');
+                alert('🐳 Docker Status:\n\n✅ conversormppxml-pdf-api-1: Running\n✅ conversormppxml-redis-1: Running\n\nSistema pronto para uso!');
+            }, 1000);
+        }
+        
+        // ===== UPLOAD E CONVERSÃO =====
+        
+        function formatFileSize(bytes) {
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function calculatePrice(size, type) {
+            const basePrices = { pdf: 3, mpp: 10, doc: 5, docx: 5, xls: 7, xlsx: 7 };
+            const basePrice = basePrices[type.toLowerCase()] || 10;
+            const extraSize = Math.max(0, (size - 10*1024*1024) / (1024*1024));
+            const sizeSurcharge = extraSize * 0.50;
+            return (basePrice + sizeSurcharge).toFixed(2);
+        }
+        
+        function handleFileSelection(file) {
+            log(`📁 Arquivo selecionado: ${file.name}`);
+            
+            selectedFile = file;
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const price = calculatePrice(file.size, fileExt);
+            
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileType.textContent = fileExt.toUpperCase();
+            filePrice.textContent = `R$ ${price}`;
+            
+            fileInfo.style.display = 'block';
+            convertBtn.disabled = false;
+            
+            log(`✅ Arquivo válido: ${formatFileSize(file.size)}, Preço: R$ ${price}`);
+        }
+        
+        async function startConversion() {
+            if (!selectedFile) {
+                log('❌ Nenhum arquivo selecionado');
+                return;
+            }
+            
+            log(`🚀 Iniciando conversão: ${selectedFile.name}`);
+            convertBtn.disabled = true;
+            
+            try {
+                if (window.conversorAPI) {
+                    const result = await window.conversorAPI.simpleConvert(selectedFile);
+                    
+                    if (result.success) {
+                        log(`✅ Conversão concluída: ID ${result.conversion_id || result.order_id}`);
+                        
+                        if (result.order_id) {
+                            // Pedido criado (requer pagamento)
+                            currentOrder = result;
+                            paymentBtn.disabled = false;
+                            log(`💰 Pedido criado: ${result.order_id} - Aguardando pagamento`);
+                        } else {
+                            // Conversão direta (PDF)
+                            showResult(result);
+                        }
+                    }
+                } else {
+                    log('❌ API Integration não carregada');
+                }
+            } catch (error) {
+                log(`❌ Erro na conversão: ${error.message}`);
+                convertBtn.disabled = false;
+            }
+        }
+        
+        async function simulatePayment() {
+            if (!currentOrder) {
+                log('❌ Nenhum pedido para simular pagamento');
+                return;
+            }
+            
+            log(`💰 Simulando pagamento: ${currentOrder.order_id}`);
+            
+            try {
+                if (window.conversorAPI) {
+                    const success = await window.conversorAPI.confirmPayment(currentOrder.order_id);
+                    
+                    if (success) {
+                        log('✅ Pagamento simulado com sucesso');
+                        paymentBtn.disabled = true;
+                        
+                        // Aguardar processamento
+                        setTimeout(async () => {
+                            log('⚙️ Processando conversão...');
+                            // O polling automático vai capturar quando concluir
+                        }, 2000);
+                    }
+                }
+            } catch (error) {
+                log(`❌ Erro no pagamento: ${error.message}`);
+            }
+        }
+        
+        function showResult(result) {
+            const resultSection = document.getElementById('resultSection');
+            
+            resultSection.innerHTML = `
+                <div class="section">
+                    <h3>🎉 Resultado da Conversão</h3>
+                    <div style="background: #d4edda; padding: 20px; border-radius: 10px;">
+                        <p><strong>✅ Conversão concluída!</strong></p>
+                        <p><strong>ID:</strong> ${result.conversion_id || result.order_id}</p>
+                        <p><strong>Arquivo:</strong> ${result.filename}</p>
+                        <p><strong>Texto extraído:</strong> ${result.text_length} caracteres</p>
+                        <p><strong>Preço:</strong> ${result.price}</p>
+                        
+                        <div style="margin: 15px 0;">
+                            <strong>Preview:</strong>
+                            <textarea readonly style="width: 100%; height: 150px; font-family: monospace; margin-top: 10px;">
+${result.extracted_text ? result.extracted_text.substring(0, 500) + '...' : 'Texto não disponível'}
+                            </textarea>
+                        </div>
+                        
+                        <button class="btn btn-success" onclick="downloadResult()">
+                            📥 Baixar Resultado Completo
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            resultSection.style.display = 'block';
+            log('🎉 Resultado exibido na interface');
+        }
+        
+        function downloadResult() {
+            if (currentOrder && window.conversorAPI) {
+                window.conversorAPI.downloadResult(currentOrder.order_id, selectedFile.name);
+                log('📥 Download iniciado');
+            } else {
+                log('❌ Não é possível fazer download');
+            }
+        }
+        
+        function resetDemo() {
+            log('🔄 Resetando demonstração...');
+            
+            selectedFile = null;
+            currentOrder = null;
+            
+            fileInfo.style.display = 'none';
+            document.getElementById('resultSection').style.display = 'none';
+            
+            convertBtn.disabled = true;
+            paymentBtn.disabled = true;
+            fileInput.value = '';
+            
+            if (window.resetConverter) {
+                window.resetConverter();
+            }
+            
+            log('✅ Demo resetada');
+        }
+        
+        // ===== EVENT LISTENERS =====
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+        
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🎯 Demo de integração inicializada');
+            
+            // Testar conectividade automaticamente
+            setTimeout(() => {
+                testConnection();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
