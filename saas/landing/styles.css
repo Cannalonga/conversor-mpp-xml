@@ -224,6 +224,7 @@ body {
   min-height: 70px;
 }
 
+/* Brand logo responsive */
 .brand {
   display: flex;
   align-items: center;
@@ -231,8 +232,9 @@ body {
 }
 
 .brand img {
-  height: 44px;
-  width: auto;
+  max-width: 100%;
+  height: auto;
+  display: block;
   transition: transform var(--transition-fast);
 }
 
@@ -688,6 +690,14 @@ body {
   .site-footer .container {
     flex-direction: column;
     text-align: center;
+  }
+  
+  .brand img {
+    height: 32px;
+  }
+  
+  .gradient-title--large {
+    font-size: 28px;
   }
 }
 
