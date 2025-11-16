@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CannaConverter — Conversão de arquivos enterprise com confiança</title>
+  <meta name="description" content="CannaConverter transforma MPP, Excel, PDF e Word em formatos prontos para integração. API robusta, SLA garantido e segurança empresarial.">
+  <meta name="keywords" content="conversão de arquivos, MPP para XML, Excel para JSON, API de conversão, enterprise, SaaS">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cannaconverter.com/">
+  <meta property="og:title" content="CannaConverter — Conversão Enterprise de Arquivos">
+  <meta property="og:description" content="Converta MPP, Excel, PDF e Word com API robusta e SLA garantido.">
+  <meta property="og:image" content="https://cannaconverter.com/assets/og-image.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://cannaconverter.com/">
+  <meta property="twitter:title" content="CannaConverter — Conversão Enterprise de Arquivos">
+  <meta property="twitter:description" content="Converta MPP, Excel, PDF e Word com API robusta e SLA garantido.">
+  <meta property="twitter:image" content="https://cannaconverter.com/assets/twitter-image.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="../assets/logo-cannaconverter.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <!-- ========== HEADER ========== -->
+  <header class="site-header" id="header">
+    <div class="container">
+      <div class="brand">
+        <img src="../assets/logo-cannaconverter.svg" alt="CannaConverter" height="44">
+      </div>
+      <nav class="nav">
+        <a href="#features">Recursos</a>
+        <a href="#pricing">Planos</a>
+        <a href="#api-docs">API</a>
+        <a href="/app/login" class="btn btn-ghost">Entrar</a>
+        <a href="/app/signup" class="btn btn-primary">Criar Conta</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Alternar modo escuro">
+          🌙
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main>
+    <!-- ========== HERO SECTION ========== -->
+    <section class="hero fade-in">
+      <div class="container">
+        <div class="hero-inner">
+          <div class="hero-copy">
+            <h1 class="gradient-title gradient-title--large">
+              Converta arquivos em escala — com segurança e performance
+            </h1>
+            <p class="lead">
+              CannaConverter transforma <strong>MPP, Excel, PDF, Word</strong> e imagens em formatos prontos para integração — API robusta, SDKs e painel empresarial com <strong>SLA de 99.5%</strong>.
+            </p>
+            <div class="cta">
+              <a href="/app/signup" class="btn btn-cta">
+                Começar grátis — 10 conversões
+              </a>
+              <a href="#pricing" class="btn btn-outline">
+                Ver todos os planos
+              </a>
+            </div>
+            <ul class="highlights">
+              <li><strong>Conversores enterprise:</strong> MPP → XML, Excel → JSON/CSV/Parquet</li>
+              <li><strong>API production-ready:</strong> Webhooks, rate limiting e observabilidade</li>
+              <li><strong>Segurança garantida:</strong> Sanitização, isolamento e SLA 99.5%</li>
+            </ul>
+          </div>
+          <div class="hero-preview">
+            <div class="card card--feature">
+              <h4 class="gradient-title gradient-title--small">Demo Interativa</h4>
+              <p class="mb-lg">Arraste um arquivo .xlsx e converta em JSON em segundos</p>
+              <div class="upload-demo" id="uploadDemo">
+                <div class="upload-zone">
+                  <div class="upload-icon">📁</div>
+                  <p><strong>Arraste um arquivo Excel aqui</strong></p>
+                  <p class="text-muted">ou clique para selecionar</p>
+                  <input type="file" id="demoFileInput" accept=".xlsx,.xls" style="display: none;">
+                </div>
+                <div class="demo-result" id="demoResult" style="display: none;">
+                  <h5>✅ Conversão concluída!</h5>
+                  <pre id="jsonOutput"></pre>
+                  <button class="btn btn--small btn-primary" id="downloadDemo">Download JSON</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== FEATURES SECTION ========== -->
+    <section id="features" class="section slide-up">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title gradient-title gradient-title--medium">
+            Recursos principais
+          </h2>
+          <p class="section-description">
+            Plataforma enterprise para conversão de arquivos em escala, com API robusta e observabilidade completa.
+          </p>
+        </div>
+
+        <div class="grid grid--3">
+          <div class="card card--feature">
+            <div class="feature-icon">🚀</div>
+            <h3>API para produção</h3>
+            <p>Endpoints REST com autenticação JWT, quotas por plano, webhooks e documentação OpenAPI completa.</p>
+            <a href="#api-docs" class="btn btn-ghost btn--small">Documentação →</a>
+          </div>
+
+          <div class="card card--feature">
+            <div class="feature-icon">⚙️</div>
+            <h3>Conversores robustos</h3>
+            <p>MPP, Excel, PDF, DOCX, Imagens para JSON, XML, CSV, Parquet — com validação e streaming para arquivos grandes.</p>
+            <a href="#conversores" class="btn btn-ghost btn--small">Ver formatos →</a>
+          </div>
+
+          <div class="card card--feature">
+            <div class="feature-icon">🔒</div>
+            <h3>Segurança enterprise</h3>
+            <p>Sanitização automatizada, bloqueio de macros, isolamento de execução e auditoria completa de operações.</p>
+            <a href="#security" class="btn btn-ghost btn--small">Política de segurança →</a>
+          </div>
+
+          <div class="card card--feature">
+            <div class="feature-icon">📊</div>
+            <h3>Observabilidade completa</h3>
+            <p>Prometheus, Grafana, Sentry e runbooks integrados. Métricas em tempo real com alertas proativos.</p>
+            <a href="#monitoring" class="btn btn-ghost btn--small">Dashboard →</a>
+          </div>
+
+          <div class="card card--feature">
+            <div class="feature-icon">⚡</div>
+            <h3>Performance otimizada</h3>
+            <p>Processamento paralelo, cache inteligente, workers dedicados e CDN global para downloads rápidos.</p>
+            <a href="#performance" class="btn btn-ghost btn--small">Benchmark →</a>
+          </div>
+
+          <div class="card card--feature">
+            <div class="feature-icon">🔧</div>
+            <h3>Integração simples</h3>
+            <p>SDKs para Python, Node.js, PHP. Webhooks, retry automático e exemplos prontos para usar.</p>
+            <a href="#sdks" class="btn btn-ghost btn--small">SDKs →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== COMPARISON SECTION ========== -->
+    <section class="section" style="background: rgba(247, 247, 247, 0.5);">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">
+            Por que <span class="gradient-punch">CannaConverter</span> vs CloudConvert?
+          </h2>
+          <p class="section-description">
+            Focamos em precisão, performance e segurança para empresas que dependem de conversão de arquivos.
+          </p>
+        </div>
+
+        <div class="grid grid--2">
+          <div class="card">
+            <h4 class="text-red">✅ CannaConverter</h4>
+            <ul style="text-align: left; list-style: none; padding: 0;">
+              <li>✓ Especializado em MPP, Excel, PDF corporativos</li>
+              <li>✓ SLA de 99.5% com suporte 24/7</li>
+              <li>✓ Processamento em território brasileiro</li>
+              <li>✓ API rate limiting e quotas granulares</li>
+              <li>✓ Observabilidade nativa (Prometheus + Grafana)</li>
+              <li>✓ Preços transparentes sem surpresas</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h4 style="color: #666;">❌ CloudConvert</h4>
+            <ul style="text-align: left; list-style: none; padding: 0;">
+              <li>❌ Genérico, sem especialização</li>
+              <li>❌ SLA limitado, suporte básico</li>
+              <li>❌ Dados processados no exterior</li>
+              <li>❌ Limitações rígidas na API</li>
+              <li>❌ Observabilidade limitada</li>
+              <li>❌ Preços variáveis e complexos</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PRICING SECTION ========== -->
+    <section id="pricing" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title gradient-title gradient-title--medium">
+            Planos e preços
+          </h2>
+          <p class="section-description">
+            Comece grátis e escale conforme sua necessidade. Sem taxas ocultas, sem surpresas.
+          </p>
+        </div>
+
+        <div class="pricing-grid">
+          <!-- Free Plan -->
+          <div class="card plan">
+            <h3>Starter</h3>
+            <p class="price">R$ 0<span style="font-size: 16px; color: #666;">/mês</span></p>
+            <p class="text-muted mb-lg">Ideal para testes e pequenos projetos</p>
+            <ul>
+              <li>10 conversões por mês</li>
+              <li>Arquivos até 5MB</li>
+              <li>API com rate limiting básico</li>
+              <li>Formatos: Excel, PDF, Word</li>
+              <li>Suporte por email</li>
+            </ul>
+            <a href="/app/signup" class="btn btn-outline">Começar grátis</a>
+          </div>
+
+          <!-- Pro Plan -->
+          <div class="card plan recommended">
+            <h3>Professional</h3>
+            <p class="price">R$ 49<span style="font-size: 16px; color: #666;">/mês</span></p>
+            <p class="text-muted mb-lg">Para desenvolvedores e pequenas empresas</p>
+            <ul>
+              <li>1.000 conversões por mês</li>
+              <li>Arquivos até 50MB</li>
+              <li>Prioridade nas filas de processamento</li>
+              <li>Todos os formatos (incluindo MPP)</li>
+              <li>Webhooks e retry automático</li>
+              <li>Relatórios mensais detalhados</li>
+              <li>Suporte prioritário</li>
+            </ul>
+            <a href="/app/checkout?plan=pro" class="btn btn-primary">Assinar Professional</a>
+          </div>
+
+          <!-- Business Plan -->
+          <div class="card plan">
+            <h3>Business</h3>
+            <p class="price">R$ 249<span style="font-size: 16px; color: #666;">/mês</span></p>
+            <p class="text-muted mb-lg">Para empresas com alto volume</p>
+            <ul>
+              <li>10.000 conversões por mês</li>
+              <li>Arquivos até 200MB</li>
+              <li>SLA de 99.9% garantido</li>
+              <li>Workers dedicados</li>
+              <li>Observabilidade avançada</li>
+              <li>Integração via SDK</li>
+              <li>Gerente de conta dedicado</li>
+            </ul>
+            <a href="/app/checkout?plan=business" class="btn btn-outline">Assinar Business</a>
+          </div>
+
+          <!-- Enterprise Plan -->
+          <div class="card plan card--premium">
+            <h3>Enterprise</h3>
+            <p class="price">Sob consulta</p>
+            <p class="text-muted mb-lg">Para grandes corporações</p>
+            <ul>
+              <li>Volume personalizado</li>
+              <li>Arquivos ilimitados</li>
+              <li>SLA personalizado</li>
+              <li>Deploy on-premises disponível</li>
+              <li>SSO e compliance</li>
+              <li>Suporte 24/7 dedicado</li>
+              <li>Consultoria técnica</li>
+            </ul>
+            <a href="/contact" class="btn btn-primary">Solicitar demo</a>
+          </div>
+        </div>
+
+        <!-- Add-ons -->
+        <div class="section-header" style="margin-top: 4rem;">
+          <h3 class="gradient-diagonal">Complementos (Pay-as-you-go)</h3>
+          <div class="grid grid--3" style="margin-top: 2rem; text-align: center;">
+            <div>
+              <strong>Volume extra:</strong><br>
+              <span class="text-red">R$ 0,05</span> por conversão adicional
+            </div>
+            <div>
+              <strong>Arquivos grandes:</strong><br>
+              <span class="text-red">R$ 0,50</span> por MB acima do limite
+            </div>
+            <div>
+              <strong>Processamento prioritário:</strong><br>
+              <span class="text-red">R$ 2,00</span> por conversão expressa
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== API DOCS PREVIEW ========== -->
+    <section id="api-docs" class="section" style="background: var(--deep-charcoal); color: var(--light-neutral);">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title" style="color: var(--clean-white);">
+            API <span class="gradient-punch">REST</span> simples e poderosa
+          </h2>
+          <p class="section-description" style="color: rgba(255, 255, 255, 0.8);">
+            Integre conversão de arquivos em minutos com nossa API RESTful documentada.
+          </p>
+        </div>
+
+        <div class="grid grid--2">
+          <div>
+            <h4 style="color: var(--xerox-corporate-red); margin-bottom: 1rem;">Upload e conversão</h4>
+            <pre style="background: #1a1a1a; padding: 1.5rem; border-radius: 8px; overflow-x: auto;"><code>curl -X POST https://api.cannaconverter.com/v1/convert \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@document.xlsx" \
+  -F "output_format=json" \
+  -F "webhook_url=https://your-app.com/webhook"
+
+# Resposta
+{
+  "job_id": "conv_abc123",
+  "status": "processing",
+  "estimated_time": "30s"
+}</code></pre>
+          </div>
+          
+          <div>
+            <h4 style="color: var(--xerox-corporate-red); margin-bottom: 1rem;">Webhook de conclusão</h4>
+            <pre style="background: #1a1a1a; padding: 1.5rem; border-radius: 8px; overflow-x: auto;"><code># Webhook recebido em your-app.com/webhook
+{
+  "job_id": "conv_abc123",
+  "status": "completed",
+  "download_url": "https://cdn.cannaconverter.com/results/abc123.json",
+  "metadata": {
+    "rows": 1250,
+    "size": "2.1MB",
+    "processing_time": "23s"
+  }
+}</code></pre>
+          </div>
+        </div>
+
+        <div class="text-center" style="margin-top: 3rem;">
+          <a href="/docs" class="btn btn-primary">Documentação completa da API</a>
+          <a href="/app/dashboard" class="btn btn-outline" style="margin-left: 1rem;">Testar no dashboard</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== FAQ ========== -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title gradient-title gradient-title--medium">
+            Perguntas frequentes
+          </h2>
+        </div>
+
+        <div class="grid grid--2">
+          <div class="card">
+            <h4>Quais formatos são suportados?</h4>
+            <p><strong>Entrada:</strong> MPP (Microsoft Project), Excel (XLS/XLSX), PDF, Word (DOC/DOCX), Imagens (PNG/JPG)</p>
+            <p><strong>Saída:</strong> JSON, XML, CSV, Parquet, PDF, Excel</p>
+          </div>
+
+          <div class="card">
+            <h4>Como funciona o SLA de 99.5%?</h4>
+            <p>Garantimos disponibilidade de 99.5% mensal. Se não atingirmos, você recebe créditos proporcionais automaticamente.</p>
+          </div>
+
+          <div class="card">
+            <h4>Os dados são seguros?</h4>
+            <p>Sim. Arquivos são processados em ambiente isolado, excluídos após 24h e nunca compartilhados. Certificação SOC 2 em andamento.</p>
+          </div>
+
+          <div class="card">
+            <h4>Como funciona a cobrança?</h4>
+            <p>Planos mensais com limite de conversões incluído. Volume extra é cobrado por uso. Sem taxas de setup ou cancelamento.</p>
+          </div>
+
+          <div class="card">
+            <h4>Posso cancelar a qualquer momento?</h4>
+            <p>Sim. Cancele quando quiser, sem multa. Você mantém acesso até o final do período pago.</p>
+          </div>
+
+          <div class="card">
+            <h4>Há limite de tamanho de arquivo?</h4>
+            <p>Starter: 5MB, Pro: 50MB, Business: 200MB, Enterprise: ilimitado. Arquivos maiores têm processamento otimizado com streaming.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== CTA FINAL ========== -->
+    <section class="section" style="background: var(--corporate-red-gradient); color: white; text-align: center;">
+      <div class="container">
+        <h2 style="font-size: 2.5rem; margin-bottom: 1rem; color: white;">
+          Comece a converter agora
+        </h2>
+        <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">
+          10 conversões gratuitas. Sem cartão de crédito. Configuração em 2 minutos.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="/app/signup" class="btn" style="background: white; color: var(--xerox-corporate-red); font-weight: 700;">
+            Criar conta gratuita →
+          </a>
+          <a href="/contact" class="btn btn-outline" style="border-color: white; color: white;">
+            Falar com especialista
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+        <div>
+          <h4 style="color: var(--xerox-corporate-red); margin-bottom: 1rem;">Produto</h4>
+          <a href="#features">Recursos</a><br>
+          <a href="#pricing">Preços</a><br>
+          <a href="/docs">Documentação</a><br>
+          <a href="/status">Status da API</a><br>
+          <a href="/changelog">Changelog</a>
+        </div>
+        <div>
+          <h4 style="color: var(--xerox-corporate-red); margin-bottom: 1rem;">Empresa</h4>
+          <a href="/about">Sobre</a><br>
+          <a href="/contact">Contato</a><br>
+          <a href="/careers">Carreiras</a><br>
+          <a href="/press">Imprensa</a><br>
+          <a href="/partners">Parceiros</a>
+        </div>
+        <div>
+          <h4 style="color: var(--xerox-corporate-red); margin-bottom: 1rem;">Recursos</h4>
+          <a href="/blog">Blog</a><br>
+          <a href="/guides">Guias</a><br>
+          <a href="/tutorials">Tutoriais</a><br>
+          <a href="/webinars">Webinars</a><br>
+          <a href="/community">Comunidade</a>
+        </div>
+        <div>
+          <h4 style="color: var(--xerox-corporate-red); margin-bottom: 1rem;">Legal</h4>
+          <a href="/privacy">Privacidade</a><br>
+          <a href="/terms">Termos</a><br>
+          <a href="/security">Segurança</a><br>
+          <a href="/compliance">Compliance</a><br>
+          <a href="/gdpr">GDPR</a>
+        </div>
+      </div>
+      
+      <div style="border-top: 1px solid #333; padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <img src="../assets/logo-cannaconverter.svg" alt="CannaConverter" height="32" style="opacity: 0.8;">
+          <p style="margin: 0.5rem 0 0 0; opacity: 0.7;">© 2025 CannaConverter — Desenvolvido por Canna Labs</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+          <a href="https://twitter.com/cannaconverter" aria-label="Twitter">🐦</a>
+          <a href="https://github.com/cannalonga" aria-label="GitHub">🐱</a>
+          <a href="https://linkedin.com/company/cannaconverter" aria-label="LinkedIn">💼</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========== JAVASCRIPT ========== -->
+  <script>
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('theme', newTheme);
+    });
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+    // Demo Upload
+    const uploadZone = document.querySelector('.upload-zone');
+    const fileInput = document.getElementById('demoFileInput');
+    const demoResult = document.getElementById('demoResult');
+    const jsonOutput = document.getElementById('jsonOutput');
+
+    uploadZone.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.style.borderColor = 'var(--xerox-corporate-red)';
+      uploadZone.style.background = 'rgba(217, 4, 41, 0.05)';
+    });
+
+    uploadZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      uploadZone.style.borderColor = '#ddd';
+      uploadZone.style.background = '#f9f9f9';
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const files = e.dataTransfer.files;
+      if (files[0]) {
+        processDemo(files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) {
+        processDemo(e.target.files[0]);
+      }
+    });
+
+    function processDemo(file) {
+      // Simulated demo conversion
+      uploadZone.style.display = 'none';
+      demoResult.style.display = 'block';
+      
+      const sampleJson = {
+        "filename": file.name,
+        "rows": Math.floor(Math.random() * 1000) + 100,
+        "columns": ["Nome", "Email", "Telefone", "Empresa", "Data"],
+        "sample_data": [
+          {"Nome": "João Silva", "Email": "joao@empresa.com", "Telefone": "11999999999"},
+          {"Nome": "Maria Santos", "Email": "maria@empresa.com", "Telefone": "11888888888"}
+        ],
+        "conversion_time": "2.3s",
+        "file_size": (file.size / 1024).toFixed(1) + " KB"
+      };
+      
+      jsonOutput.textContent = JSON.stringify(sampleJson, null, 2);
+    }
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Header background on scroll
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('header');
+      if (window.scrollY > 50) {
+        header.style.background = 'rgba(255, 255, 255, 0.98)';
+        header.style.backdropFilter = 'blur(20px)';
+      } else {
+        header.style.background = 'rgba(255, 255, 255, 0.95)';
+        header.style.backdropFilter = 'blur(12px)';
+      }
+    });
+
+    // Animations on scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    // Observe all cards and sections for animation
+    document.querySelectorAll('.card, .section').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+      observer.observe(el);
+    });
+  </script>
+
+  <!-- Analytics -->
+  <script>
+    // Add your analytics script here (Google Analytics, etc.)
+  </script>
+</body>
+</html>

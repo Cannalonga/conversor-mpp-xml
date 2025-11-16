@@ -1,0 +1,322 @@
+global:
+  # Global configuration
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@excel-converter.company.com'
+  smtp_auth_username: 'alerts@excel-converter.company.com'
+  smtp_auth_password: 'your-smtp-password'
+  
+  # Slack webhook URL (replace with your webhook)
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+
+# Alert routing configuration
+route:
+  # Default receiver
+  receiver: 'excel-default'
+  
+  # Group alerts by alertname and cluster for 30 seconds
+  group_by: ['alertname', 'cluster', 'service']
+  
+  # Wait 30 seconds before sending initial notification
+  group_wait: 30s
+  
+  # Wait 5 minutes before sending notifications for new alerts in existing group
+  group_interval: 5m
+  
+  # Wait 12 hours before re-sending resolved notification
+  repeat_interval: 12h
+  
+  # Child routes for different alert types
+  routes:
+  
+  # CRITICAL alerts (immediate page)
+  - match:
+      severity: critical
+    receiver: 'excel-critical-page'
+    group_wait: 10s
+    repeat_interval: 5m
+    continue: true
+    
+  # WARNING alerts during business hours  
+  - match:
+      severity: warning
+    receiver: 'excel-warning-slack'
+    group_interval: 10m
+    repeat_interval: 2h
+    continue: true
+    
+  # SLO violation alerts
+  - match_re:
+      alertname: '^ExcelConverter.*SLO$'
+    receiver: 'excel-slo-team'
+    group_interval: 15m
+    repeat_interval: 6h
+    
+  # Error budget burn alerts  
+  - match_re:
+      alertname: '^ExcelConverter.*BudgetBurn.*'
+    receiver: 'excel-sre-oncall'
+    group_wait: 5s
+    repeat_interval: 30m
+    
+  # Queue/capacity alerts
+  - match_re:
+      alertname: '^ExcelConverter.*Queue.*'
+    receiver: 'excel-capacity-team'
+    group_interval: 5m
+    repeat_interval: 1h
+
+# Notification templates
+templates:
+- '/etc/alertmanager/templates/*.tmpl'
+
+# Notification receivers
+receivers:
+
+# Default receiver (low priority)
+- name: 'excel-default'
+  email_configs:
+  - to: 'excel-team@company.com'
+    subject: '📊 Excel Converter Alert: {{ .GroupLabels.alertname }}'
+    body: |
+      {{ range .Alerts }}
+      Alert: {{ .Annotations.summary }}
+      Description: {{ .Annotations.description }}
+      Severity: {{ .Labels.severity }}
+      
+      Dashboard: {{ .Annotations.dashboard_url }}
+      Runbook: {{ .Annotations.runbook_url }}
+      {{ end }}
+
+# CRITICAL alerts - Page immediately + Slack
+- name: 'excel-critical-page'
+  # PagerDuty integration
+  pagerduty_configs:
+  - routing_key: 'YOUR_PAGERDUTY_INTEGRATION_KEY'
+    description: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+    severity: 'critical'
+    details:
+      alertname: '{{ .GroupLabels.alertname }}'
+      summary: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+      description: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+      dashboard: '{{ range .Alerts }}{{ .Annotations.dashboard_url }}{{ end }}'
+      runbook: '{{ range .Alerts }}{{ .Annotations.runbook_url }}{{ end }}'
+  
+  # Slack critical channel
+  slack_configs:
+  - channel: '#excel-alerts-critical'
+    title: '🚨 CRITICAL ALERT: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      **{{ .Annotations.summary }}**
+      
+      📊 **Details:**
+      • Service: Excel Converter
+      • Severity: {{ .Labels.severity | upper }}
+      • Alert: {{ .Labels.alertname }}
+      
+      📋 **Description:**
+      {{ .Annotations.description }}
+      
+      🔗 **Quick Links:**
+      • [Dashboard]({{ .Annotations.dashboard_url }})
+      • [Runbook]({{ .Annotations.runbook_url }}) 
+      • [Sentry]({{ .Annotations.sentry_url }})
+      
+      ⏰ **Time:** {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+      {{ end }}
+    color: 'danger'
+    send_resolved: true
+
+# WARNING alerts - Slack only
+- name: 'excel-warning-slack'
+  slack_configs:
+  - channel: '#excel-alerts'
+    title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      **{{ .Annotations.summary }}**
+      
+      📊 **Service:** Excel Converter
+      **Severity:** {{ .Labels.severity | upper }}
+      
+      {{ .Annotations.description }}
+      
+      🔗 [Dashboard]({{ .Annotations.dashboard_url }}) | [Runbook]({{ .Annotations.runbook_url }})
+      {{ end }}
+    color: 'warning'
+    send_resolved: true
+
+# SLO violation - Product + Engineering teams  
+- name: 'excel-slo-team'
+  email_configs:
+  - to: 'product-team@company.com,engineering-leads@company.com'
+    subject: '📈 SLO Violation: {{ .GroupLabels.alertname }}'
+    body: |
+      🎯 **Service Level Objective Violated**
+      
+      {{ range .Alerts }}
+      **Alert:** {{ .Annotations.summary }}
+      **Impact:** {{ .Annotations.description }}
+      **Service:** Excel Converter
+      
+      📊 **SLO Details:**
+      • Alert: {{ .Labels.alertname }}
+      • Severity: {{ .Labels.severity }}
+      • Started: {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+      
+      🔗 **Actions:**
+      • [View Dashboard]({{ .Annotations.dashboard_url }})
+      • [Follow Runbook]({{ .Annotations.runbook_url }})
+      • [Check Errors]({{ .Annotations.sentry_url }})
+      {{ end }}
+  
+  slack_configs:
+  - channel: '#excel-slo-alerts'
+    title: '📈 SLO Violation: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      **{{ .Annotations.summary }}**
+      
+      📊 **SLO Impact Analysis Required**
+      {{ .Annotations.description }}
+      
+      🎯 **Business Impact:** Revenue and customer experience affected
+      
+      🔗 [Dashboard]({{ .Annotations.dashboard_url }}) | [Runbook]({{ .Annotations.runbook_url }})
+      {{ end }}
+    color: '#ff8c00'  # Orange
+
+# Error budget burn - SRE on-call
+- name: 'excel-sre-oncall'
+  # PagerDuty for error budget burn
+  pagerduty_configs:
+  - routing_key: 'YOUR_SRE_PAGERDUTY_KEY'
+    description: '⚡ Error Budget Burn: {{ .GroupLabels.alertname }}'
+    severity: 'error'
+    details:
+      error_budget_alert: true
+      service: 'excel-converter'
+      burn_rate: '{{ range .Alerts }}{{ .Labels.burn_rate }}{{ end }}'
+      
+  slack_configs:
+  - channel: '#sre-oncall'
+    title: '⚡ Error Budget Burn: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      **🔥 FAST ERROR BUDGET BURN DETECTED**
+      
+      {{ .Annotations.summary }}
+      
+      **⚠️ Impact:** {{ .Annotations.description }}
+      
+      **📊 Burn Rate:** Consuming error budget {{ .Labels.burn_rate }}x faster than acceptable
+      
+      **🚨 Action Required:**
+      1. Check [Dashboard]({{ .Annotations.dashboard_url }}) immediately
+      2. Follow [Runbook]({{ .Annotations.runbook_url }})
+      3. Investigate [Sentry Errors]({{ .Annotations.sentry_url }})
+      
+      {{ end }}
+    color: 'danger'
+
+# Capacity/Queue alerts - Platform team
+- name: 'excel-capacity-team'
+  slack_configs:
+  - channel: '#excel-capacity'
+    title: '📈 Capacity Alert: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      **{{ .Annotations.summary }}**
+      
+      📊 **Capacity Analysis Needed**
+      {{ .Annotations.description }}
+      
+      🎯 **Recommended Actions:**
+      • Review scaling policies
+      • Check resource utilization  
+      • Consider worker scaling
+      
+      🔗 [Dashboard]({{ .Annotations.dashboard_url }}) | [Runbook]({{ .Annotations.runbook_url }})
+      {{ end }}
+    color: '#0099cc'  # Blue
+    send_resolved: true
+    
+  email_configs:
+  - to: 'platform-team@company.com'
+    subject: '📈 Excel Converter Capacity Alert'
+    body: |
+      {{ range .Alerts }}
+      Capacity planning attention required for Excel Converter.
+      
+      Alert: {{ .Annotations.summary }}
+      Details: {{ .Annotations.description }}
+      
+      Dashboard: {{ .Annotations.dashboard_url }}
+      Runbook: {{ .Annotations.runbook_url }}
+      {{ end }}
+
+# Webhook receivers (for custom integrations)
+- name: 'excel-webhooks'
+  webhook_configs:
+  # Custom internal monitoring system
+  - url: 'https://internal-monitoring.company.com/webhook/excel-alerts'
+    send_resolved: true
+    http_config:
+      bearer_token: 'your-webhook-token'
+    
+  # Slack alternative via webhook  
+  - url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+    send_resolved: true
+    
+# Inhibition rules (suppress redundant alerts)
+inhibit_rules:
+
+# Suppress warning alerts when critical version is firing
+- source_match:
+    severity: 'critical'
+  target_match:
+    severity: 'warning'  
+  equal: ['alertname', 'service']
+
+# Suppress individual worker alerts when cluster alert is firing  
+- source_match:
+    alertname: 'ExcelConverterAvailabilitySLO'
+  target_match_re:
+    alertname: 'ExcelConverterWorker.*'
+  equal: ['service']
+
+# Suppress latency alerts when error rate is high
+- source_match_re:
+    alertname: 'ExcelConverter.*ErrorRate.*'
+  target_match_re:
+    alertname: 'ExcelConverter.*Latency.*'
+  equal: ['service']
+
+# Mute resolved alerts
+mute_time_intervals:
+
+# Maintenance windows (example)
+- name: 'maintenance-window'
+  time_intervals:
+  - times:
+    - start_time: '02:00'
+      end_time: '06:00'
+    weekdays: ['sunday']
+    months: ['1:12']
+
+# Business hours only alerts
+- name: 'business-hours'
+  time_intervals:
+  - times:
+    - start_time: '09:00'  
+      end_time: '18:00'
+    weekdays: ['monday:friday']
+    location: 'America/Sao_Paulo'
+
+# Test alert receiver (for testing)
+- name: 'excel-test'
+  slack_configs:
+  - channel: '#excel-alerts-test' 
+    title: '🧪 Test Alert: {{ .GroupLabels.alertname }}'
+    text: 'This is a test alert for Excel Converter monitoring system.'
+    color: 'good'

@@ -1,0 +1,443 @@
+/* ==========================================================================
+   CannaConverter - DARK MODE Premium
+   Xerox-inspired Dark Theme with Red Accents
+   ========================================================================== */
+
+/* Dark Mode Color Overrides */
+:root[data-theme="dark"] {
+  /* === DARK FOUNDATIONS === */
+  --light-neutral: #0F0F0F;         /* Main dark background */
+  --clean-white: #1A1A1A;           /* Card/container background */
+  --soft-graphite: #E8E8E8;         /* Primary text */
+  --subtle-gray: #2A2A2A;           /* Borders and dividers */
+  --deep-charcoal: #000000;         /* Pure black for contrast */
+  
+  /* === ENHANCED DARK GRADIENTS === */
+  --xerox-gradient-main: linear-gradient(90deg, #E8E8E8 0%, #FF0A0A 50%, #B30000 100%);
+  --xerox-gradient-dark: linear-gradient(90deg, #FFFFFF 0%, #FF2A2A 40%, #D90429 100%);
+  --dark-red-glow: linear-gradient(135deg, #1A0000 0%, #330000 50%, #D90429 100%);
+  
+  /* === DARK SHADOWS & EFFECTS === */
+  --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --shadow-premium: 0 20px 50px rgba(217, 4, 41, 0.3);
+  --shadow-red-glow: 0 8px 25px rgba(255, 10, 10, 0.4);
+  --shadow-dark-inset: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+  
+  /* === DARK SPECIFIC ACCENTS === */
+  --dark-accent-1: #FF4444;
+  --dark-accent-2: #CC0000;
+  --dark-border: #333333;
+  --dark-hover: #262626;
+}
+
+/* ==========================================================================
+   DARK MODE BASE OVERRIDES
+   ========================================================================== */
+
+[data-theme="dark"] body {
+  background: var(--light-neutral);
+  color: var(--soft-graphite);
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(217, 4, 41, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 10, 10, 0.02) 0%, transparent 50%);
+}
+
+[data-theme="dark"] .gradient-title {
+  background: var(--xerox-gradient-dark);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .gradient-diagonal {
+  background: linear-gradient(120deg, #FFFFFF 0%, #FF4444 45%, #CC0000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .gradient-punch {
+  background: linear-gradient(90deg, #FFFFFF 0%, #FF0000 70%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==========================================================================
+   DARK MODE HEADER & NAVIGATION
+   ========================================================================== */
+
+[data-theme="dark"] .site-header {
+  background: rgba(15, 15, 15, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--dark-border);
+}
+
+[data-theme="dark"] .nav a {
+  color: var(--soft-graphite);
+}
+
+[data-theme="dark"] .nav a:hover {
+  color: var(--dark-accent-1);
+  background: rgba(255, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .nav a::after {
+  background: var(--corporate-red-gradient);
+}
+
+/* ==========================================================================
+   DARK MODE BUTTONS
+   ========================================================================== */
+
+[data-theme="dark"] .btn-primary {
+  background: var(--corporate-red-gradient);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-red-glow);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  background: linear-gradient(135deg, #FF2A2A 0%, #B30000 100%);
+  box-shadow: var(--shadow-premium);
+  transform: translateY(-3px);
+}
+
+[data-theme="dark"] .btn-cta {
+  background: var(--clean-white);
+  color: var(--dark-accent-1);
+  border: 2px solid var(--dark-accent-1);
+  box-shadow: var(--shadow-dark-inset);
+}
+
+[data-theme="dark"] .btn-cta::before {
+  background: var(--dark-red-glow);
+}
+
+[data-theme="dark"] .btn-cta:hover {
+  color: #FFFFFF;
+  box-shadow: var(--shadow-premium);
+}
+
+[data-theme="dark"] .btn-outline {
+  background: transparent;
+  color: var(--soft-graphite);
+  border: 1px solid var(--dark-border);
+}
+
+[data-theme="dark"] .btn-outline:hover {
+  background: var(--dark-hover);
+  border-color: var(--dark-accent-1);
+  color: var(--dark-accent-1);
+  box-shadow: var(--shadow-subtle);
+}
+
+[data-theme="dark"] .btn-ghost {
+  color: var(--dark-accent-1);
+}
+
+[data-theme="dark"] .btn-ghost:hover {
+  background: rgba(255, 68, 68, 0.15);
+}
+
+/* ==========================================================================
+   DARK MODE CARDS
+   ========================================================================== */
+
+[data-theme="dark"] .card {
+  background: var(--clean-white);
+  border: 1px solid var(--dark-border);
+  box-shadow: var(--shadow-subtle);
+}
+
+[data-theme="dark"] .card:hover {
+  background: var(--dark-hover);
+  box-shadow: var(--shadow-elevated);
+  transform: translateY(-6px);
+  border-color: var(--dark-accent-2);
+}
+
+[data-theme="dark"] .card--premium {
+  border: 2px solid var(--dark-accent-1);
+  background: linear-gradient(135deg, var(--clean-white) 0%, #1F1F1F 100%);
+}
+
+[data-theme="dark"] .card--premium::before {
+  background: var(--dark-red-glow);
+}
+
+[data-theme="dark"] .card--feature {
+  background: var(--clean-white);
+  border: 1px solid var(--dark-border);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .card--feature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--corporate-red-gradient);
+  opacity: 0;
+  transition: opacity var(--transition-smooth);
+}
+
+[data-theme="dark"] .card--feature:hover::before {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   DARK MODE HERO SECTION
+   ========================================================================== */
+
+[data-theme="dark"] .hero {
+  background: linear-gradient(135deg, 
+    rgba(15, 15, 15, 0.95) 0%, 
+    rgba(26, 26, 26, 0.9) 50%, 
+    rgba(15, 15, 15, 0.95) 100%);
+}
+
+[data-theme="dark"] .hero::before {
+  background: radial-gradient(ellipse, 
+    rgba(217, 4, 41, 0.08) 0%, 
+    transparent 60%);
+}
+
+[data-theme="dark"] .lead {
+  color: rgba(232, 232, 232, 0.9);
+}
+
+[data-theme="dark"] .highlights li {
+  color: var(--soft-graphite);
+}
+
+[data-theme="dark"] .highlights li::before {
+  background: var(--dark-red-glow);
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   DARK MODE PRICING & SPECIAL SECTIONS
+   ========================================================================== */
+
+[data-theme="dark"] .price {
+  color: var(--dark-accent-1);
+  text-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .plan ul li {
+  border-bottom: 1px solid var(--dark-border);
+  color: rgba(232, 232, 232, 0.8);
+}
+
+[data-theme="dark"] .recommended::after {
+  background: var(--dark-red-glow);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-red-glow);
+}
+
+/* ==========================================================================
+   DARK MODE API DOCS SECTION ENHANCEMENT
+   ========================================================================== */
+
+[data-theme="dark"] #api-docs {
+  background: #000000;
+  position: relative;
+}
+
+[data-theme="dark"] #api-docs::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(217, 4, 41, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 10, 10, 0.05) 0%, transparent 50%);
+  z-index: 0;
+}
+
+[data-theme="dark"] #api-docs .container {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="dark"] #api-docs pre {
+  background: #0A0A0A !important;
+  border: 1px solid var(--dark-border);
+  box-shadow: var(--shadow-dark-inset);
+}
+
+[data-theme="dark"] #api-docs code {
+  color: #E8E8E8;
+}
+
+/* ==========================================================================
+   DARK MODE FOOTER
+   ========================================================================== */
+
+[data-theme="dark"] .site-footer {
+  background: #000000;
+  border-top: 1px solid var(--dark-border);
+}
+
+[data-theme="dark"] .site-footer h4 {
+  color: var(--dark-accent-1) !important;
+}
+
+[data-theme="dark"] .site-footer a {
+  color: rgba(232, 232, 232, 0.8);
+}
+
+[data-theme="dark"] .site-footer a:hover {
+  color: var(--dark-accent-1);
+}
+
+/* ==========================================================================
+   DARK MODE SPECIAL EFFECTS
+   ========================================================================== */
+
+/* Glowing red elements on hover */
+[data-theme="dark"] .feature-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-md);
+  transition: all var(--transition-smooth);
+  filter: drop-shadow(0 4px 8px rgba(217, 4, 41, 0.2));
+}
+
+[data-theme="dark"] .card--feature:hover .feature-icon {
+  filter: drop-shadow(0 6px 12px rgba(255, 68, 68, 0.4));
+  transform: scale(1.1);
+}
+
+/* Enhanced glow effect for titles */
+[data-theme="dark"] .section-title {
+  position: relative;
+}
+
+[data-theme="dark"] .section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: var(--corporate-red-gradient);
+  border-radius: 1px;
+  opacity: 0.8;
+}
+
+/* Dark mode upload demo styling */
+[data-theme="dark"] .upload-zone {
+  background: var(--dark-hover);
+  border: 2px dashed var(--dark-border);
+  color: var(--soft-graphite);
+  transition: all var(--transition-smooth);
+}
+
+[data-theme="dark"] .upload-zone:hover {
+  border-color: var(--dark-accent-1);
+  background: rgba(255, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .demo-result {
+  background: var(--clean-white);
+  border: 1px solid var(--dark-border);
+}
+
+[data-theme="dark"] #jsonOutput {
+  background: #0A0A0A;
+  color: #E8E8E8;
+  border: 1px solid var(--dark-border);
+}
+
+/* ==========================================================================
+   DARK MODE ANIMATIONS & TRANSITIONS
+   ========================================================================== */
+
+/* Enhanced fade-in for dark mode */
+[data-theme="dark"] .fade-in {
+  animation: darkFadeIn 0.8s ease-out;
+}
+
+@keyframes darkFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px);
+    filter: brightness(0.8);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+}
+
+/* Red glow pulse effect */
+[data-theme="dark"] .pulse-red {
+  animation: pulseRed 2s ease-in-out infinite;
+}
+
+@keyframes pulseRed {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(217, 4, 41, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(255, 10, 10, 0.6);
+  }
+}
+
+/* ==========================================================================
+   DARK MODE RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  [data-theme="dark"] .hero {
+    background: linear-gradient(135deg, 
+      rgba(15, 15, 15, 0.98) 0%, 
+      rgba(26, 26, 26, 0.95) 50%, 
+      rgba(15, 15, 15, 0.98) 100%);
+  }
+  
+  [data-theme="dark"] .card {
+    background: rgba(26, 26, 26, 0.95);
+  }
+}
+
+/* ==========================================================================
+   DARK MODE UTILITY CLASSES
+   ========================================================================== */
+
+[data-theme="dark"] .text-red {
+  color: var(--dark-accent-1) !important;
+}
+
+[data-theme="dark"] .text-muted {
+  color: rgba(232, 232, 232, 0.6) !important;
+}
+
+[data-theme="dark"] .border-red {
+  border-color: var(--dark-accent-1) !important;
+}
+
+[data-theme="dark"] .bg-dark-accent {
+  background: var(--dark-red-glow) !important;
+}
+
+/* Theme toggle button styling */
+[data-theme="dark"] .theme-toggle {
+  background: var(--clean-white);
+  border: 1px solid var(--dark-border);
+  color: var(--dark-accent-1);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background: var(--dark-hover);
+  border-color: var(--dark-accent-1);
+  box-shadow: var(--shadow-red-glow);
+}

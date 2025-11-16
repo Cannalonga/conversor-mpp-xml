@@ -1,0 +1,145 @@
+# Excel Converter Prometheus Recording Rules
+# These rules pre-calculate important SLI metrics for alerting and dashboards
+
+groups:
+  - name: excel_converter_recording_rules
+    interval: 30s
+    rules:
+    
+    # ====================
+    # SUCCESS RATE SLIs
+    # ====================
+    
+    # Overall conversion success rate (5m window)
+    - record: excel:conversion_success_rate_5m
+      expr: |
+        sum(rate(excel_converter_conversions_total{status="success"}[5m])) 
+        / 
+        sum(rate(excel_converter_conversions_total[5m]))
+
+    # Success rate by output format  
+    - record: excel:conversion_success_rate_by_format_5m
+      expr: |
+        sum(rate(excel_converter_conversions_total{status="success"}[5m])) by (format)
+        / 
+        sum(rate(excel_converter_conversions_total[5m])) by (format)
+
+    # API availability (non-5xx responses)
+    - record: excel:api_availability_5m  
+      expr: |
+        sum(rate(excel_converter_requests_total{status!~"5.."}[5m])) 
+        / 
+        sum(rate(excel_converter_requests_total[5m]))
+
+    # ====================
+    # LATENCY SLIs  
+    # ====================
+    
+    # P95 conversion latency by file size
+    - record: excel:conversion_latency_p95_small_5m
+      expr: |
+        histogram_quantile(0.95, 
+          sum(rate(excel_converter_conversion_duration_seconds_bucket{
+            status="success",
+            file_size_category="small"
+          }[5m])) by (le)
+        )
+
+    - record: excel:conversion_latency_p95_medium_5m  
+      expr: |
+        histogram_quantile(0.95, 
+          sum(rate(excel_converter_conversion_duration_seconds_bucket{
+            status="success", 
+            file_size_category="medium"
+          }[5m])) by (le)
+        )
+
+    - record: excel:conversion_latency_p95_large_5m
+      expr: |
+        histogram_quantile(0.95, 
+          sum(rate(excel_converter_conversion_duration_seconds_bucket{
+            status="success",
+            file_size_category="large"
+          }[5m])) by (le)
+        )
+
+    # P99 API response time
+    - record: excel:api_latency_p99_5m
+      expr: |
+        histogram_quantile(0.99, 
+          sum(rate(excel_converter_request_duration_seconds_bucket[5m])) 
+          by (le, endpoint)
+        )
+
+    # ====================
+    # THROUGHPUT SLIs
+    # ====================
+    
+    # Conversion throughput (conversions/second)
+    - record: excel:conversion_throughput_5m
+      expr: sum(rate(excel_converter_conversions_total{status="success"}[5m]))
+
+    # Request throughput (requests/second)  
+    - record: excel:request_throughput_5m
+      expr: sum(rate(excel_converter_requests_total[5m]))
+
+    # ====================
+    # ERROR BUDGET BURN RATES
+    # ====================
+    
+    # Error rate (for 99.5% SLO = 0.5% error budget)
+    - record: excel:error_rate_1m
+      expr: |
+        sum(rate(excel_converter_conversions_total{status="error"}[1m])) 
+        / 
+        sum(rate(excel_converter_conversions_total[1m]))
+
+    - record: excel:error_rate_5m  
+      expr: |
+        sum(rate(excel_converter_conversions_total{status="error"}[5m])) 
+        / 
+        sum(rate(excel_converter_conversions_total[5m]))
+
+    - record: excel:error_rate_1h
+      expr: |
+        sum(rate(excel_converter_conversions_total{status="error"}[1h])) 
+        / 
+        sum(rate(excel_converter_conversions_total[1h]))
+
+    - record: excel:error_rate_6h
+      expr: |
+        sum(rate(excel_converter_conversions_total{status="error"}[6h])) 
+        / 
+        sum(rate(excel_converter_conversions_total[6h]))
+
+    # Error budget burn rate (multiple = burn_rate / error_budget)
+    # 0.005 = 0.5% error budget for 99.5% SLO
+    - record: excel:error_budget_burn_rate_1h
+      expr: excel:error_rate_1h / 0.005
+
+    - record: excel:error_budget_burn_rate_6h  
+      expr: excel:error_rate_6h / 0.005
+
+    # ====================
+    # RESOURCE UTILIZATION
+    # ====================
+    
+    # Worker pool utilization
+    - record: excel:worker_utilization  
+      expr: |
+        excel_converter_active_conversions 
+        / 
+        excel_converter_worker_pool_size
+
+    # Queue depth
+    - record: excel:queue_depth
+      expr: excel_converter_active_conversions + excel_converter_queued_conversions
+
+    # Memory utilization per worker
+    - record: excel:worker_memory_utilization
+      expr: |
+        (
+          excel_converter_memory_usage_bytes{job="worker"} 
+          / 
+          excel_converter_memory_limit_bytes{job="worker"}
+        ) * 100

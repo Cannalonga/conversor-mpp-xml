@@ -16,6 +16,16 @@ from converters.excel.api import router as excel_router
 # from app.routers.image import router as image_router  # Future import
 # from app.routers.office import router as office_router  # Future import
 
+# Import monitoring components
+try:
+    from monitoring.middleware import setup_monitoring_middleware
+    from monitoring.metrics import metrics_router
+    from monitoring.sentry_config import init_sentry, setup_sentry_logging
+    MONITORING_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"⚠️ Monitoring not available: {e}")
+    MONITORING_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -23,10 +33,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger("main")
 
+# Initialize Sentry error tracking (if available)
+if MONITORING_AVAILABLE:
+    setup_sentry_logging()
+    sentry_initialized = init_sentry()
+    logger.info("🔍 Monitoring and error tracking initialized")
+else:
+    logger.info("📊 Running without advanced monitoring")
+
 # Create FastAPI app
 app = FastAPI(
     title="Conversor Enterprise API",
-    description="Multi-format file conversion platform with PDF, Office, and Image processing",
+    description="Multi-format file conversion platform with PDF, Office, and Image processing + Enterprise Monitoring",
     version="4.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -40,6 +58,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setup monitoring middleware (if available)
+if MONITORING_AVAILABLE:
+    setup_monitoring_middleware(
+        app,
+        enable_prometheus=True,
+        enable_conversion_tracking=True,
+        enable_health_tracking=True,
+        system_metrics_interval=30.0
+    )
+    logger.info("📈 Prometheus metrics and conversion tracking enabled")
+
+# Include monitoring endpoints
+if MONITORING_AVAILABLE:
+    app.include_router(metrics_router, prefix="/monitoring", tags=["Monitoring"])
 
 # Include routers
 app.include_router(pdf_router, prefix="/api", tags=["PDF Conversion"])
@@ -56,14 +89,21 @@ async def root():
         "status": "active",
         "converters": {
             "pdf": "✅ PDF → Text extraction",
-            "excel": "✅ Excel → CSV/JSON/XML conversion",
+            "excel": "✅ Excel → CSV/JSON/XML/TSV/Parquet conversion with enterprise monitoring",
             "mpp": "✅ MPP → XML conversion", 
             "office": "🔄 Office formats (coming soon)",
             "image": "🔄 Image processing (coming soon)"
         },
+        "monitoring": {
+            "prometheus_metrics": "✅ Available" if MONITORING_AVAILABLE else "❌ Not available",
+            "sentry_tracking": "✅ Available" if MONITORING_AVAILABLE else "❌ Not available",
+            "performance_monitoring": "✅ Available" if MONITORING_AVAILABLE else "❌ Not available"
+        },
         "endpoints": {
             "docs": "/docs",
             "health": "/health",
+            "metrics": "/monitoring/metrics" if MONITORING_AVAILABLE else "Not available",
+            "health_detailed": "/monitoring/health" if MONITORING_AVAILABLE else "Not available",
             "pdf_text": "/api/convert/pdf/text",
             "excel_convert": "/api/excel/convert",
             "excel_formats": "/api/excel/formats"

@@ -1,0 +1,380 @@
+# Excel Converter Prometheus Alerting Rules
+# Production-ready alerts based on SLO definitions and error budget burn rates
+
+groups:
+  - name: excel_converter_slo_alerts
+    rules:
+
+    # ====================================
+    # CRITICAL SLO VIOLATION ALERTS  
+    # ====================================
+
+    # Fast error budget burn (page immediately)
+    - alert: ExcelConverterErrorBudgetBurnCritical
+      expr: |
+        (
+          excel:error_rate_1h > (2 * 0.005)
+          and
+          excel:error_rate_5m > (2 * 0.005)
+        )
+      for: 2m
+      labels:
+        severity: critical
+        team: sre
+        service: excel-converter
+        alert_type: error_budget_burn
+      annotations:
+        summary: "🚨 CRITICAL: Excel Converter burning error budget too fast"
+        description: |
+          Error budget consumption rate is 2x the acceptable threshold.
+          - Current 1h error rate: {{ $value | humanizePercentage }}
+          - SLO threshold: 0.5%
+          - If this continues, monthly error budget will be exhausted in < 12 hours.
+          
+          IMMEDIATE ACTION REQUIRED:
+          1. Check Sentry for error patterns
+          2. Verify worker health and capacity  
+          3. Consider halting deployments
+          4. Escalate to on-call engineer
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/error-budget-burn"
+        dashboard_url: "https://grafana.company.com/d/excel-overview"
+        sentry_url: "https://sentry.io/organizations/company/projects/excel-converter/"
+
+    # Slow error budget burn (warn early)  
+    - alert: ExcelConverterErrorBudgetBurnHigh
+      expr: |
+        (
+          excel:error_rate_6h > (10 * 0.005)
+          and
+          excel:error_rate_1h > (10 * 0.005)
+        )
+      for: 15m
+      labels:
+        severity: warning
+        team: sre  
+        service: excel-converter
+        alert_type: error_budget_burn
+      annotations:
+        summary: "⚠️ Excel Converter error budget consumption elevated"
+        description: |
+          Error budget consumption is 10x higher than normal.
+          - Current 6h error rate: {{ $value | humanizePercentage }}
+          - SLO threshold: 0.5%
+          - At current rate, monthly error budget exhausted in ~3 days.
+          
+          RECOMMENDED ACTIONS:
+          1. Investigate error trends in Grafana
+          2. Review recent deployments and changes
+          3. Monitor worker performance metrics
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/error-budget-burn"
+
+    # ====================================
+    # PERFORMANCE SLO ALERTS
+    # ====================================
+
+    # Small file latency SLO violation
+    - alert: ExcelConverterLatencySmallFilesSLO
+      expr: excel:conversion_latency_p95_small_5m > 3
+      for: 3m  
+      labels:
+        severity: warning
+        team: backend
+        service: excel-converter
+        alert_type: latency_slo
+        file_size: small
+      annotations:
+        summary: "🐌 Small file conversion latency SLO violated"
+        description: |
+          P95 latency for small files (< 1MB) exceeds 3 second SLO.
+          - Current P95 latency: {{ $value | printf "%.2f" }}s
+          - SLO target: < 3s
+          - Impact: Poor user experience for quick conversions
+          
+          INVESTIGATE:
+          1. Worker pool utilization and queue depth
+          2. Database/storage performance  
+          3. Memory/CPU pressure on workers
+          4. Network latency to storage backend
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/latency-issues"
+
+    # Medium file latency SLO violation
+    - alert: ExcelConverterLatencyMediumFilesSLO
+      expr: excel:conversion_latency_p95_medium_5m > 8  
+      for: 5m
+      labels:
+        severity: warning
+        team: backend
+        service: excel-converter
+        alert_type: latency_slo
+        file_size: medium
+      annotations:
+        summary: "🐌 Medium file conversion latency SLO violated" 
+        description: |
+          P95 latency for medium files (1-5MB) exceeds 8 second SLO.
+          - Current P95 latency: {{ $value | printf "%.2f" }}s
+          - SLO target: < 8s
+          - Impact: Degraded user experience for typical workflows
+
+    # Large file latency SLO violation  
+    - alert: ExcelConverterLatencyLargeFilesSLO
+      expr: excel:conversion_latency_p95_large_5m > 20
+      for: 5m
+      labels:
+        severity: warning  
+        team: backend
+        service: excel-converter
+        alert_type: latency_slo
+        file_size: large
+      annotations:
+        summary: "🐌 Large file conversion latency SLO violated"
+        description: |
+          P95 latency for large files (5-20MB) exceeds 20 second SLO.
+          - Current P95 latency: {{ $value | printf "%.2f" }}s
+          - SLO target: < 20s
+          - Impact: Enterprise customer workflow disruption
+
+    # API response time degradation
+    - alert: ExcelConverterAPILatencyHigh
+      expr: excel:api_latency_p99_5m > 2
+      for: 2m
+      labels:
+        severity: warning
+        team: backend  
+        service: excel-converter
+        alert_type: api_latency
+      annotations:
+        summary: "🐌 API response time degraded"
+        description: |
+          P99 API response time exceeds 2 second SLO.
+          - Current P99 latency: {{ $value | printf "%.2f" }}s
+          - SLO target: < 2s
+          - Impact: Poor API user experience, potential timeouts
+
+    # ====================================
+    # CAPACITY & THROUGHPUT ALERTS  
+    # ====================================
+
+    # Queue depth too high
+    - alert: ExcelConverterQueueDepthHigh
+      expr: excel:queue_depth > 20
+      for: 5m
+      labels:
+        severity: warning
+        team: sre
+        service: excel-converter  
+        alert_type: capacity
+      annotations:
+        summary: "📈 Conversion queue depth exceeds SLO"
+        description: |
+          Queue depth is above 20 jobs for 5+ minutes.
+          - Current queue depth: {{ $value }} jobs
+          - SLO target: < 20 jobs 95% of time
+          - Impact: Increased user wait times
+          
+          ACTIONS:
+          1. Check worker pool utilization  
+          2. Consider scaling workers horizontally
+          3. Verify no stuck/hanging jobs
+          4. Monitor for traffic spikes
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/queue-backlog"
+
+    # Queue depth critical (immediate scaling needed)
+    - alert: ExcelConverterQueueDepthCritical  
+      expr: excel:queue_depth > 50
+      for: 2m
+      labels:
+        severity: critical
+        team: sre
+        service: excel-converter
+        alert_type: capacity  
+      annotations:
+        summary: "🚨 CRITICAL: Conversion queue severely backlogged"
+        description: |
+          Queue depth critically high - immediate action required.
+          - Current queue depth: {{ $value }} jobs
+          - Critical threshold: > 50 jobs
+          - Impact: Severe user experience degradation
+          
+          IMMEDIATE ACTIONS:
+          1. Scale workers immediately (kubectl scale / docker service scale)
+          2. Check for stuck jobs and clear if needed
+          3. Verify storage/database connectivity
+          4. Consider temporary rate limiting
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/queue-critical"
+
+    # Throughput below business requirements
+    - alert: ExcelConverterThroughputLow
+      expr: |
+        (
+          excel:conversion_throughput_5m * 60 < 50
+          and
+          time() % 86400 > 32400  # 9 AM UTC
+          and  
+          time() % 86400 < 64800  # 6 PM UTC
+        )
+      for: 10m
+      labels:
+        severity: warning
+        team: backend
+        service: excel-converter
+        alert_type: throughput
+      annotations:
+        summary: "📉 Conversion throughput below business requirements"
+        description: |
+          Throughput during peak hours below 50 conversions/minute SLO.
+          - Current throughput: {{ $value | printf "%.1f" }} conv/min
+          - Business requirement: > 50 conv/min during 9 AM - 6 PM
+          - Impact: Revenue bottleneck during high-demand periods
+
+    # ====================================
+    # RESOURCE UTILIZATION ALERTS
+    # ====================================
+
+    # Worker pool utilization high
+    - alert: ExcelConverterWorkerUtilizationHigh
+      expr: excel:worker_utilization > 0.8
+      for: 10m
+      labels:
+        severity: warning
+        team: sre
+        service: excel-converter
+        alert_type: resource_utilization  
+      annotations:
+        summary: "🔥 Worker pool utilization high"
+        description: |
+          Worker pool utilization above 80% for 10+ minutes.
+          - Current utilization: {{ $value | humanizePercentage }}
+          - Threshold: 80%
+          - Impact: Reduced capacity for traffic spikes
+          
+          ACTIONS:
+          1. Consider adding more workers
+          2. Check for inefficient jobs
+          3. Monitor queue depth trends
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/worker-utilization"
+
+    # Memory utilization critical (OOM risk)
+    - alert: ExcelConverterWorkerMemoryHigh
+      expr: excel:worker_memory_utilization > 85
+      for: 5m
+      labels:
+        severity: critical
+        team: sre  
+        service: excel-converter
+        alert_type: resource_utilization
+      annotations:
+        summary: "🚨 Worker memory utilization critical - OOM risk"
+        description: |
+          Worker memory usage above 85% - risk of OOM kills.
+          - Current memory utilization: {{ $value | printf "%.1f" }}%
+          - Critical threshold: 85%
+          - Impact: Worker crashes, job failures
+          
+          IMMEDIATE ACTIONS:
+          1. Monitor for OOM kills in logs
+          2. Consider restarting high-memory workers  
+          3. Temporarily increase memory limits
+          4. Check for memory leaks in recent deployments
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/memory-pressure"
+
+    # ====================================
+    # AVAILABILITY ALERTS
+    # ====================================
+
+    # API availability SLO violation
+    - alert: ExcelConverterAvailabilitySLO
+      expr: excel:api_availability_5m < 0.999
+      for: 1m
+      labels:
+        severity: critical
+        team: sre
+        service: excel-converter  
+        alert_type: availability
+      annotations:
+        summary: "🚨 CRITICAL: API availability SLO violated"
+        description: |
+          API availability below 99.9% SLO - service degradation detected.
+          - Current availability: {{ $value | humanizePercentage }}  
+          - SLO target: > 99.9%
+          - Impact: Service downtime blocks all conversions
+          
+          IMMEDIATE ACTIONS:
+          1. Check service health and restart if needed
+          2. Verify load balancer and networking
+          3. Check database connectivity
+          4. Review infrastructure alerts
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/service-down"
+
+    # Worker health check failures  
+    - alert: ExcelConverterWorkersDown
+      expr: up{job="excel-converter-workers"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        team: sre
+        service: excel-converter
+        alert_type: availability
+      annotations:
+        summary: "🚨 CRITICAL: Excel converter workers down"
+        description: |
+          One or more worker instances are not responding to health checks.
+          - Affected workers: {{ $labels.instance }}
+          - Impact: Reduced conversion capacity, potential service disruption
+          
+          IMMEDIATE ACTIONS:
+          1. Check worker pod/container status
+          2. Review worker logs for crash reasons
+          3. Restart failed workers
+          4. Verify resource availability (CPU/memory)
+        runbook_url: "https://wiki.company.com/excel-converter/runbooks/worker-down"
+
+  # ====================================
+  # DATA QUALITY & SECURITY ALERTS  
+  # ====================================
+
+  - name: excel_converter_data_quality_alerts
+    rules:
+    
+    # Data integrity check failures
+    - alert: ExcelConverterDataIntegrityFailures
+      expr: |
+        (
+          sum(rate(excel_converter_data_integrity_checks_total{result="failure"}[5m])) 
+          / 
+          sum(rate(excel_converter_data_integrity_checks_total[5m]))
+        ) > 0.001
+      for: 30m
+      labels:
+        severity: warning
+        team: backend
+        service: excel-converter
+        alert_type: data_quality
+      annotations:
+        summary: "⚠️ Data integrity check failures elevated"  
+        description: |
+          Data integrity failure rate above 0.1% threshold.
+          - Current failure rate: {{ $value | humanizePercentage }}
+          - Threshold: 0.1%
+          - Impact: Data corruption risk, compliance concerns
+
+    # Security scan false positive rate high
+    - alert: ExcelConverterSecurityFalsePositiveHigh
+      expr: |
+        (
+          sum(rate(excel_converter_security_scans_total{result="blocked_legitimate"}[5m]))
+          /
+          sum(rate(excel_converter_security_scans_total[5m]))  
+        ) > 0.1
+      for: 30m
+      labels:
+        severity: warning
+        team: security
+        service: excel-converter
+        alert_type: security
+      annotations:
+        summary: "⚠️ Security scan false positive rate high"
+        description: |
+          Security scans blocking legitimate files at elevated rate.
+          - Current false positive rate: {{ $value | humanizePercentage }}
+          - Threshold: 10%
+          - Impact: Legitimate users blocked, poor UX

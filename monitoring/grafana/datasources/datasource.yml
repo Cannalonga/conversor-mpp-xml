@@ -1,0 +1,35 @@
+apiVersion: 1
+
+datasources:
+  # Prometheus datasource for Excel Converter metrics
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      queryTimeout: 60s
+      timeInterval: 15s
+      prometheusType: Prometheus
+      prometheusVersion: 2.40.0
+      cacheLevel: High
+      incrementalQuery: true
+      disableRecordingRules: false
+    secureJsonData: {}
+    version: 1
+
+  # Example: External monitoring service (uncomment if needed)
+  # - name: External-Prometheus
+  #   type: prometheus
+  #   access: proxy
+  #   url: https://your-external-prometheus.com
+  #   isDefault: false
+  #   editable: true
+  #   jsonData:
+  #     httpMethod: POST
+  #     timeInterval: 30s
+  #   secureJsonData:
+  #     httpHeaderValue1: 'Bearer your-token-here'
+  #   version: 1
