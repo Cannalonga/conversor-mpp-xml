@@ -37,6 +37,18 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin')); // Servir arquivos da pasta admin
 
+// CORS middleware para permitir requisições locais
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
+});
+
 console.log('✅ Middlewares configurados');
 
 // Upload simples
@@ -452,6 +464,24 @@ app.get('/api/files/:directory', authenticateAdmin, (req, res) => {
     }
 });
 
+// Rota Premium Area
+app.get('/premium', (req, res) => {
+    console.log('💎 Área premium acessada');
+    res.json({
+        success: true,
+        area: 'premium',
+        features: [
+            'Conversão ilimitada de arquivos MPP',
+            'Suporte prioritário 24/7',
+            'Relatórios avançados',
+            'API access',
+            'Customização de templates'
+        ],
+        status: 'ativo',
+        message: '✅ Bem-vindo à área premium!'
+    });
+});
+
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
     console.log('');
@@ -480,13 +510,13 @@ process.on('unhandledRejection', (reason, promise) => {
     console.log('🔄 Servidor continuará rodando...');
 });
 
-// Graceful shutdown para produção
-process.on('SIGTERM', () => {
-    console.log('📴 Recebido SIGTERM, finalizando graciosamente...');
-    process.exit(0);
-});
+// Graceful shutdown para produção (desabilitado para testes em background)
+// process.on('SIGTERM', () => {
+//     console.log('📴 Recebido SIGTERM, finalizando graciosamente...');
+//     process.exit(0);
+// });
 
-process.on('SIGINT', () => {
-    console.log('📴 Recebido SIGINT, finalizando graciosamente...');
-    process.exit(0);
-});
+// process.on('SIGINT', () => {
+//     console.log('📴 Recebido SIGINT, finalizando graciosamente...');
+//     process.exit(0);
+// });
