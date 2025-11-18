@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "github.copilot",
+    "github.github-vscode-theme"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-python.isort",
+    "ms-python.vscode-python-envs",
+    "ms-python.python-environment-manager",
+    "donjayamanne.python-extension-pack",
+    "kevinrose.vsc-python-indent"
+  ]
+}
