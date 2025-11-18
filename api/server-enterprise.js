@@ -734,14 +734,14 @@ app.post('/api/premium/webhook/pix', async (req, res) => {
         tx.status = 'completed';
         tx.completedAt = new Date().toISOString();
 
-        // Gerar token de acesso
+        // Gerar token de acesso com expiração baseada no plano
+        const planExpiry = tx.plan === 'monthly' ? '30d' : (tx.plan === 'quarterly' ? '90d' : '365d');
         const accessToken = generateToken({
             transactionId: tx.id,
             plan: tx.plan,
             customer: tx.customer.email,
-            premium: true,
-            expiresIn: tx.plan === 'monthly' ? '30d' : (tx.plan === 'quarterly' ? '90d' : '365d')
-        });
+            premium: true
+        }, planExpiry);
 
         log('info', 'PIX payment confirmed', {
             transactionId: tx.id,
