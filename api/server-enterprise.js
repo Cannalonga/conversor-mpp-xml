@@ -114,11 +114,10 @@ const app = express();
 // 1. NONCE GENERATION PER REQUEST
 app.use((req, res, next) => {
     res.locals.nonce = crypto.randomBytes(16).toString('hex');
-    res.set('X-Content-Security-Policy-Nonce', res.locals.nonce);
     next();
 });
 
-// 2. HELMET - Security headers
+// 2. HELMET - Security headers (CSP sem nonce dinâmico - simplificado)
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -128,12 +127,7 @@ app.use(helmet({
                 "'unsafe-inline'",
                 "https://fonts.googleapis.com"
             ],
-            scriptSrc: [
-                "'self'",
-                "https://trusted-cdn.example.com" // only if needed
-                // NUNCA usar 'unsafe-inline' para scripts!
-            ],
-            scriptSrcElem: [`'nonce-${res.locals.nonce}'`, "'self'"],
+            scriptSrc: ["'self'"],
             fontSrc: [
                 "'self'",
                 "https://fonts.gstatic.com",
@@ -528,6 +522,330 @@ app.get('/api/admin/stats', authMiddleware, (req, res) => {
         activeUsers: 0,
         timestamp: new Date().toISOString()
     });
+});
+
+// ============================================================================
+// ROUTES - Premium Area (Monetização)
+// ============================================================================
+
+/**
+ * POST /api/premium/checkout
+ * Processa solicitação de checkout para área premium
+ * 
+ * Body:
+ * {
+ *   plan: 'monthly' | 'quarterly' | 'annual',
+ *   payment: 'pix' | 'card' | 'boleto',
+ *   customer: { email, firstName, lastName, cpf }
+ * }
+ * 
+ * Response:
+ * {
+ *   success: boolean,
+ *   transaction: { id, status, expiry, pixKey?, pixQR? },
+ *   message: string
+ * }
+ */
+app.post('/api/premium/checkout', async (req, res) => {
+    try {
+        const { plan, payment, customer } = req.body;
+
+        // Validações
+        if (!plan || !payment || !customer) {
+            return res.status(400).json({
+                success: false,
+                message: 'Plan, payment method e customer são obrigatórios'
+            });
+        }
+
+        const validPlans = {
+            monthly: { price: 10.00, duration: 30 },
+            quarterly: { price: 25.00, duration: 90 },
+            annual: { price: 70.00, duration: 365 }
+        };
+
+        if (!validPlans[plan]) {
+            return res.status(400).json({
+                success: false,
+                message: 'Plano inválido'
+            });
+        }
+
+        // Validar email
+        if (!customer.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email inválido'
+            });
+        }
+
+        // Validar CPF (simplificado)
+        if (!customer.cpf || customer.cpf.replace(/\D/g, '').length !== 11) {
+            return res.status(400).json({
+                success: false,
+                message: 'CPF inválido'
+            });
+        }
+
+        // Gerar ID de transação
+        const transactionId = `tx_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+        const planDetails = validPlans[plan];
+
+        // Preparar resposta baseada no método de pagamento
+        let pixKey = null;
+        let pixQRCode = null;
+
+        if (payment === 'pix') {
+            // Gerar chave PIX aleatória (aqui você integraria com Mercado Pago/Stripe)
+            pixKey = `00020126580014br.gov.bcb.pix0136${crypto.randomBytes(16).toString('hex')}`;
+            
+            // Em produção: gerar QR Code real via Mercado Pago API
+            pixQRCode = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="white" width="200" height="200"/%3E%3Crect x="10" y="10" width="30" height="30" fill="black"/%3E%3C/svg%3E';
+        }
+
+        // Salvar transação em memória (em produção: usar BD)
+        if (!global.transactions) {
+            global.transactions = {};
+        }
+
+        global.transactions[transactionId] = {
+            id: transactionId,
+            status: payment === 'pix' ? 'pending_pix' : 'pending_payment',
+            plan,
+            payment,
+            customer,
+            price: planDetails.price,
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 min
+            pixKey,
+            pixQRCode
+        };
+
+        log('info', 'Premium checkout initiated', {
+            transactionId,
+            plan,
+            customer: customer.email,
+            payment
+        });
+
+        res.json({
+            success: true,
+            transaction: {
+                id: transactionId,
+                status: payment === 'pix' ? 'pending_pix' : 'pending_payment',
+                expiry: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+                pixKey: payment === 'pix' ? pixKey : undefined,
+                pixQRCode: payment === 'pix' ? pixQRCode : undefined,
+                message: payment === 'pix' 
+                    ? 'PIX gerado - escaneie o código para pagar'
+                    : 'Aguardando processamento do pagamento'
+            },
+            message: 'Checkout iniciado com sucesso'
+        });
+
+    } catch (error) {
+        log('error', 'Checkout error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao processar checkout'
+        });
+    }
+});
+
+/**
+ * GET /api/premium/verify/:transactionId
+ * Verifica status de uma transação
+ * 
+ * Response:
+ * {
+ *   success: boolean,
+ *   status: 'pending' | 'completed' | 'failed' | 'expired',
+ *   transaction: { ... }
+ * }
+ */
+app.get('/api/premium/verify/:transactionId', async (req, res) => {
+    try {
+        const { transactionId } = req.params;
+
+        if (!global.transactions || !global.transactions[transactionId]) {
+            return res.status(404).json({
+                success: false,
+                status: 'not_found',
+                message: 'Transação não encontrada'
+            });
+        }
+
+        const tx = global.transactions[transactionId];
+
+        // Verificar expiração
+        if (new Date() > new Date(tx.expiresAt)) {
+            tx.status = 'expired';
+            return res.json({
+                success: false,
+                status: 'expired',
+                message: 'Transação expirou'
+            });
+        }
+
+        log('info', 'Premium verification', {
+            transactionId,
+            status: tx.status
+        });
+
+        res.json({
+            success: tx.status === 'completed',
+            status: tx.status,
+            transaction: {
+                id: tx.id,
+                plan: tx.plan,
+                price: tx.price,
+                status: tx.status,
+                createdAt: tx.createdAt,
+                expiresAt: tx.expiresAt
+            }
+        });
+
+    } catch (error) {
+        log('error', 'Verify error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao verificar transação'
+        });
+    }
+});
+
+/**
+ * POST /api/premium/webhook/pix
+ * Webhook para receber confirmação de PIX (integração Mercado Pago)
+ * 
+ * Simula recebimento de pagamento
+ */
+app.post('/api/premium/webhook/pix', async (req, res) => {
+    try {
+        const { transactionId } = req.body;
+
+        if (!global.transactions || !global.transactions[transactionId]) {
+            return res.status(404).json({ error: 'Transaction not found' });
+        }
+
+        const tx = global.transactions[transactionId];
+
+        // Simular confirmação de pagamento
+        tx.status = 'completed';
+        tx.completedAt = new Date().toISOString();
+
+        // Gerar token de acesso
+        const accessToken = generateToken({
+            transactionId: tx.id,
+            plan: tx.plan,
+            customer: tx.customer.email,
+            premium: true,
+            expiresIn: tx.plan === 'monthly' ? '30d' : (tx.plan === 'quarterly' ? '90d' : '365d')
+        });
+
+        log('info', 'PIX payment confirmed', {
+            transactionId: tx.id,
+            customer: tx.customer.email,
+            plan: tx.plan
+        });
+
+        res.json({
+            success: true,
+            message: 'Pagamento confirmado',
+            accessToken,
+            transaction: tx
+        });
+
+    } catch (error) {
+        log('error', 'Webhook error', { error: error.message });
+        res.status(500).json({ error: 'Webhook processing failed' });
+    }
+});
+
+/**
+ * GET /api/premium/status
+ * Retorna informações sobre acesso premium do usuário
+ * 
+ * Headers: Authorization: Bearer <token>
+ */
+app.get('/api/premium/status', (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader) {
+            return res.json({
+                premium: false,
+                message: 'Não autenticado'
+            });
+        }
+
+        const token = authHeader.replace('Bearer ', '');
+        const decoded = verifyToken(token);
+
+        if (decoded && decoded.premium) {
+            res.json({
+                premium: true,
+                plan: decoded.plan,
+                customer: decoded.customer,
+                expiresAt: decoded.exp ? new Date(decoded.exp * 1000).toISOString() : null
+            });
+        } else {
+            res.json({
+                premium: false,
+                message: 'Token não é premium'
+            });
+        }
+
+    } catch (error) {
+        res.json({
+            premium: false,
+            message: 'Token inválido ou expirado'
+        });
+    }
+});
+
+/**
+ * POST /api/premium/convert
+ * Conversão de arquivo MPP para XML (apenas para premium)
+ * 
+ * Headers: Authorization: Bearer <token>
+ * Form-data: file (multipart)
+ */
+app.post('/api/premium/convert', async (req, res) => {
+    try {
+        // Verificar token premium
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const token = authHeader.replace('Bearer ', '');
+        const decoded = verifyToken(token);
+
+        if (!decoded || !decoded.premium) {
+            return res.status(403).json({ error: 'Premium access required' });
+        }
+
+        // TODO: Implementar conversão real de MPP para XML
+        // Por enquanto, simular sucesso
+
+        res.json({
+            success: true,
+            conversion: {
+                id: `conv_${Date.now()}`,
+                originalName: 'documento.mpp',
+                outputName: 'documento.xml',
+                size: 1024,
+                uploadedAt: new Date().toISOString(),
+                downloadUrl: '/api/download/conv_' + Date.now()
+            },
+            message: 'Arquivo convertido com sucesso'
+        });
+
+    } catch (error) {
+        log('error', 'Conversion error', { error: error.message });
+        res.status(500).json({ error: 'Conversion failed' });
+    }
 });
 
 // ============================================================================
