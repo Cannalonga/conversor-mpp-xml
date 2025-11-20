@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Teste Fluxo Premium - Conversor MPP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #C41E3A 0%, #8B1528 50%, #1B5E20 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #C41E3A;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .test-section {
+            background: #f5f5f5;
+            border-left: 4px solid #C41E3A;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .test-section h2 {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #C41E3A;
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #C41E3A;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #8B1528;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(196, 30, 58, 0.3);
+        }
+
+        .btn-secondary {
+            background: #1B5E20;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #0d3812;
+            transform: translateY(-2px);
+        }
+
+        .result {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #333;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .result.success {
+            border-color: #1B5E20;
+            background: #f0f8f0;
+            color: #0d3812;
+        }
+
+        .result.error {
+            border-color: #C41E3A;
+            background: #fff0f0;
+            color: #8B1528;
+        }
+
+        .result.info {
+            border-color: #1976D2;
+            background: #f0f5ff;
+            color: #0d3812;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status.ready {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .link-btn {
+            color: #C41E3A;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .link-btn:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(196, 30, 58, 0.3);
+            border-radius: 50%;
+            border-top-color: #C41E3A;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste Fluxo Premium</h1>
+        <p class="subtitle">Teste passo a passo: Checkout → PIX → Verify → Dashboard</p>
+
+        <div id="status" class="status ready">
+            ✅ Pronto para testar
+        </div>
+
+        <!-- TESTE 1: CHECKOUT -->
+        <div class="test-section">
+            <h2>1️⃣ POST /api/premium/checkout</h2>
+            <p style="color: #666; margin-bottom: 15px;">Iniciar processo de compra com dados do cliente</p>
+
+            <div class="test-grid">
+                <div class="input-group">
+                    <label>Plan</label>
+                    <select id="plan">
+                        <option value="monthly">Mensal - R$ 10</option>
+                        <option value="quarterly">Trimestral - R$ 25</option>
+                        <option value="annual">Anual - R$ 70</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Payment Method</label>
+                    <select id="payment">
+                        <option value="pix">PIX</option>
+                        <option value="card">Cartão</option>
+                        <option value="boleto">Boleto</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="test-grid">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="email" value="teste@email.com">
+                </div>
+
+                <div class="input-group">
+                    <label>Nome</label>
+                    <input type="text" id="firstName" value="Rafael">
+                </div>
+
+                <div class="input-group">
+                    <label>Sobrenome</label>
+                    <input type="text" id="lastName" value="Cannalonga">
+                </div>
+
+                <div class="input-group">
+                    <label>CPF</label>
+                    <input type="text" id="cpf" value="02038351740" maxlength="14">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testCheckout()">
+                    💳 Testar Checkout
+                </button>
+            </div>
+
+            <div id="result1" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- TESTE 2: VERIFY -->
+        <div class="test-section">
+            <h2>2️⃣ GET /api/premium/verify/:transactionId</h2>
+            <p style="color: #666; margin-bottom: 15px;">Verificar status da transação (use o ID do checkout acima)</p>
+
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Transaction ID</label>
+                <input type="text" id="transactionId" placeholder="tx_... (preenchido automaticamente)">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testVerify()">
+                    🔍 Verificar Status
+                </button>
+            </div>
+
+            <div id="result2" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- TESTE 3: WEBHOOK -->
+        <div class="test-section">
+            <h2>3️⃣ POST /api/premium/webhook/pix</h2>
+            <p style="color: #666; margin-bottom: 15px;">Simular webhook de confirmação de PIX (simula pagamento recebido)</p>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testWebhook()">
+                    ✅ Simular Pagamento PIX
+                </button>
+            </div>
+
+            <div id="result3" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- TESTE 4: STATUS -->
+        <div class="test-section">
+            <h2>4️⃣ GET /api/premium/status</h2>
+            <p style="color: #666; margin-bottom: 15px;">Verificar status do acesso premium (requer token)</p>
+
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Access Token (preenchido automaticamente)</label>
+                <input type="text" id="accessToken" placeholder="Bearer ..." style="font-size: 0.8em;">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testStatus()">
+                    📊 Verificar Status Premium
+                </button>
+            </div>
+
+            <div id="result4" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- TESTE 5: DASHBOARD -->
+        <div class="test-section">
+            <h2>5️⃣ Acessar Dashboard Premium</h2>
+            <p style="color: #666; margin-bottom: 15px;">Abrir dashboard com acesso premium (requer autenticação)</p>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="openDashboard()">
+                    🚀 Abrir Dashboard
+                </button>
+                <button class="btn btn-primary" onclick="runCompleteFlow()">
+                    ▶️ Testar Fluxo Completo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        let currentTransactionId = '';
+        let currentAccessToken = '';
+
+        async function testCheckout() {
+            const status = document.getElementById('status');
+            const result = document.getElementById('result1');
+            
+            status.innerHTML = '<span class="loading"></span> Processando checkout...';
+            status.className = 'status running';
+
+            try {
+                const response = await fetch(`${API_URL}/api/premium/checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        plan: document.getElementById('plan').value,
+                        payment: document.getElementById('payment').value,
+                        customer: {
+                            email: document.getElementById('email').value,
+                            firstName: document.getElementById('firstName').value,
+                            lastName: document.getElementById('lastName').value,
+                            cpf: document.getElementById('cpf').value
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentTransactionId = data.transaction.id;
+                    document.getElementById('transactionId').value = currentTransactionId;
+                    
+                    result.textContent = JSON.stringify(data, null, 2);
+                    result.className = 'result success';
+                    result.style.display = 'block';
+
+                    status.innerHTML = '✅ Checkout criado com sucesso!';
+                    status.className = 'status ready';
+                } else {
+                    result.textContent = JSON.stringify(data, null, 2);
+                    result.className = 'result error';
+                    result.style.display = 'block';
+
+                    status.innerHTML = '❌ Erro ao processar checkout';
+                    status.className = 'status error';
+                }
+            } catch (error) {
+                result.textContent = `❌ ERRO: ${error.message}`;
+                result.className = 'result error';
+                result.style.display = 'block';
+
+                status.innerHTML = '❌ Erro na requisição';
+                status.className = 'status error';
+            }
+        }
+
+        async function testVerify() {
+            const txId = document.getElementById('transactionId').value;
+            if (!txId) {
+                alert('⚠️ Complete o checkout primeiro para obter o Transaction ID');
+                return;
+            }
+
+            const status = document.getElementById('status');
+            const result = document.getElementById('result2');
+            
+            status.innerHTML = '<span class="loading"></span> Verificando transação...';
+            status.className = 'status running';
+
+            try {
+                const response = await fetch(`${API_URL}/api/premium/verify/${txId}`);
+                const data = await response.json();
+
+                result.textContent = JSON.stringify(data, null, 2);
+                result.className = data.success ? 'result success' : 'result info';
+                result.style.display = 'block';
+
+                status.innerHTML = `✅ Status da transação: ${data.status}`;
+                status.className = 'status ready';
+            } catch (error) {
+                result.textContent = `❌ ERRO: ${error.message}`;
+                result.className = 'result error';
+                result.style.display = 'block';
+
+                status.innerHTML = '❌ Erro na verificação';
+                status.className = 'status error';
+            }
+        }
+
+        async function testWebhook() {
+            const txId = document.getElementById('transactionId').value;
+            if (!txId) {
+                alert('⚠️ Complete o checkout primeiro para obter o Transaction ID');
+                return;
+            }
+
+            const status = document.getElementById('status');
+            const result = document.getElementById('result3');
+            
+            status.innerHTML = '<span class="loading"></span> Simulando pagamento PIX...';
+            status.className = 'status running';
+
+            try {
+                const response = await fetch(`${API_URL}/api/premium/webhook/pix`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transactionId: txId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentAccessToken = data.accessToken;
+                    document.getElementById('accessToken').value = currentAccessToken;
+
+                    result.textContent = JSON.stringify(data, null, 2);
+                    result.className = 'result success';
+                    result.style.display = 'block';
+
+                    status.innerHTML = '✅ Pagamento simulado com sucesso!';
+                    status.className = 'status ready';
+                } else {
+                    result.textContent = JSON.stringify(data, null, 2);
+                    result.className = 'result error';
+                    result.style.display = 'block';
+
+                    status.innerHTML = '❌ Erro ao simular pagamento';
+                    status.className = 'status error';
+                }
+            } catch (error) {
+                result.textContent = `❌ ERRO: ${error.message}`;
+                result.className = 'result error';
+                result.style.display = 'block';
+
+                status.innerHTML = '❌ Erro na simulação';
+                status.className = 'status error';
+            }
+        }
+
+        async function testStatus() {
+            const token = document.getElementById('accessToken').value;
+            if (!token) {
+                alert('⚠️ Complete o webhook primeiro para obter o token');
+                return;
+            }
+
+            const status = document.getElementById('status');
+            const result = document.getElementById('result4');
+            
+            status.innerHTML = '<span class="loading"></span> Verificando status premium...';
+            status.className = 'status running';
+
+            try {
+                const response = await fetch(`${API_URL}/api/premium/status`, {
+                    headers: { 'Authorization': token }
+                });
+
+                const data = await response.json();
+
+                result.textContent = JSON.stringify(data, null, 2);
+                result.className = data.premium ? 'result success' : 'result info';
+                result.style.display = 'block';
+
+                status.innerHTML = `✅ Status premium: ${data.premium ? 'ATIVO' : 'INATIVO'}`;
+                status.className = 'status ready';
+            } catch (error) {
+                result.textContent = `❌ ERRO: ${error.message}`;
+                result.className = 'result error';
+                result.style.display = 'block';
+
+                status.innerHTML = '❌ Erro ao verificar status';
+                status.className = 'status error';
+            }
+        }
+
+        function openDashboard() {
+            const txId = document.getElementById('transactionId').value;
+            if (txId) {
+                window.open(`http://localhost:3000/premium-dashboard.html?tx=${txId}`, 'dashboard');
+            } else {
+                alert('⚠️ Complete o checkout primeiro');
+            }
+        }
+
+        async function runCompleteFlow() {
+            const status = document.getElementById('status');
+            
+            status.innerHTML = '<span class="loading"></span> Executando fluxo completo...';
+            status.className = 'status running';
+
+            try {
+                // 1. Checkout
+                await testCheckout();
+                await new Promise(r => setTimeout(r, 1000));
+
+                // 2. Verify
+                await testVerify();
+                await new Promise(r => setTimeout(r, 1000));
+
+                // 3. Webhook
+                await testWebhook();
+                await new Promise(r => setTimeout(r, 1000));
+
+                // 4. Status
+                await testStatus();
+
+                status.innerHTML = '✅ Fluxo completo executado com sucesso! Acesse o dashboard.';
+                status.className = 'status ready';
+            } catch (error) {
+                status.innerHTML = `❌ Erro durante fluxo: ${error.message}`;
+                status.className = 'status error';
+            }
+        }
+
+        // Auto-format CPF
+        document.getElementById('cpf').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                e.target.value = value;
+            }
+        });
+    </script>
+</body>
+</html>

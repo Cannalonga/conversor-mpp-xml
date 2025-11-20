@@ -11,7 +11,34 @@ require('dotenv').config();
 
 const uploadUtils = require('./upload-utils');
 const downloadToken = require('../utils/downloadToken');
-const fileQueue = require('../queue/queue');
+
+// Import memory-based queue (no Redis required)
+let fileQueue;
+try {
+    fileQueue = require('../queue/queue-memory');
+} catch (e) {
+    console.warn('[QUEUE] Memory queue not available, using fallback');
+    fileQueue = null;
+}
+
+const EnterpriseLogger = require('./logger-enterprise');
+const HealthChecker = require('./health-checker');
+const MetricsCollector = require('./metrics');
+
+// Initialize Enterprise Logger
+const logger = new EnterpriseLogger('SERVER', {
+    logsDir: path.join(__dirname, '../logs'),
+    level: process.env.LOG_LEVEL || 'INFO'
+});
+
+// Initialize Health Checker
+const healthChecker = new HealthChecker({
+    logsDir: path.join(__dirname, '../logs'),
+    uploadsDir: path.join(__dirname, '../uploads')
+});
+
+// Initialize Metrics Collector
+const metricsCollector = new MetricsCollector();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +63,107 @@ app.use(cors());
 app.use(require('compression')());
 
 app.use(express.json());
+
+// 🏥 ROTA DE HEALTH CHECK - COM DIAGNOSTICS COMPLETOS (ANTES DOS ARQUIVOS ESTÁTICOS)
+app.get('/health', async (req, res) => {
+    try {
+        // Run comprehensive health check
+        const healthStatus = await healthChecker.runHealthCheck();
+        
+        logger.info('HEALTH_CHECK_REQUESTED', {
+            timestamp: healthStatus.timestamp,
+            ip: req.ip,
+            overall_status: healthStatus.status,
+            duration_ms: healthStatus.duration
+        });
+        
+        // Return appropriate status code based on health status
+        const statusCode = 
+            healthStatus.status === 'HEALTHY' ? 200 :
+            healthStatus.status === 'DEGRADED' ? 200 :
+            healthStatus.status === 'CRITICAL' ? 503 :
+            500;
+        
+        res.status(statusCode).json(healthStatus);
+    } catch (error) {
+        logger.error('HEALTH_CHECK_FAILED', error, {
+            ip: req.ip
+        });
+        res.status(500).json({ 
+            status: 'OFFLINE',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// 📊 ROTA DE MÉTRICAS PROMETHEUS
+app.get('/metrics', (req, res) => {
+    try {
+        const prometheusMetrics = metricsCollector.exportPrometheus();
+        res.set('Content-Type', 'text/plain; version=0.0.4');
+        res.send(prometheusMetrics);
+        
+        logger.debug('METRICS_PROMETHEUS_EXPORTED', {
+            ip: req.ip,
+            format: 'prometheus'
+        });
+    } catch (error) {
+        logger.error('METRICS_EXPORT_FAILED', error, {
+            ip: req.ip
+        });
+        res.status(500).json({ 
+            error: 'Failed to export metrics',
+            message: error.message
+        });
+    }
+});
+
+// 📊 ROTA DE MÉTRICAS JSON
+app.get('/metrics/json', (req, res) => {
+    try {
+        const jsonMetrics = metricsCollector.exportJSON();
+        res.json(jsonMetrics);
+        
+        logger.debug('METRICS_JSON_EXPORTED', {
+            ip: req.ip,
+            format: 'json'
+        });
+    } catch (error) {
+        logger.error('METRICS_EXPORT_FAILED', error, {
+            ip: req.ip
+        });
+        res.status(500).json({ 
+            error: 'Failed to export metrics',
+            message: error.message
+        });
+    }
+});
+
+// 📊 ROTA DE RESUMO DE MÉTRICAS
+app.get('/metrics/summary', (req, res) => {
+    try {
+        const summary = metricsCollector.getSummary();
+        res.json({
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            summary: summary
+        });
+        
+        logger.debug('METRICS_SUMMARY_EXPORTED', {
+            ip: req.ip
+        });
+    } catch (error) {
+        logger.error('METRICS_SUMMARY_FAILED', error, {
+            ip: req.ip
+        });
+        res.status(500).json({ 
+            error: 'Failed to export metrics summary',
+            message: error.message
+        });
+    }
+});
+
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(compression());
 
@@ -77,7 +205,7 @@ app.use((req, res, next) => {
     const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(fullUrl));
     
     if (isSuspicious) {
-        console.log('⚠️ Tentativa suspeita detectada:', {
+        logger.security('SUSPICIOUS_REQUEST_DETECTED', 'high', {
             ip: req.ip,
             url: fullUrl,
             userAgent: req.get('User-Agent'),
@@ -494,6 +622,11 @@ class AnalyticsManager {
 app.post('/api/upload-test', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
+            logger.warn('UPLOAD_FAILED_NO_FILE', {
+                ip: req.ip,
+                timestamp: new Date().toISOString()
+            });
+            
             return res.status(400).json({ 
                 success: false, 
                 error: 'Nenhum arquivo enviado',
@@ -504,11 +637,19 @@ app.post('/api/upload-test', upload.single('file'), async (req, res) => {
         // Validação adicional pós-upload
         const validation = uploadUtils.validateUpload(req.file);
         if (!validation.valid) {
+            logger.warn('UPLOAD_VALIDATION_FAILED', {
+                filename: req.file.originalname,
+                errors: validation.errors,
+                ip: req.ip
+            });
+            
             // Remove arquivo inválido
             try {
                 await fs.unlink(req.file.path);
             } catch (unlinkError) {
-                console.error('Erro ao remover arquivo inválido:', unlinkError);
+                logger.error('UNLINK_ERROR', unlinkError, {
+                    path: req.file.path
+                });
             }
             
             return res.status(400).json({
@@ -521,12 +662,19 @@ app.post('/api/upload-test', upload.single('file'), async (req, res) => {
         // Log seguro do upload
         const logData = uploadUtils.logUploadInfo(req.file, req.file.filename);
         
+        logger.info('FILE_UPLOAD_STARTED', {
+            filename: logData.originalName,
+            size: req.file.size,
+            ip: req.ip,
+            jobId: req.file.filename
+        });
+        
         // Enfileirar para processamento
         try {
             const jobResult = await fileQueue.addConversionJob(req.file.filename, {
                 originalName: logData.originalName,
                 size: req.file.size,
-                userId: req.ip // Usando IP como identificador simples
+                userId: req.ip
             });
 
             // Gerar token para download futuro
@@ -537,6 +685,13 @@ app.post('/api/upload-test', upload.single('file'), async (req, res) => {
                     jobId: jobResult.jobId
                 }
             );
+
+            logger.info('FILE_UPLOAD_QUEUED', {
+                jobId: jobResult.jobId,
+                filename: logData.originalName,
+                size: req.file.size,
+                ip: req.ip
+            });
 
             res.status(202).json({
                 success: true,
@@ -551,13 +706,16 @@ app.post('/api/upload-test', upload.single('file'), async (req, res) => {
             });
 
         } catch (queueError) {
-            console.error('❌ Erro ao enfileirar:', queueError);
+            logger.error('QUEUE_ENQUEUE_FAILED', queueError, {
+                filename: req.file.originalname,
+                ip: req.ip
+            });
             
             // Remove arquivo se falhou ao enfileirar
             try {
                 await fs.unlink(req.file.path);
-            } catch {
-                // Ignorar erro de remoção
+            } catch (unlinkError) {
+                logger.error('CLEANUP_UNLINK_FAILED', unlinkError);
             }
 
             return res.status(500).json({
@@ -568,14 +726,10 @@ app.post('/api/upload-test', upload.single('file'), async (req, res) => {
         }
         
     } catch (error) {
-        console.error('❌ Erro crítico no upload:', error);
-        
-        // Log de segurança para monitoramento
-        console.log('🔒 Tentativa de upload suspeita:', {
+        logger.error('UPLOAD_CRITICAL_ERROR', error, {
             ip: req.ip,
             userAgent: req.get('User-Agent'),
-            timestamp: new Date().toISOString(),
-            error: error.message
+            timestamp: new Date().toISOString()
         });
         
         res.status(500).json({ 
@@ -906,11 +1060,6 @@ setInterval(async () => {
     }
 }, 60 * 60 * 1000); // A cada hora
 
-// 🏥 ROTA DE HEALTH CHECK
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok' });
-});
-
 // 📊 ROTA DE STATUS DE JOB
 app.get('/api/status/:jobId', async (req, res) => {
     try {
@@ -988,7 +1137,45 @@ app.get('/api/queue/stats', async (req, res) => {
 });
 
 app.listen(PORT, () => {
+    logger.info('SERVER_STARTED', {
+        port: PORT,
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString(),
+        pid: process.pid
+    });
+    
+    logger.info('SERVER_ENDPOINTS_AVAILABLE', {
+        baseUrl: `http://localhost:${PORT}`,
+        healthCheck: `http://localhost:${PORT}/health`,
+        uploadApi: `http://localhost:${PORT}/api/upload-test`
+    });
+    
     console.log(`Servidor rodando na porta ${PORT}`);
     console.log(`Acesse: http://localhost:${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
+});
+
+// Graceful shutdown - apenas flush logs, sem exit
+process.on('SIGTERM', async () => {
+    logger.info('SERVER_SHUTDOWN_SIGNAL', {
+        signal: 'SIGTERM',
+        timestamp: new Date().toISOString()
+    });
+    
+    // Flush logs sem encerrar o processo
+    if (logger._flushBuffer) {
+        logger._flushBuffer();
+    }
+});
+
+process.on('SIGINT', async () => {
+    logger.info('SERVER_SHUTDOWN_SIGNAL', {
+        signal: 'SIGINT',
+        timestamp: new Date().toISOString()
+    });
+    
+    // Flush logs sem encerrar o processo
+    if (logger._flushBuffer) {
+        logger._flushBuffer();
+    }
 });

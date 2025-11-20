@@ -168,13 +168,12 @@ app.use(helmet({
 }));
 
 // 3. CORS - STRICT validation com URL parsing
-// CRÍTICO #1: Rejeita requisições sem Origin header (exceto health check)
+// CRÍTICO #1: Rejeita requisições sem Origin header
 app.use(cors({
     origin: function(origin, callback) {
-        // Health check é público, não precisa de CORS check rigoroso
         if (!origin) {
-            log('warn', 'CORS: No Origin header (public endpoint)');
-            return callback(null, true); // Permitir requests sem Origin (health check, CLI, etc)
+            log('warn', 'CORS blocked: No Origin header', { ip: '' });
+            return callback(new Error('Origin header required'));
         }
         
         try {

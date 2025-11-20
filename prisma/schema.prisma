@@ -1,0 +1,211 @@
+// Prisma Schema - MPP to XML Converter
+// Database: SQLite (development) / PostgreSQL (production)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============ PAYMENT SYSTEM ============
+
+model PaymentTransaction {
+  id              String    @id @default(cuid())
+  
+  // Customer Info
+  cpf             String    @unique
+  email           String
+  name            String
+  
+  // Payment Details
+  status          PaymentStatus @default(PENDING_PIX)
+  planType        PlanType      @default(MONTHLY)
+  amount          Float         @default(10.00)
+  pixKey          String?       @unique
+  pixQRCode       String?
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  completedAt     DateTime?
+  expiresAt       DateTime
+  
+  // Mercado Pago Integration
+  mpTransactionId String?       @unique
+  mpStatus        String?
+  mpWebhookData   String?
+  
+  // Premium Session
+  premiumSession  PremiumSession?
+  
+  // Conversion Files
+  conversions     FileConversion[]
+  
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PremiumSession {
+  id              String    @id @default(cuid())
+  
+  // Link to Transaction
+  transactionId   String    @unique
+  transaction     PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  // JWT Token
+  accessToken     String    @unique
+  tokenExpiresAt  DateTime
+  
+  // Session Info
+  ipAddress       String
+  userAgent       String
+  lastActivityAt  DateTime  @default(now())
+  isActive        Boolean   @default(true)
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  revokedAt       DateTime?
+  
+  @@index([accessToken])
+  @@index([transactionId])
+}
+
+model FileConversion {
+  id              String    @id @default(cuid())
+  
+  // Link to Transaction
+  transactionId   String
+  transaction     PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  // File Info
+  originalFilename String
+  mimeType        String
+  fileSizeBytes   Int
+  fileHash        String    @unique
+  
+  // Conversion Status
+  status          ConversionStatus @default(PENDING)
+  inputPath       String
+  outputPath      String?
+  errorMessage    String?
+  
+  // Processing
+  startedAt       DateTime?
+  completedAt     DateTime?
+  processingTimeMs Int?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime  // Auto-delete old files
+  
+  @@index([transactionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============ ADMIN SYSTEM ============
+
+model AdminUser {
+  id              String    @id @default(cuid())
+  username        String    @unique
+  passwordHash    String
+  email           String    @unique
+  
+  // Permissions
+  role            AdminRole @default(SUPER_ADMIN)
+  isActive        Boolean   @default(true)
+  
+  // Security
+  lastLoginAt     DateTime?
+  failedLoginAttempts Int @default(0)
+  lockedUntil     DateTime?
+  
+  // 2FA
+  twoFactorSecret String?
+  twoFactorEnabled Boolean @default(false)
+  
+  // Audit
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Sessions
+  sessions        AdminSession[]
+  auditLogs       AuditLog[]
+  
+  @@index([username])
+  @@index([email])
+}
+
+model AdminSession {
+  id              String    @id @default(cuid())
+  adminId         String
+  admin           AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  
+  token           String    @unique
+  tokenExpiresAt  DateTime
+  
+  ipAddress       String
+  userAgent       String
+  
+  createdAt       DateTime  @default(now())
+  revokedAt       DateTime?
+  
+  @@index([adminId])
+  @@index([token])
+}
+
+model AuditLog {
+  id              String    @id @default(cuid())
+  adminId         String
+  admin           AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  
+  action          String    // LOGIN, LOGOUT, VIEW, EDIT, DELETE, etc
+  resource        String    // TRANSACTION, USER, SETTING, etc
+  resourceId      String?
+  
+  details         String?
+  ipAddress       String
+  userAgent       String
+  
+  status          String    // SUCCESS, FAILED, DENIED
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ============ ENUMS ============
+
+enum PaymentStatus {
+  PENDING_PIX      // Esperando confirmação PIX
+  CONFIRMED        // Confirmado mas não processado
+  COMPLETED        // Processado com sucesso
+  FAILED           // Falha na transação
+  EXPIRED          // PIX expirou
+  REFUNDED         // Reembolso processado
+}
+
+enum PlanType {
+  MONTHLY          // 30 dias
+  QUARTERLY        // 90 dias
+  ANNUAL           // 365 dias
+}
+
+enum ConversionStatus {
+  PENDING          // Na fila
+  PROCESSING       // Em processamento
+  COMPLETED        // Sucesso
+  FAILED           // Erro
+  EXPIRED          // Arquivo expirou
+}
+
+enum AdminRole {
+  SUPER_ADMIN      // Acesso total
+  ADMIN            // Gerenciar transações
+  MODERATOR        // Apenas visualizar
+}
