@@ -61,19 +61,25 @@ pm2 status
 ## 🔐 Credenciais de Admin
 
 ### Acesso do Proprietário
-```
-Usuário: Alcap0ne
-Senha: C@rolin@36932025
-Email 2FA: rafaelcannalonga2@hotmail.com
+Credenciais do administrador estão configuradas via **variáveis de ambiente**:
+
+```bash
+# .env (não commitar com valores reais!)
+ADMIN_USER=seu_usuario_admin
+ADMIN_PASS=sua_senha_super_segura
+ADMIN_EMAIL_2FA=seu_email@example.com
 ```
 
 ### Recursos de Segurança
-- **Autenticação personalizada** - Credenciais exclusivas do proprietário
-- **2FA via Email** - Notificações de login para rafaelcannalonga2@hotmail.com
+- **Autenticação via Variáveis de Ambiente** - Nunca hardcode credenciais
+- **2FA via Email** - Notificações de login (configurável em .env)
 - **Logs de acesso** - Monitoramento completo de tentativas de login
 - **Sessão segura** - Token-based authentication com timeout
 
-> ⚠️ **SEGURANÇA:** Credenciais configuradas exclusivamente para o proprietário Rafael Cannalonga
+> ⚠️ **IMPORTANTE:** 
+> - Credenciais nunca devem ser commitadas no repositório
+> - Use `.env.example` como template e preencha `.env` localmente
+> - Em produção, configure via variáveis de ambiente do servidor
 
 ## 🏗️ Estrutura do Projeto
 
