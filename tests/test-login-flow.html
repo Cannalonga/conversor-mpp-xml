@@ -251,9 +251,9 @@
 
         <div class="section-title">📋 Credenciais de Teste</div>
         <div class="info-box">
-            <strong>Credenciais Corretas:</strong><br>
-            Username: <code>Alcap0ne</code><br>
-            Password: <code>C@rolin@36932025</code><br>
+            <strong>⚠️ Credenciais Removidas</strong><br>
+            Configure via .env<br>
+            Veja .env.example para template
         </div>
     </div>
 
@@ -320,7 +320,7 @@
                 const resp = await fetch(`${BASE_URL}/api/admin/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: 'Alcap0ne', password: 'C@rolin@36932025' })
+                    body: JSON.stringify({ username: 'seu_admin_user', password: 'sua_senha_forte' })
                 });
                 const data = await resp.json();
                 if (resp.ok) {

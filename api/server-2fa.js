@@ -262,9 +262,23 @@ app.post('/api/login', async (req, res) => {
         userAgent: req.get('User-Agent')?.substring(0, 100)
     });
     
-    // Credenciais personalizadas para Rafael Cannalonga
-    if (username === 'Alcap0ne' && password === 'C@rolin@36932025') {
-        const email = 'rafaelcannalonga2@hotmail.com';
+    // ⚠️ CREDENCIAIS REMOVIDAS - USE .env
+    // Validar contra variáveis de ambiente
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin_placeholder';
+    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+    
+    if (!adminPasswordHash) {
+        console.error('❌ ADMIN_PASSWORD_HASH não configurado em .env');
+        res.status(500).json({ message: 'Servidor não configurado corretamente' });
+        return;
+    }
+    
+    // Comparar com hash bcrypt
+    const bcrypt = require('bcryptjs');
+    const isValidPassword = await bcrypt.compare(password, adminPasswordHash);
+    
+    if (username === adminUsername && isValidPassword) {
+        const email = process.env.ADMIN_EMAIL_2FA || 'email@example.com';
         const code = generateTwoFactorCode();
         
         // Armazenar código temporariamente (5 minutos)

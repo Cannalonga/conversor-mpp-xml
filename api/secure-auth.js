@@ -1,4 +1,9 @@
 /**
+ * ⚠️ DEPRECATED - NÃO USE ESTE ARQUIVO EM PRODUÇÃO
+ * 
+ * Este arquivo contém um exemplo de como NÃO fazer autenticação.
+ * Use variáveis de ambiente e o arquivo api/server-new.js em vez deste.
+ * 
  * Sistema de Autenticação Ultra-Seguro
  * Desenvolvido especialmente para Rafael Cannalonga
  * Zero exposição de credenciais
@@ -14,18 +19,16 @@ class SecureAuthSystem {
         this.blockedIPs = new Set();
         this.activeSessions = new Map();
         
-        // Credenciais ultra-seguras (hash real da senha)
+        // ⚠️ CREDENCIAIS REMOVIDAS - USE .env EM VEZ DISTO
+        // Caregar de variáveis de ambiente
         this.secureCredentials = {
-            // Username sem criptografia para simplicidade e segurança
-            username: 'Alcap0ne',
-            // Hash real da senha "C@rolin@36932025" com salt
-            passwordHash: '57f8da593da6ea97241d00da304f56aad4e9e32c54bff74e19ba817c9b55f009859e519ad5ef57cebfc4274edb5b6acedb31fb6e7fd2c051525368f7de7bcf26',
-            passwordSalt: '3f8e2a9d7c4b6f1a8d5c2e9b7f0a3d6c1e4b7a0d9c5f2a8e1b4c7f0a3d6c9e2b5',
-            email: 'rafaelcannalonga2@hotmail.com'
+            username: process.env.ADMIN_USERNAME || 'admin_placeholder',
+            passwordHash: process.env.ADMIN_PASSWORD_HASH || 'usar_bcrypt_hash',
+            email: process.env.ADMIN_EMAIL_2FA || 'seu_email@example.com'
         };
         
-        console.log('🛡️ Sistema de autenticação ultra-seguro iniciado');
-        console.log('🔐 Credenciais protegidas por hash PBKDF2');
+        console.log('🛡️ Sistema de autenticação (DEPRECATED) - use .env');
+        console.log('🔐 Carregando credenciais de variáveis de ambiente');
     }
     
     /**

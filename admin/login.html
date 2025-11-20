@@ -125,26 +125,38 @@
             const password = document.getElementById('password').value;
             const messageDiv = document.getElementById('message');
             
-            // Validação simples
-            if (username === 'Alcap0ne' && password === 'C@rolin@36932025') {
-                messageDiv.className = 'message success';
-                messageDiv.innerHTML = '✅ Login realizado com sucesso! Redirecionando...';
-                messageDiv.style.display = 'block';
-                
-                // Salvar que está logado
-                localStorage.setItem('adminLoggedIn', 'true');
-                localStorage.setItem('adminUser', username);
-                
-                // Redirecionar após 1 segundo
-                setTimeout(() => {
-                    window.location.href = '/admin/';
-                }, 1000);
-                
-            } else {
+            // Validação via servidor (NUNCA hardcode credenciais!)
+            fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    messageDiv.className = 'message success';
+                    messageDiv.innerHTML = '✅ Login realizado com sucesso! Redirecionando...';
+                    messageDiv.style.display = 'block';
+                    
+                    localStorage.setItem('adminLoggedIn', 'true');
+                    localStorage.setItem('adminUser', username);
+                    localStorage.setItem('adminToken', data.token);
+                    
+                    setTimeout(() => {
+                        window.location.href = '/admin/';
+                    }, 1000);
+                } else {
+                    messageDiv.className = 'message error';
+                    messageDiv.innerHTML = '❌ ' + (data.message || 'Credenciais inválidas!');
+                    messageDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
                 messageDiv.className = 'message error';
-                messageDiv.innerHTML = '❌ Credenciais inválidas!';
+                messageDiv.innerHTML = '❌ Erro de conexão';
                 messageDiv.style.display = 'block';
-            }
+                console.error(err);
+            });
         });
         
         // Verificar se já está logado
