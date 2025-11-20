@@ -1,18 +1,13 @@
 # 🔐 SECURITY POLICY - POLÍTICA DE SEGURANÇA DO PROJETO
 
-## ⚠️ CRITICAL SECURITY ISSUE RESOLUTION (20 de Novembro de 2025)
+## ⚠️ CREDENTIAL MANAGEMENT (20 de Novembro de 2025)
 
-### 🚨 PROBLEMA IDENTIFICADO
-Credenciais reais estavam expostas em arquivos versionados:
-- ❌ `PROJECT_STRUCTURE.md` - Usuário: `Alcap0ne`, Senha: `C@rolin@36932025`, Email: `rafaelcannalonga2@hotmail.com`
-- ❌ `SECURITY_REMEDIATION_PLAN.md` - Mesmas credenciais
+### ✅ BEST PRACTICES IMPLEMENTADAS
 
-### ✅ SOLUÇÃO IMPLEMENTADA
-
-#### 1. **Remoção Imediata de Credenciais Expostas**
-- ✅ Removidas TODAS as credenciais reais dos arquivos versionados
-- ✅ Substituídas por placeholders genéricos
-- ✅ Documentos atualizados para referir-se apenas a variáveis de ambiente
+#### 1. **Remoção de Credenciais Hardcoded**
+- ✅ TODAS as credenciais reais foram removidas dos arquivos versionados
+- ✅ Substituídas por placeholders genéricos em `.env.example`
+- ✅ Documentação atualizada para usar apenas variáveis de ambiente
 
 #### 2. **Padrão Seguro Estabelecido**
 - ✅ `.env.example` - Template com APENAS placeholders (seguro para versionamento)
@@ -28,10 +23,10 @@ cp .env.example .env
 nano .env
 
 # Passo 3: Garantir que .env está em .gitignore
-cat .gitignore | grep ".env"
+grep ".env" .gitignore
 
 # Passo 4: Verificar que .env NÃO foi commitado
-git status .env
+git status | grep ".env"
 ```
 
 ---
@@ -43,25 +38,26 @@ git status .env
 #### Arquivos PÚBLICOS (seguro versioná-los):
 - ✅ `.env.example` - APENAS placeholders, sem dados reais
 - ✅ `README.md` - Refere-se a `.env`, sem credenciais reais
-- ✅ `PROJECT_STRUCTURE.md` - Template de config, sem credenciais reais
-- ✅ `.gitignore` - Protege `.env`
+- ✅ Documentação - Templates de config, sem credenciais reais
+- ✅ `.gitignore` - Protege `.env` e `.env.*`
 
 #### Arquivos PRIVADOS (NUNCA versioná-los):
-- ⚠️ `.env` - Deve estar em `.gitignore` (VERIFICADO)
-- ⚠️ `.env.production` - Deve estar em `.gitignore` (VERIFICADO)
-- ⚠️ `.env.local` - Deve estar em `.gitignore` (VERIFICADO)
+- ⚠️ `.env` - Deve estar em `.gitignore`
+- ⚠️ `.env.production` - Deve estar em `.gitignore`
+- ⚠️ `.env.local` - Deve estar em `.gitignore`
+- ⚠️ `credentials.json` - Deve estar em `.gitignore`
 
-### 🔍 Auditoria - O Que NÃO Deve Estar no Repositório
+### 🔍 Auditoria - Como Verificar
 
 ```bash
-# Verificar se há credenciais residuais
-git grep -i "admin_pass\|admin_password\|senha\|C@rolin@36932025\|Alcap0ne\|rafaelcannalonga"
+# Procurar por padrões de credenciais no repositório
+git grep -i "password.*=\|admin.*=\|secret.*=" -- "*.js" "*.md" "*.json"
 
-# Procurar por padrões de senha comum
-git grep -i "password\s*=\s*['\"]" -- "*.js" "*.md" "*.json"
+# Procurar por emails
+git log -p -S "@" -- "*.md" "*.js" | grep -i "email"
 
-# Procurar por emails expostos
-git grep -E "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" -- "*.md" "*.js"
+# Verificar commits recentes por dados sensíveis
+git log --all --pretty=format: --name-only | sort -u | xargs grep -l "password\|credential\|secret"
 ```
 
 ---
@@ -71,12 +67,12 @@ git grep -E "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" -- "*.md" "*.js"
 ### 1. Admin Credentials
 ```bash
 # ❌ NUNCA ASSIM (plain text no código)
-const ADMIN_USER = "Alcap0ne";
-const ADMIN_PASS = "C@rolin@36932025";
+const ADMIN_USER = "admin_user";
+const ADMIN_PASS = "minha_senha_secreta";
 
 # ✅ SEMPRE ASSIM (variáveis de ambiente)
-const ADMIN_USER = process.env.ADMIN_USERNAME;
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH; // bcrypt hash, não plain text
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH; // bcrypt hash
 ```
 
 ### 2. Gerar Bcrypt Hash Seguro

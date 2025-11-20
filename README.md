@@ -41,31 +41,211 @@
 - **Logs Persistentes** - Monitoramento e debugging
 - **Scripts de Deploy** - Inicialização automática
 
-## 🚀 Quick Start
+## 🚀 Setup Enxuto (Desenvolvimento & Produção)
 
-### 1. Inicialização Rápida
+### Pré-Requisitos
+- Node.js v20+
+- Docker (para Redis)
+- Git
+
+### 1️⃣ Clonar e Configurar
 ```bash
-# Execute o script automático
-restart-completo.bat
+# Clonar repositório
+git clone https://github.com/Cannalonga/conversor-mpp-xml.git
+cd conversor-mpp-xml
+
+# Criar .env a partir do exemplo
+cp .env.example .env
+
+# Editar .env com suas configurações
+# - ALLOWED_ORIGINS (ex: http://localhost:3000,https://seu-dominio.com)
+# - ADMIN_USERNAME e ADMIN_PASSWORD_HASH (bcrypt)
+# - PIX_KEY (se usar PIX)
+# - REDIS_URL (ex: redis://localhost:6379)
+# - PORT (padrão 3000)
+nano .env  # ou use seu editor favorito
 ```
 
-### 2. Inicialização Manual
+### 2️⃣ Instalar Dependências
 ```bash
-# Navegar para o diretório
-cd "C:\Users\rafae\Desktop\PROJETOS DE ESTUDOS\CONVERSOR MPP XML"
+npm install
+```
 
-# Iniciar com PM2
+### 3️⃣ Subir Redis (Local com Docker)
+```bash
+# Iniciar container Redis
+docker run -d -p 6379:6379 --name conv-redis redis:6
+
+# Verificar se está rodando
+docker ps | grep conv-redis
+```
+
+### 4️⃣ Modo Desenvolvimento (Com Logs Ao Vivo)
+```bash
+# Terminal 1: API + Frontend
+npm run dev
+
+# Terminal 2: Worker (em outro terminal)
+npm run worker
+
+# Acessar
+# - Frontend: http://localhost:3000
+# - Admin: http://localhost:3000/admin
+# - Health: http://localhost:3000/api/health
+```
+
+### 5️⃣ Modo Produção (Com PM2)
+```bash
+# Iniciar todos os processos
 pm2 start ecosystem.config.json --env production
 
 # Verificar status
 pm2 status
+
+# Ver logs em tempo real
+pm2 logs mpp-converter-prod
+
+# Parar serviço
+pm2 stop mpp-converter-prod
+
+# Reiniciar
+pm2 restart mpp-converter-prod
+
+# Salvar configuração de inicialização automática
+pm2 save
 ```
 
-### 3. Acessar o Sistema
-- **Frontend:** http://localhost:3000
-- **Admin Panel:** http://localhost:3000/admin
-- **Health Check:** http://localhost:3000/api/health
-- **SaaS API:** http://localhost:3000/api/saas/
+---
+
+## ✅ Checklist de Validação
+
+Antes de colocar em produção, valide cada ponto:
+
+### 1. CORS
+```bash
+# ✓ Requisição do domínio autorizado funciona
+curl -H "Origin: http://seu-dominio.com" http://localhost:3000/api/health
+
+# ✓ Requisição de outro domínio é bloqueada
+curl -H "Origin: http://outro-dominio.com" http://localhost:3000/api/health
+# → Deve retornar erro CORS
+```
+
+### 2. Rate Limiting
+```bash
+# ✓ Fazer 5 uploads rápidos do mesmo IP
+for i in {1..5}; do curl -X POST -F "file=@arquivo.mpp" http://localhost:3000/api/upload; done
+
+# ✓ 6ª requisição deve retornar 429 (Too Many Requests)
+curl -X POST -F "file=@arquivo.mpp" http://localhost:3000/api/upload
+# → Status: 429, Retry-After: 60
+```
+
+### 3. PIX / Pagamento
+```bash
+# ✓ Gerar QR Code PIX
+curl -X POST http://localhost:3000/api/payment/pix \
+  -H "Content-Type: application/json" \
+  -d '{"fileName": "projeto.mpp", "amount": 10.00}'
+
+# ✓ Response contém qrCode e pixKey AUSENTE (por segurança)
+# ✓ Ler QR com app de banco
+```
+
+### 4. Worker / Timeout
+```bash
+# ✓ Upload arquivo válido
+# → Job deve aparecer na fila (Redis)
+# → Worker processa em < 5 minutos
+# → Arquivo aparece em uploads/converted/
+
+# ✓ Se worker travar, timeout em 5 min mata o job
+# → Log indica: "Job timeout after 300000ms"
+# → Fila continua processando novos jobs
+```
+
+### 5. Download Token Expirado
+```bash
+# ✓ Fazer conversão (gera link com token)
+# ✓ Copiar URL de download
+# ✓ Esperar DOWNLOAD_TOKEN_EXPIRY (ex: 15 min)
+# ✓ Tentar usar o link de novo
+# → Deve retornar 401: "Token expirado"
+```
+
+### 6. Logs e Rotação
+```bash
+# ✓ Verificar pasta logs/
+ls -la logs/
+
+# ✓ Deve ter arquivos tipo: app-2025-11-20.log (por data)
+# ✓ Arquivos de 14 dias atrás foram deletados
+# ✓ Nenhum arquivo com > 10MB (max size)
+
+# ✓ Ver logs em tempo real
+tail -f logs/app-*.log
+```
+
+---
+
+## 🛡️ Segurança - Checklist Pré-Deploy
+
+- [ ] Credenciais ADMIN_USER/ADMIN_PASSWORD_HASH alteradas no .env
+- [ ] ALLOWED_ORIGINS configurado (não usar * em produção)
+- [ ] JWT_SECRET_KEY gerada com 64 caracteres aleatórios
+- [ ] ENCRYPTION_KEY configurada (32 bytes)
+- [ ] PIX_KEY removida do código (apenas em .env)
+- [ ] SSL/HTTPS ativado (nginx reverse proxy)
+- [ ] Rate limiting testado
+- [ ] Logs sendo rotacionados corretamente
+- [ ] Backup de uploads/ configurado
+- [ ] .env adicionado ao .gitignore (verificar)
+
+---
+
+## 🚀 Variáveis de Ambiente Obrigatórias
+
+```bash
+# === SERVIDOR ===
+PORT=3000
+NODE_ENV=production
+HOST=0.0.0.0
+
+# === BANCO DE DADOS ===
+DATABASE_URL=file:./prisma/dev.db  # SQLite dev, PostgreSQL prod
+
+# === SEGURANÇA ===
+JWT_SECRET_KEY=<64_hex_chars_aleatorios>
+JWT_EXPIRATION_HOURS=24
+SESSION_SECRET=<32_hex_chars_aleatorios>
+ENCRYPTION_KEY=<32_hex_chars_aleatorios>
+
+# === ADMIN ===
+ADMIN_USERNAME=seu_usuario_admin
+ADMIN_PASSWORD_HASH=<bcrypt_hash_sua_senha>
+
+# === CORS ===
+ALLOWED_ORIGINS=http://localhost:3000,https://seu-dominio.com
+
+# === REDIS ===
+REDIS_URL=redis://localhost:6379
+
+# === TAXA/COBRANÇA ===
+PAYMENT_AMOUNT=10.00
+
+# === LOGGING ===
+LOG_LEVEL=info
+LOG_MAX_FILES=14d
+
+# === RATE LIMITING ===
+RATE_LIMIT_GLOBAL=100
+RATE_LIMIT_UPLOAD=5
+
+# === FILA ===
+JOB_TIMEOUT_MS=300000
+```
+
+---
 
 ## 🏢 SaaS API (Multi-Tenant)
 
@@ -191,26 +371,30 @@ Response: 200 OK
 
 ## 🔐 Credenciais de Admin
 
-### Acesso do Proprietário
-Credenciais do administrador estão configuradas via **variáveis de ambiente**:
+### ⚠️ Segurança Crítica
+
+**NUNCA** commite credenciais reais no repositório. Use **apenas** variáveis de ambiente:
 
 ```bash
-# .env (não commitar com valores reais!)
-ADMIN_USER=seu_usuario_admin
-ADMIN_PASS=sua_senha_super_segura
-ADMIN_EMAIL_2FA=seu_email@example.com
+# .env (arquivo local, adicionar ao .gitignore)
+ADMIN_USERNAME=seu_usuario_admin
+ADMIN_PASSWORD_HASH=<bcrypt_hash_gerado_localmente>
+```
+
+### Como Gerar Hash Seguro
+```bash
+# Execute localmente APENAS (não no repositório)
+node -e "const bcrypt=require('bcryptjs'); bcrypt.hash('SUA_SENHA_SUPER_FORTE_AQUI',12).then(h=>console.log('Hash:',h))"
 ```
 
 ### Recursos de Segurança
-- **Autenticação via Variáveis de Ambiente** - Nunca hardcode credenciais
-- **2FA via Email** - Notificações de login (configurável em .env)
-- **Logs de acesso** - Monitoramento completo de tentativas de login
-- **Sessão segura** - Token-based authentication com timeout
+- ✅ **Env Variables Only** - Credenciais nunca hardcoded
+- ✅ **2FA via Email** - Autenticação de dois fatores
+- ✅ **Logs de Acesso** - Monitoramento de tentativas
+- ✅ **Token-Based Auth** - JWT com timeout configurável
+- ✅ **Rate Limiting** - Proteção contra brute force
 
-> ⚠️ **IMPORTANTE:** 
-> - Credenciais nunca devem ser commitadas no repositório
-> - Use `.env.example` como template e preencha `.env` localmente
-> - Em produção, configure via variáveis de ambiente do servidor
+---
 
 ## 🏗️ Estrutura do Projeto
 

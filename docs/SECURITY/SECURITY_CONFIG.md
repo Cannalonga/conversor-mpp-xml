@@ -1,33 +1,49 @@
 # 🔐 CONFIGURAÇÃO DE SEGURANÇA - MPP CONVERTER
 
-## 👤 PROPRIETÁRIO AUTORIZADO
-**Nome:** Rafael Cannalonga  
-**Email:** rafaelcannalonga2@hotmail.com  
-**Sistema:** Autenticação exclusiva configurada  
+## ⚠️ NOTA IMPORTANTE
+
+**CREDENCIAIS NUNCA DEVEM SER ARMAZENADAS AQUI OU COMMITADAS NO REPOSITÓRIO**
+
+Use variáveis de ambiente (`.env`) para armazenar dados sensíveis.
 
 ---
 
-## 🛡️ CREDENCIAIS DE ACESSO
+## 🛡️ CREDENCIAIS - COMO CONFIGURAR
 
-### Login Administrativo
+### Setup Seguro
+```bash
+# 1. Crie o arquivo .env localmente
+cp .env.example .env
+
+# 2. Abra .env e configure SUAS credenciais (não compartilhe!)
+nano .env
+
+# 3. Configure as variáveis:
+ADMIN_USERNAME=seu_usuario_personalizado
+ADMIN_PASSWORD_HASH=seu_bcrypt_hash
+
+# 4. NUNCA commite .env no git
+# (já está no .gitignore)
 ```
-👤 Usuário: Alcap0ne
-🔑 Senha: C@rolin@36932025
-📧 Email 2FA: rafaelcannalonga2@hotmail.com
+
+### Gerar Hash Seguro
+```bash
+# Execute APENAS localmente, uma única vez
+node -e "const bcrypt=require('bcryptjs'); bcrypt.hash('SUA_SENHA_FORTE_AQUI',12).then(h=>console.log(h))"
+
+# Cole o resultado no .env como ADMIN_PASSWORD_HASH
 ```
 
 ---
 
 ## 🔒 RECURSOS DE SEGURANÇA IMPLEMENTADOS
 
-### ✅ Autenticação Personalizada
-- Credenciais exclusivas do proprietário
-- Sistema de login hardcoded no código
-- Proteção contra acesso não autorizado
-- Validação server-side rigorosa
-
-### ✅ Sistema 2FA (Two-Factor Authentication)
-- **Notificação por email:** Toda tentativa de login é notificada
+### ✅ Autenticação Segura
+- ✅ Credenciais via **variáveis de ambiente** (nunca hardcoded)
+- ✅ Senhas com **bcrypt** (10+ rounds de hashing)
+- ✅ JWT tokens com **expiração configurável**
+- ✅ Rate limiting contra **brute force**
+- ✅ Logs de **todas as tentativas de login**
 - **Email de destino:** rafaelcannalonga2@hotmail.com
 - **Alertas de segurança:** Atividade suspeita é reportada
 - **Configuração SMTP:** Outlook/Hotmail integrado
