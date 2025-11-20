@@ -301,6 +301,21 @@ app.get('/api/premium/status', verifyToken, (req, res) => {
 });
 
 // ============================================================================
+// SAAS ROUTES (MULTI-TENANT)
+// ============================================================================
+
+const saasRouter = require('./saas/routes');
+const {
+  validateSaasToken,
+  validateResourceAccess,
+  validateConversionLimit,
+  rateLimitByUser,
+} = require('./saas/middleware');
+
+// ✅ Integrar todas as rotas SaaS com middleware de autenticação
+app.use('/api/saas', saasRouter);
+
+// ============================================================================
 // FILE UPLOAD ROUTES (Requer autenticação)
 // ============================================================================
 

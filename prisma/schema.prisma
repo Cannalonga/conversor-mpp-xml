@@ -106,6 +106,132 @@ model FileConversion {
   @@index([createdAt])
 }
 
+// ============ SAAS CORE (MULTI-TENANT) ============
+
+model User {
+  id              String    @id @default(cuid())
+  
+  // Identity
+  email           String    @unique
+  name            String
+  cpf             String?   @unique
+  status          String    @default("active")  // active, inactive, suspended
+  tier            String    @default("free")    // free, pro, enterprise
+  
+  // Relations
+  subscriptions   Subscription[]
+  usage           Usage[]
+  invoices        Invoice[]
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Metadata
+  metadata        String?   // JSON string for custom data
+  
+  @@index([email])
+  @@index([tier])
+  @@index([status])
+}
+
+model Subscription {
+  id              String    @id @default(cuid())
+  
+  // Link to User
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Plan Details
+  planType        String    // free, pro, enterprise
+  conversionsLimit Int
+  price           Float
+  billingCycle    String    @default("monthly")  // monthly, yearly
+  
+  // Status
+  status          String    @default("active")  // active, inactive, suspended, cancelled
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Metadata
+  metadata        String?   // JSON string
+  
+  // Relations
+  invoices        Invoice[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([endDate])
+}
+
+model Usage {
+  id              String    @id @default(cuid())
+  
+  // Link to User
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Period (YYYY-MM format)
+  month           String
+  
+  // Tracking
+  conversionsCount Int      @default(0)
+  totalBytes      Int       @default(0)
+  
+  // Conversions detail (JSON array)
+  conversions     String?   // JSON array of {fileHash, fileName, fileSize, timestamp}
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([userId, month])
+  @@index([userId])
+  @@index([month])
+}
+
+model Invoice {
+  id              String    @id @default(cuid())
+  
+  // Links
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  subscriptionId  String?
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  
+  // Invoice Details
+  amount          Float
+  paidAmount      Float?
+  description     String?
+  
+  // Status
+  status          String    @default("pending")  // pending, paid, failed, cancelled
+  dueDate         DateTime
+  paidAt          DateTime?
+  
+  // Payment
+  paymentMethod   String?   // pix, credit_card, boleto
+  externalTransactionId String?
+  pixQrCode       String?
+  pixCopyPaste    String?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Metadata
+  metadata        String?   // JSON string
+  
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
+}
+
 // ============ ADMIN SYSTEM ============
 
 model AdminUser {
