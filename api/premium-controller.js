@@ -247,8 +247,6 @@ class PremiumController {
           email: transaction.email,
           plan: transaction.planType,
           type: 'premium',
-          iat: Math.floor(Date.now() / 1000),
-          exp: Math.floor(Date.now() / 1000) + (expiresIn * 24 * 60 * 60),
         },
         this.config.jwtSecret,
         { algorithm: 'HS256', expiresIn: `${expiresIn}d` }

@@ -30,6 +30,7 @@ require('dotenv').config();
 const { PaymentRepository, AdminRepository, FileRepository, prisma } = require('./database');
 const UploadSecurity = require('./upload-security');
 const PremiumController = require('./premium-controller');
+const ConversionService = require('./conversion-service');
 const EnterpriseLogger = require('./logger-enterprise');
 const HealthChecker = require('./health-checker');
 
@@ -64,6 +65,12 @@ const logger = new EnterpriseLogger('SERVER', {
 const healthChecker = new HealthChecker({
   logsDir: path.join(__dirname, '../logs'),
   uploadsDir: config.uploadDir
+});
+
+const conversionService = new ConversionService({
+  uploadDir: config.uploadDir,
+  maxRetries: 3,
+  timeout: 300000 // 5 minutos
 });
 
 // ============================================================================
@@ -367,16 +374,160 @@ app.post('/api/convert', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'File ID required' });
     }
 
-    // TODO: Implementar conversão real
+    // Obter arquivo do BD
+    const fileRecord = await FileRepository.getConversionById(fileId);
+    if (!fileRecord) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Validar que arquivo pertence ao usuário
+    if (fileRecord.transactionId !== req.user.transactionId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Validar se arquivo ainda está disponível
+    if (fileRecord.status === 'EXPIRED') {
+      return res.status(410).json({ error: 'File has expired' });
+    }
+
+    // Se já está processando ou completo, retornar status
+    if (fileRecord.status === 'PROCESSING') {
+      return res.json({
+        success: false,
+        message: 'Conversion already in progress',
+        status: 'PROCESSING'
+      });
+    }
+
+    if (fileRecord.status === 'COMPLETED') {
+      return res.json({
+        success: true,
+        message: 'Conversion already completed',
+        status: 'COMPLETED',
+        downloadUrl: `/api/download/${fileRecord.outputHash}`
+      });
+    }
+
+    // Iniciar conversão em background
+    logger.info('STARTING_CONVERSION', {
+      fileId,
+      filename: fileRecord.originalFilename,
+      transactionId: req.user.transactionId
+    });
+
+    // Executar conversão de forma assíncrona (não aguardar)
+    conversionService.startConversion(fileId, fileRecord.inputPath)
+      .then(result => {
+        logger.info('CONVERSION_COMPLETED_ASYNC', result);
+      })
+      .catch(error => {
+        logger.error('CONVERSION_FAILED_ASYNC', error);
+      });
+
     res.json({
       success: true,
       message: 'Conversion started',
-      status: 'processing'
+      fileId,
+      status: 'PROCESSING',
+      statusUrl: `/api/conversion-status/${fileId}`
     });
 
   } catch (error) {
     logger.error('CONVERSION_FAILED', error);
-    res.status(500).json({ error: 'Conversion failed' });
+    res.status(500).json({ error: 'Conversion failed', details: error.message });
+  }
+});
+
+/**
+ * GET /api/conversion-status/:fileId
+ * Obter status de conversão
+ */
+app.get('/api/conversion-status/:fileId', verifyToken, async (req, res) => {
+  try {
+    const { fileId } = req.params;
+
+    const fileRecord = await FileRepository.getConversionById(parseInt(fileId));
+    if (!fileRecord) {
+      return res.status(404).json({ error: 'Conversion not found' });
+    }
+
+    // Validar que arquivo pertence ao usuário
+    if (fileRecord.transactionId !== req.user.transactionId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const status = await conversionService.getStatus(parseInt(fileId));
+    res.json(status);
+
+  } catch (error) {
+    logger.error('GET_CONVERSION_STATUS_FAILED', error);
+    res.status(500).json({ error: 'Failed to get status', details: error.message });
+  }
+});
+
+/**
+ * GET /api/conversions
+ * Listar conversões do usuário
+ */
+app.get('/api/conversions', verifyToken, async (req, res) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+
+    const conversions = await conversionService.listConversions(
+      req.user.transactionId,
+      parseInt(limit),
+      parseInt(offset)
+    );
+
+    res.json(conversions);
+
+  } catch (error) {
+    logger.error('LIST_CONVERSIONS_FAILED', error);
+    res.status(500).json({ error: 'Failed to list conversions', details: error.message });
+  }
+});
+
+/**
+ * GET /api/download/:hash
+ * Download arquivo convertido
+ */
+app.get('/api/download/:hash', verifyToken, async (req, res) => {
+  try {
+    const { hash } = req.params;
+
+    const fileRecord = await FileRepository.getByHash(hash);
+    if (!fileRecord) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Validar permissão
+    if (fileRecord.transactionId !== req.user.transactionId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Validar arquivo
+    if (fileRecord.status !== 'COMPLETED') {
+      return res.status(410).json({ error: 'File not ready or expired' });
+    }
+
+    if (!fileRecord.outputPath) {
+      return res.status(500).json({ error: 'Output file path not found' });
+    }
+
+    // Registrar download no logger
+    logger.info('FILE_DOWNLOADED', {
+      fileId: fileRecord.id,
+      filename: fileRecord.originalFilename,
+      size: fileRecord.fileSizeBytes,
+      ip: req.ip
+    });
+
+    // Enviar arquivo
+    res.download(fileRecord.outputPath, fileRecord.originalFilename.replace('.mpp', '.xml'));
+
+  } catch (error) {
+    logger.error('DOWNLOAD_FAILED', error);
+    res.status(500).json({ error: 'Download failed', details: error.message });
   }
 });
 

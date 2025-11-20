@@ -325,20 +325,57 @@ class FileRepository {
   }
 
   /**
+   * Buscar conversão por ID
+   */
+  async getConversionById(id) {
+    try {
+      return await prisma.fileConversion.findUnique({
+        where: { id },
+      });
+    } catch (error) {
+      console.error('[FileRepository] Erro ao buscar conversão:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Buscar conversões por transação
+   */
+  async getConversionsByTransaction(transactionId, limit = 50, offset = 0) {
+    try {
+      return await prisma.fileConversion.findMany({
+        where: { transactionId },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      });
+    } catch (error) {
+      console.error('[FileRepository] Erro ao buscar conversões:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Atualizar status de conversão
    */
-  async updateConversionStatus(id, status, outputPath = null, errorMessage = null, processingTimeMs = null) {
+  async updateConversionStatus(id, status, extraData = {}) {
     try {
+      const updateData = {
+        status,
+        ...extraData,
+      };
+
+      // Auto-set timestamps
+      if (status === 'PROCESSING' && !extraData.startedAt) {
+        updateData.startedAt = new Date();
+      }
+      if (status === 'COMPLETED' && !extraData.completedAt) {
+        updateData.completedAt = new Date();
+      }
+
       return await prisma.fileConversion.update({
         where: { id },
-        data: {
-          status,
-          outputPath,
-          errorMessage,
-          processingTimeMs,
-          completedAt: status === 'COMPLETED' ? new Date() : null,
-          startedAt: status === 'PROCESSING' ? new Date() : null,
-        },
+        data: updateData,
       });
     } catch (error) {
       console.error('[FileRepository] Erro ao atualizar status:', error);
@@ -363,6 +400,40 @@ class FileRepository {
       });
     } catch (error) {
       console.error('[FileRepository] Erro ao listar expirados:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deletar arquivos expirados
+   */
+  async deleteExpiredFiles() {
+    try {
+      const result = await prisma.fileConversion.deleteMany({
+        where: {
+          expiresAt: {
+            lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 dias
+          },
+          status: 'EXPIRED',
+        },
+      });
+      return result.count;
+    } catch (error) {
+      console.error('[FileRepository] Erro ao deletar expirados:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obter arquivo por hash
+   */
+  async getByHash(hash) {
+    try {
+      return await prisma.fileConversion.findFirst({
+        where: { outputHash: hash },
+      });
+    } catch (error) {
+      console.error('[FileRepository] Erro ao buscar por hash:', error);
       throw error;
     }
   }
