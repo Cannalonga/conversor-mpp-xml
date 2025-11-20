@@ -27,6 +27,14 @@
 - **Relatórios Detalhados** - Estatísticas diárias, mensais e anuais
 - **Dashboard Administrativo** - Interface completa de gestão
 
+### 🏢 SaaS Multi-Tenant (Novo!)
+- **Autenticação por Cliente** - Cada usuário tem sua conta
+- **Planos Flexíveis** - Free / Pro / Enterprise
+- **Limite de Conversões** - Configurável por plano
+- **Isolamento de Dados** - Cada tenant vê apenas seus dados
+- **Faturamento Automático** - Integrado com PIX
+- **Dashboard do Cliente** - Uso e histórico de conversões
+
 ### 🔧 Infraestrutura de Produção
 - **PM2 Process Manager** - Estabilidade e auto-restart
 - **Zero Downtime** - Sistema robusto para produção
@@ -57,6 +65,129 @@ pm2 status
 - **Frontend:** http://localhost:3000
 - **Admin Panel:** http://localhost:3000/admin
 - **Health Check:** http://localhost:3000/api/health
+- **SaaS API:** http://localhost:3000/api/saas/
+
+## 🏢 SaaS API (Multi-Tenant)
+
+### Endpoints de Autenticação
+```bash
+# Registrar novo cliente
+POST /api/saas/users/register
+Content-Type: application/json
+
+{
+  "email": "cliente@example.com",
+  "name": "João Silva",
+  "cpf": "12345678901"
+}
+
+Response: 201 Created
+{
+  "success": true,
+  "user": {
+    "id": "xxx",
+    "email": "cliente@example.com",
+    "tier": "free",
+    "status": "active"
+  }
+}
+```
+
+### Endpoints de Perfil (Autenticado)
+```bash
+# Obter perfil do cliente
+GET /api/saas/users/profile
+Authorization: Bearer {JWT_TOKEN}
+
+# Atualizar perfil
+PUT /api/saas/users/profile
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+{
+  "name": "João Silva Updated",
+  "phone": "11999999999"
+}
+```
+
+### Endpoints de Assinatura
+```bash
+# Obter assinatura ativa
+GET /api/saas/subscriptions/active
+Authorization: Bearer {JWT_TOKEN}
+
+# Fazer upgrade de plano
+POST /api/saas/subscriptions/upgrade
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+{
+  "planType": "pro"  # free | pro | enterprise
+}
+
+Response: 200 OK
+{
+  "success": true,
+  "subscription": {
+    "planType": "pro",
+    "conversionsLimit": 100,
+    "billingCycle": "monthly",
+    "price": 29.90
+  }
+}
+```
+
+### Endpoints de Uso
+```bash
+# Obter uso do mês atual
+GET /api/saas/usage/current
+Authorization: Bearer {JWT_TOKEN}
+
+Response: 200 OK
+{
+  "success": true,
+  "usage": {
+    "month": "2025-11",
+    "conversionsCount": 45,
+    "conversionsLimit": 100,
+    "percentageUsed": 45,
+    "totalBytes": 1024000
+  }
+}
+```
+
+### Endpoints de Faturamento
+```bash
+# Listar faturas
+GET /api/saas/billing/invoices
+Authorization: Bearer {JWT_TOKEN}
+
+# Obter faturas em aberto
+GET /api/saas/billing/pending
+Authorization: Bearer {JWT_TOKEN}
+
+Response: 200 OK
+{
+  "success": true,
+  "invoices": [
+    {
+      "id": "inv_xxx",
+      "amount": 29.90,
+      "status": "pending",
+      "dueDate": "2025-12-20",
+      "pixQrCode": "base64...",
+      "pixCopyPaste": "00020126..."
+    }
+  ]
+}
+```
+
+### Planos Disponíveis
+
+| Plano | Preço | Conversões/mês | Suporte |
+|-------|-------|-----------------|---------|
+| **Free** | R$ 0,00 | 0 (Demo) | Comunitário |
+| **Pro** | R$ 29,90 | 100 | Email |
+| **Enterprise** | Customizado | Ilimitado | Dedicado |
+
 
 ## 🔐 Credenciais de Admin
 
@@ -178,6 +309,19 @@ pm2 save
 4. **Admin não carrega:** Limpe localStorage do navegador
 
 ## 📝 Changelog
+
+### v2.0 - SaaS Core (20/11/2025)
+- ✅ Arquitetura multi-tenant completa
+- ✅ Autenticação por cliente (User Model)
+- ✅ Planos flexíveis (Free/Pro/Enterprise)
+- ✅ Limite de conversões por plano
+- ✅ Isolamento de dados por tenant
+- ✅ API SaaS com 15+ endpoints
+- ✅ Middleware de segurança multi-tenant
+- ✅ Faturamento automático integrado
+- ✅ Dashboard de uso para clientes
+- ✅ Prisma ORM com migrations
+- ✅ Tests automatizados para SaaS
 
 ### v1.0 (13/11/2025)
 - ✅ Sistema completo de conversão MPP → XML
