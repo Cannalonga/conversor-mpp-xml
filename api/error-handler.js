@@ -20,12 +20,29 @@ class AppError extends Error {
 
 /**
  * Global Error Handler Middleware
+ * FIX #2: Medium priority security fix - Enhanced error code mapping
  */
 const globalErrorHandler = (err, req, res, next) => {
     // Default error values
-    const statusCode = err.statusCode || 500;
+    let statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
     const isDevelopment = process.env.NODE_ENV !== 'production';
+
+    // MÉDIO FIX #2: Map file system and validation errors to proper HTTP codes
+    if (err.code === 'ENOENT') {
+        statusCode = 404; // File not found
+    } else if (err.code === 'EACCES') {
+        statusCode = 403; // Permission denied
+    } else if (err.name === 'ValidationError') {
+        statusCode = 400; // Bad request
+    } else if (err.type === 'entity.too.large') {
+        statusCode = 413; // Payload too large
+    } else if (err.code === 'ENOSPC') {
+        statusCode = 507; // Insufficient storage
+    } else if (!err.statusCode && err.name === 'Error') {
+        // Generic unhandled error
+        statusCode = 500;
+    }
 
     // Log error
     logger.error(message, err, {

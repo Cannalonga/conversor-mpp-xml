@@ -80,6 +80,19 @@ class FileConversionWorker {
 
             await job.updateProgress(20);
 
+            // FIX #5: Medium priority - Validate empty file
+            const stats = await fs.stat(incomingPath);
+            if (stats.size === 0) {
+                throw new Error('Arquivo vazio nao e permitido');
+            }
+
+            // FIX #6: Medium priority - Validate MPP structure (extension)
+            if (!filename.toLowerCase().endsWith('.mpp')) {
+                throw new Error('Arquivo deve ter extensao .mpp');
+            }
+
+            console.log(`📂 Arquivo validado: ${filename} (${stats.size} bytes)`);
+
             // Mover para processing
             await fs.rename(incomingPath, processingPath);
             console.log(`📂 Arquivo movido para processing: ${filename}`);

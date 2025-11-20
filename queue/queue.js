@@ -9,13 +9,14 @@ const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:63
     lazyConnect: true
 });
 
-// Criação da fila de conversão
+// Criacao da fila de conversao
 const convertQueue = new Queue('file-conversion', {
     connection: redisConnection,
     defaultJobOptions: {
         removeOnComplete: 10, // Manter apenas 10 jobs completos
         removeOnFail: 20,     // Manter 20 jobs falhos para debug
         attempts: 3,          // Tentar 3 vezes em caso de falha
+        timeout: parseInt(process.env.JOB_TIMEOUT_MS || '300000'), // FIX #4: Medium priority - 5 min timeout
         backoff: {
             type: 'exponential',
             delay: 2000

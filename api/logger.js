@@ -1,10 +1,13 @@
 /**
  * Logger Configuration - ENTERPRISE GRADE
  * Winston-based logging with structured logs, levels, and rotation
+ * FIX #3: Medium priority - Daily rotation with retention policy
  */
 
 const path = require('path');
 const fs = require('fs');
+const winston = require('winston');
+const DailyRotateFile = require('winston-daily-rotate-file');
 
 // Ensure logs directory exists
 const logsDir = path.join(__dirname, '../logs');
@@ -13,13 +16,60 @@ if (!fs.existsSync(logsDir)) {
 }
 
 /**
- * Simple Logger Class
- * Implements structured logging without external dependencies initially
+ * Winston Logger Configuration with Daily Rotation
+ * FIX #3: Medium priority security fix
+ * - Rotates daily
+ * - Keeps max 14 days of logs
+ * - Max size per file: 10MB
+ */
+const winstonLogger = winston.createLogger({
+    level: process.env.LOG_LEVEL || 'info',
+    format: winston.format.combine(
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+    ),
+    defaultMeta: { service: 'conversor-mpp' },
+    transports: [
+        // Daily rotate file for all logs
+        new DailyRotateFile({
+            filename: path.join(logsDir, 'app-%DATE%.log'),
+            datePattern: 'YYYY-MM-DD',
+            maxSize: '10m', // 10MB per file
+            maxDays: process.env.LOG_MAX_FILES || '14d', // Keep 14 days
+            format: winston.format.json(),
+            level: 'info'
+        }),
+        // Daily rotate file for errors only
+        new DailyRotateFile({
+            filename: path.join(logsDir, 'error-%DATE%.log'),
+            datePattern: 'YYYY-MM-DD',
+            maxSize: '10m',
+            maxDays: process.env.LOG_MAX_FILES || '14d',
+            format: winston.format.json(),
+            level: 'error'
+        }),
+        // Console output
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.printf(({ timestamp, level, message, ...meta }) => {
+                    return `${timestamp} [${level}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
+                })
+            ),
+            level: process.env.LOG_LEVEL || 'info'
+        })
+    ]
+});
+
+/**
+ * Enhanced Logger Class wrapping Winston
  */
 class Logger {
     constructor(module) {
         this.module = module;
         this.isDevelopment = process.env.NODE_ENV !== 'production';
+        this.winston = winstonLogger;
     }
 
     /**
@@ -44,30 +94,14 @@ class Logger {
     }
 
     /**
-     * Write log to file
-     */
-    writeToFile(filename, message) {
-        try {
-            const logPath = path.join(logsDir, filename);
-            const stream = fs.createWriteStream(logPath, { flags: 'a' });
-            stream.write(message + '\n');
-            stream.end();
-        } catch (error) {
-            console.error('Failed to write log:', error);
-        }
-    }
-
-    /**
-     * INFO level
+     * INFO level - Uses Winston
      */
     info(message, meta = {}) {
-        const formatted = this.formatMessage('info', message, meta);
-        console.log(`[INFO] ${this.module} - ${message}`);
-        this.writeToFile('app.log', formatted);
+        this.winston.info(message, { ...meta, module: this.module });
     }
 
     /**
-     * ERROR level
+     * ERROR level - Uses Winston
      */
     error(message, error = null, meta = {}) {
         const errorMeta = error ? {
@@ -75,28 +109,22 @@ class Logger {
             error: error.message,
             stack: error.stack
         } : meta;
-        const formatted = this.formatMessage('error', message, errorMeta);
-        console.error(`[ERROR] ${this.module} - ${message}`, error);
-        this.writeToFile('error.log', formatted);
+        this.winston.error(message, { ...errorMeta, module: this.module });
     }
 
     /**
-     * WARN level
+     * WARN level - Uses Winston
      */
     warn(message, meta = {}) {
-        const formatted = this.formatMessage('warn', message, meta);
-        console.warn(`[WARN] ${this.module} - ${message}`);
-        this.writeToFile('app.log', formatted);
+        this.winston.warn(message, { ...meta, module: this.module });
     }
 
     /**
-     * DEBUG level (development only)
+     * DEBUG level - Uses Winston (development only)
      */
     debug(message, meta = {}) {
         if (this.isDevelopment) {
-            const formatted = this.formatMessage('debug', message, meta);
-            console.log(`[DEBUG] ${this.module} - ${message}`);
-            this.writeToFile('debug.log', formatted);
+            this.winston.debug(message, { ...meta, module: this.module });
         }
     }
 
@@ -169,3 +197,4 @@ class Logger {
  */
 module.exports = Logger;
 module.exports.createLogger = (moduleName) => new Logger(moduleName);
+module.exports.getWinstonLogger = () => winstonLogger;

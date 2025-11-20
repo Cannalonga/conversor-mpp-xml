@@ -9,7 +9,50 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const QRCode = require('qrcode'); // Biblioteca para QR codes PIX
+const rateLimit = require('express-rate-limit');
 const SecureAuthSystem = require('./secure-auth');
+const Logger = require('./logger');
+
+// Logger instance
+const logger = new Logger('ServerMinimal');
+
+// Rate limiters
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: parseInt(process.env.RATE_LIMIT_GLOBAL || '100'),
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        logger.warn(`Rate limit exceeded for IP: ${req.ip}`, { 
+            path: req.path,
+            ip: req.ip 
+        });
+        res.status(429).json({
+            success: false,
+            error: 'Too many requests. Please try again later.',
+            retryAfter: req.rateLimit.resetTime
+        });
+    }
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minuto
+    max: parseInt(process.env.RATE_LIMIT_UPLOAD || '5'),
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.ip, // Por IP
+    handler: (req, res) => {
+        logger.warn(`Upload rate limit exceeded for IP: ${req.ip}`, { 
+            ip: req.ip,
+            filename: req.file?.originalname
+        });
+        res.status(429).json({
+            success: false,
+            error: 'Too many uploads. Maximum 5 uploads per minute.',
+            retryAfter: req.rateLimit.resetTime
+        });
+    }
+});
 
 // Inicializar sistema de autenticação ultra-seguro
 const secureAuth = new SecureAuthSystem();
@@ -29,13 +72,16 @@ ensureDirectories();
 const app = express();
 const PORT = 3000;
 
-console.log('🛡️ Iniciando servidor ultra-seguro...');
-console.log('🔐 Sistema de autenticação carregado');
+logger.info('Iniciando servidor ultra-seguro');
+logger.info('Sistema de autenticação carregado');
 
 // Middlewares básicos
 app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin')); // Servir arquivos da pasta admin
+
+// Apply global rate limiter
+app.use(globalLimiter);
 
 // CORS middleware com whitelist de origens permitidas (SEGURANÇA: não usar '*')
 app.use((req, res, next) => {
@@ -56,7 +102,7 @@ app.use((req, res, next) => {
     }
 });
 
-console.log('✅ Middlewares configurados');
+logger.info('Middlewares configurados');
 
 // Upload simples
 const upload = multer({ 
@@ -64,7 +110,7 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-console.log('✅ Upload configurado');
+logger.info('Upload configurado');
 
 // Dados financeiros
 const financialData = {
@@ -106,15 +152,15 @@ const registerPaidConversion = (fileName, amount) => {
     financialData.monthlyStats[monthKey].count++;
     financialData.monthlyStats[monthKey].revenue += amount;
     
-    console.log(`💰 Conversão registrada: ${fileName} - R$ ${amount}`);
+    logger.info('Conversão registrada', { fileName, amount });
     return transaction;
 };
 
-console.log('✅ Sistema financeiro configurado');
+logger.info('Sistema financeiro configurado');
 
 // Rotas
 app.get('/api/health', (req, res) => {
-    console.log('💚 Health check requisitado');
+    logger.info('Health check requisitado');
     res.json({ 
         status: 'ok', 
         timestamp: new Date().toISOString(),
@@ -122,19 +168,30 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-app.post('/api/upload', upload.single('file'), (req, res) => {
-    console.log('📁 Upload recebido:', req.file ? req.file.originalname : 'Nenhum arquivo');
-    console.log('🔍 Detalhes do request:', {
-        headers: req.headers['content-type'],
-        body: Object.keys(req.body || {}),
-        file: req.file ? 'SIM' : 'NÃO'
+app.post('/api/upload', uploadLimiter, upload.single('file'), (req, res) => {
+    logger.info('Upload recebido', { 
+        filename: req.file?.originalname,
+        size: req.file?.size,
+        ip: req.ip
     });
     
     if (!req.file) {
-        console.log('❌ Nenhum arquivo no upload');
+        logger.warn('Upload sem arquivo', { ip: req.ip });
         return res.status(400).json({
             success: false,
             error: 'Nenhum arquivo enviado'
+        });
+    }
+
+    // Validar arquivo vazio (FIX #5)
+    if (req.file.size === 0) {
+        logger.warn('Arquivo vazio rejeitado', { 
+            filename: req.file.originalname,
+            ip: req.ip
+        });
+        return res.status(400).json({
+            success: false,
+            error: 'Arquivo vazio não é permitido'
         });
     }
 
@@ -153,7 +210,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     // Registrar conversão paga (simula pagamento aprovado)
     const transaction = registerPaidConversion(req.file.originalname, 10.00);
 
-    console.log('✅ Arquivo convertido:', xmlPath);
+    logger.info('Arquivo convertido', { xmlPath });
 
     res.json({
         success: true,
@@ -169,7 +226,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 });
 
 app.get('/api/download/:filename', (req, res) => {
-    console.log('⬇️ Download solicitado:', req.params.filename);
+    logger.info('Download solicitado', { filename: req.params.filename });
     
     const filePath = path.join(__dirname, '../uploads/converted', req.params.filename);
     
@@ -182,19 +239,19 @@ app.get('/api/download/:filename', (req, res) => {
 
 // Admin dashboard route
 app.get('/admin', (req, res) => {
-    console.log('🔧 Admin dashboard acessado');
+    logger.info('Admin dashboard acessado');
     res.sendFile(path.join(__dirname, '..', 'admin', 'login.html'));
 });
 
 // Admin login page route
 app.get('/admin/login', (req, res) => {
-    console.log('🔑 Admin login page acessada');
+    logger.info('Admin login page acessada');
     res.sendFile(path.join(__dirname, '..', 'admin', 'login.html'));
 });
 
 // Admin dashboard route (simples)
 app.get('/admin/dashboard', (req, res) => {
-    console.log('📊 Admin dashboard acessado');
+    logger.info('Admin dashboard acessado');
     res.sendFile(path.join(__dirname, '..', 'admin', 'index.html'));
 });
 
@@ -203,7 +260,7 @@ app.post('/api/payment/pix', async (req, res) => {
     try {
         const { fileName, amount = 10.00 } = req.body;
         
-        console.log('💰 Gerando QR Code PIX:', { fileName, amount });
+        logger.info('Gerando QR Code PIX', { fileName, amount });
         
         // Dados do PIX (use suas configurações reais)
         const pixKey = process.env.PIX_KEY || 'canna.vendasonline@gmail.com';
@@ -242,7 +299,7 @@ app.post('/api/payment/pix', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('❌ Erro ao gerar QR Code PIX:', error);
+        logger.error('Erro ao gerar QR Code PIX', error, { fileName, amount });
         res.status(500).json({
             success: false,
             error: 'Erro ao gerar código PIX'
@@ -298,9 +355,9 @@ app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
     const clientIP = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
     
-    console.log(`[${new Date().toISOString()}] Tentativa de autenticação:`, {
+    logger.info('Tentativa de autenticação', {
         ip: clientIP,
-        userAgent: req.get('User-Agent')?.substring(0, 50) + '...',
+        userAgent: req.get('User-Agent')?.substring(0, 50),
         username: username ? 'PRESENTE' : 'AUSENTE'
     });
     
@@ -308,8 +365,7 @@ app.post('/api/admin/login', (req, res) => {
     const authResult = secureAuth.authenticate(username, password, clientIP);
     
     if (authResult.success) {
-        console.log('✅ RAFAEL CANNALONGA AUTENTICADO COM SUCESSO');
-        console.log('🔐 Token seguro gerado e ativado');
+        logger.info('Autenticação bem-sucedida', { username, ip: clientIP });
         
         res.json({
             success: true,
@@ -319,8 +375,11 @@ app.post('/api/admin/login', (req, res) => {
             securityLevel: 'MAXIMUM'
         });
     } else {
-        console.log(`❌ FALHA NA AUTENTICAÇÃO: ${authResult.reason}`);
-        console.log(`⚠️ IP registrado: ${clientIP}`);
+        logger.warn('Falha na autenticação', { 
+            reason: authResult.reason,
+            ip: clientIP,
+            username
+        });
         
         // Resposta padronizada para não vazar informações
         res.status(401).json({
@@ -336,7 +395,7 @@ const authenticateAdmin = (req, res, next) => {
     const clientIP = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        console.log(`⚠️ Tentativa de acesso sem token do IP: ${clientIP}`);
+        logger.warn('Tentativa de acesso sem token', { ip: clientIP });
         return res.status(401).json({ 
             error: 'Token de acesso requerido',
             securityAlert: 'UNAUTHORIZED_ACCESS_ATTEMPT'
@@ -346,10 +405,12 @@ const authenticateAdmin = (req, res, next) => {
     const token = authHeader.substring(7);
     
     if (secureAuth.verifyToken(token, clientIP)) {
-        console.log(`✅ Acesso autorizado para IP: ${clientIP.substring(0, 8)}***`);
+        logger.info('Acesso autorizado', { ip: clientIP.substring(0, 8) });
         next();
     } else {
-        console.log(`🚨 TENTATIVA DE ACESSO COM TOKEN INVÁLIDO: ${clientIP}`);
+        logger.security('Tentativa de acesso com token inválido', { 
+            ip: clientIP
+        });
         res.status(401).json({ 
             error: 'Token inválido ou expirado',
             securityAlert: 'INVALID_TOKEN_ATTEMPT'
