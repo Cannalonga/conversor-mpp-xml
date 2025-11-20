@@ -111,13 +111,16 @@ async function runTests() {
 
   // Step 2: Criar Transação (Checkout)
   await step(2, 'Criar Transação de Pagamento', async () => {
+    // Usar CPF aleatório para evitar constraint UNIQUE
+    const randomCPF = String(Math.floor(Math.random() * 99999999999)).padStart(11, '0');
+    
     const payload = {
       plan: 'monthly',
       payment: 'pix',
       customer: {
-        email: 'test@example.com',
+        email: `test${Date.now()}@example.com`,
         name: 'Test User',
-        cpf: '12345678901'
+        cpf: randomCPF
       }
     };
 
