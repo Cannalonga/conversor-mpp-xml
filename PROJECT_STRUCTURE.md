@@ -157,10 +157,14 @@ start tests/test-login-flow.html
 
 ## 🔑 Credenciais de Admin (Teste)
 
-```
-Usuário: Alcap0ne
-Senha: C@rolin@36932025
-Email: rafaelcannalonga2@hotmail.com
+```bash
+# ⚠️ CREDENCIAIS NÃO DEVEM SER EXPOSTAS AQUI!
+# Configure via variáveis de ambiente (.env)
+# Veja .env.example para template
+
+ADMIN_USER=seu_usuario_aqui
+ADMIN_PASS=sua_senha_super_segura
+ADMIN_EMAIL_2FA=seu_email@example.com
 ```
 
 ---

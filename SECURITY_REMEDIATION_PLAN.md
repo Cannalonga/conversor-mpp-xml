@@ -4,9 +4,13 @@
 
 ### P0 - Credenciais Expostas (CRITICAL)
 
-#### ✅ CORRIGIDO 1: README.md
-- ❌ ANTES: Usuário `Alcap0ne`, Senha `C@rolin@36932025` hardcoded
-- ✅ DEPOIS: Referência a variáveis de ambiente com `.env.example` template
+#### ✅ CORRIGIDO 1: README.md & Documentação
+- ❌ ANTES: Credenciais reais (`Alcap0ne`, `C@rolin@36932025`) hardcoded em múltiplos arquivos
+- ✅ DEPOIS: 
+  - Removidas TODAS as credenciais reais do repositório
+  - Referência APENAS a variáveis de ambiente
+  - `.env.example` como template seguro
+  - `.gitignore` atualizado para proteger `.env`
 
 #### ⚠️ LEGADO 2: Arquivos Antigos NÃO EM USO
 - `api/server-2fa.js` - **Não está em production** (ecosystem.config usa `server-minimal.js`)
