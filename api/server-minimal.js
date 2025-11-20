@@ -37,9 +37,16 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin')); // Servir arquivos da pasta admin
 
-// CORS middleware para permitir requisições locais
+// CORS middleware com whitelist de origens permitidas (SEGURANÇA: não usar '*')
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').map(o => o.trim());
+    const origin = req.headers.origin;
+    
+    // Verificar se origem está na whitelist
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        res.header('Access-Control-Allow-Origin', origin || allowedOrigins[0]);
+    }
+    
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (req.method === 'OPTIONS') {
@@ -229,9 +236,9 @@ app.post('/api/payment/pix', async (req, res) => {
             qrCode: qrCodeImage,
             pixCode: pixCode,
             amount: amount,
-            pixKey: pixKey,
             merchantName: merchantName,
             expiresIn: '15 minutos'
+            // SEGURANÇA: pixKey removida da resposta (não exponha chave PIX)
         });
         
     } catch (error) {
@@ -272,21 +279,20 @@ function generatePixEMV(data) {
     return emv;
 }
 
-// Função simplificada de CRC16
+// CRC16 CCITT implementação correta para PIX (Banco Central)
 function calculateCRC16(data) {
     let crc = 0xFFFF;
     for (let i = 0; i < data.length; i++) {
         crc ^= data.charCodeAt(i) << 8;
         for (let j = 0; j < 8; j++) {
-            if ((crc & 0x8000) !== 0) {
-                crc = (crc << 1) ^ 0x1021;
-            } else {
-                crc = crc << 1;
+            crc <<= 1;
+            if (crc & 0x10000) {
+                crc ^= 0x1021;
             }
-            crc &= 0xFFFF;
         }
+        crc &= 0xFFFF;
     }
-    return crc;
+    return crc ^ 0xFFFF;  // Complement final para CCITT
 }
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
@@ -443,8 +449,28 @@ app.get('/api/financial/monthly-report', authenticateAdmin, (req, res) => {
 });
 
 app.get('/api/files/:directory', authenticateAdmin, (req, res) => {
+    // SEGURANÇA: Validar directory contra whitelist (prevenir path traversal CWE-22)
+    const allowedDirs = ['incoming', 'processing', 'converted', 'expired'];
     const directory = req.params.directory;
+    
+    if (!allowedDirs.includes(directory)) {
+        return res.status(400).json({ 
+            success: false,
+            error: 'Diretório inválido. Valores permitidos: incoming, processing, converted, expired' 
+        });
+    }
+    
     const dirPath = path.join('uploads', directory);
+    
+    // Validar que o caminho resolvido permanece dentro de uploads/
+    const resolvedPath = path.resolve(dirPath);
+    const uploadsPath = path.resolve('uploads');
+    if (!resolvedPath.startsWith(uploadsPath)) {
+        return res.status(403).json({ 
+            success: false,
+            error: 'Acesso negado' 
+        });
+    }
     
     try {
         if (fs.existsSync(dirPath)) {
@@ -460,7 +486,11 @@ app.get('/api/files/:directory', authenticateAdmin, (req, res) => {
             res.json({ files: [] });
         }
     } catch (error) {
-        res.json({ files: [] });
+        console.error(`Erro ao listar arquivos em ${directory}:`, error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Erro ao listar arquivos' 
+        });
     }
 });
 

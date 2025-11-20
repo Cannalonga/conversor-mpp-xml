@@ -94,7 +94,7 @@ class MPPToXMLConverter {
     
     <CalendarUID>1</CalendarUID>
     <DefaultStartTime>08:00:00</DefaultStartTime>
-    <DefaultFinishTime>17:00:00</DefaultFinTime>
+    <DefaultFinishTime>17:00:00</DefaultFinishTime>
     <MinutesPerDay>480</MinutesPerDay>
     <MinutesPerWeek>2400</MinutesPerWeek>
     <DaysPerMonth>20</DaysPerMonth>

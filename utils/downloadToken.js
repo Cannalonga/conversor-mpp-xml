@@ -4,7 +4,13 @@ const jwt = require('jsonwebtoken');
 class DownloadTokenManager {
     constructor() {
         this.secretKey = process.env.SECRET_KEY || 'fallback-secret-key-change-me';
-        this.expiryMinutes = parseInt(process.env.DOWNLOAD_TOKEN_EXPIRY) || 15;
+        // SEGURANÇA: Validar que DOWNLOAD_TOKEN_EXPIRY é número válido (não NaN)
+        const expiryEnv = parseInt(process.env.DOWNLOAD_TOKEN_EXPIRY);
+        this.expiryMinutes = (Number.isNaN(expiryEnv) || expiryEnv <= 0) ? 15 : expiryEnv;
+        
+        if (!process.env.DOWNLOAD_TOKEN_EXPIRY) {
+            console.warn('⚠️ DOWNLOAD_TOKEN_EXPIRY não definido em .env, usando padrão 15 minutos');
+        }
     }
 
     /**
