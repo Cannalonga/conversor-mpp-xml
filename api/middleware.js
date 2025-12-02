@@ -6,6 +6,7 @@
 const Logger = require('./logger');
 const logger = new Logger('Middleware');
 const { ValidationError } = require('./error-handler');
+const rateLimit = require('express-rate-limit');
 
 /**
  * Request ID Middleware
@@ -198,6 +199,44 @@ const requireAuth = (req, res, next) => {
     next();
 };
 
+/**
+ * API Rate Limiter Middleware
+ * Prevents abuse by limiting requests per IP
+ */
+const apiRateLimiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1 minute default
+    max: parseInt(process.env.RATE_LIMIT_MAX || '60'), // 60 requests per window
+    standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+    legacyHeaders: false, // Disable `X-RateLimit-*` headers
+    message: { 
+        success: false, 
+        error: 'Too many requests, please slow down.' 
+    },
+    skip: (req) => {
+        // Skip rate limiting for health checks
+        return req.path === '/health';
+    },
+    keyGenerator: (req, res) => {
+        // Use IP address as key (or X-Forwarded-For if behind proxy)
+        return req.ip || req.connection.remoteAddress;
+    }
+});
+
+/**
+ * Upload Rate Limiter (stricter for file uploads)
+ * Prevents abuse of upload endpoint
+ */
+const uploadRateLimiter = rateLimit({
+    windowMs: parseInt(process.env.UPLOAD_RATE_LIMIT_WINDOW_MS || '300000'), // 5 minutes default
+    max: parseInt(process.env.UPLOAD_RATE_LIMIT_MAX || '10'), // 10 uploads per 5 minutes per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { 
+        success: false, 
+        error: 'Too many upload requests, please wait before trying again.' 
+    }
+});
+
 module.exports = {
     requestIdMiddleware,
     requestLoggingMiddleware,
@@ -206,5 +245,7 @@ module.exports = {
     bodyLimitMiddleware,
     RateLimiter,
     validateInput,
-    requireAuth
+    requireAuth,
+    apiRateLimiter,
+    uploadRateLimiter
 };
