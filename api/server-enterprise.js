@@ -219,13 +219,35 @@ app.use(compression({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 6. STATIC FILES
+// 6. STATIC FILES - Servir com cache headers corretos
 app.use(express.static('public', {
     maxAge: config.isDev ? '1m' : '1d',
     etag: true,
     lastModified: true,
-    cacheControl: false
+    cacheControl: true,
+    dotfiles: 'deny'
 }));
+
+// 🎯 CACHE HEADERS MIDDLEWARE PARA ASSETS
+app.use((req, res, next) => {
+    // CSS, JS, Fonts - Cache agressivo (1 ano)
+    if (req.url.match(/\.(css|js|woff|woff2|ttf|eot|svg)$/i)) {
+        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+        if (req.url.endsWith('.css')) res.set('Content-Type', 'text/css');
+        else if (req.url.endsWith('.js')) res.set('Content-Type', 'application/javascript');
+    }
+    // HTML - Sem cache (sempre verificar)
+    else if (req.url.match(/\.html$/i) || req.url === '/') {
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+    }
+    // Imagens - Cache moderado (1 dia)
+    else if (req.url.match(/\.(jpg|jpeg|png|gif|webp|ico)$/i)) {
+        res.set('Cache-Control', 'public, max-age=86400');
+    }
+    
+    next();
+});
 
 // ============================================================================
 // RATE LIMITING
