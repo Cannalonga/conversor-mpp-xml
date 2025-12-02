@@ -47,11 +47,19 @@ class FileConversionWorker {
             connection: redisConnection,
             concurrency: 2, // Processar até 2 jobs simultaneamente
             removeOnComplete: 10,
-            removeOnFail: 20
+            removeOnFail: 20,
+            // MÉDIO FIX #3: Add job timeout to prevent infinite processing
+            settings: {
+                lockDuration: parseInt(process.env.JOB_LOCK_DURATION_MS || '30000'), // 30s lock
+                lockRenewTime: parseInt(process.env.JOB_LOCK_RENEW_MS || '15000'), // Renew every 15s
+                maxStalledCount: 2,
+                stalledInterval: 5000,
+                maxStalledTimeout: parseInt(process.env.JOB_STALLED_TIMEOUT_MS || '60000') // 60s
+            }
         });
 
         this.setupEventHandlers();
-        console.log('🔧 Worker de conversão iniciado');
+        console.log('🔧 Worker de conversão iniciado com timeout protection');
     }
 
     /**
@@ -61,20 +69,35 @@ class FileConversionWorker {
     async processJob(job) {
         const { filename, originalName } = job.data;
         
-        try {
-            console.log(`🔄 Processando job ${job.id}: ${filename}`);
-            
-            // Atualizar progresso
-            await job.updateProgress(10);
-            
-            // Caminhos dos arquivos
-            const incomingPath = path.join('uploads/incoming', filename);
-            const processingPath = path.join('uploads/processing', filename);
-            const convertedPath = path.join('uploads/converted', filename.replace('.mpp', '.xml'));
-            
-            // Verificar se arquivo existe em incoming
-            const fileExists = await this.fileExists(incomingPath);
-            if (!fileExists) {
+        // MÉDIO FIX #3: Add internal timeout wrapper
+        const JOB_TIMEOUT_MS = parseInt(process.env.JOB_TIMEOUT_MS || '300000'); // 5 minutes default
+        
+        // Create timeout promise
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => {
+                const error = new Error('JOB_TIMEOUT');
+                error.code = 'JOB_TIMEOUT';
+                error.details = { timeoutMs: JOB_TIMEOUT_MS, jobId: job.id };
+                reject(error);
+            }, JOB_TIMEOUT_MS)
+        );
+        
+        // Create job processing promise
+        const processPromise = (async () => {
+            try {
+                console.log(`🔄 Processando job ${job.id}: ${filename}`);
+                
+                // Atualizar progresso
+                await job.updateProgress(10);
+                
+                // Caminhos dos arquivos
+                const incomingPath = path.join('uploads/incoming', filename);
+                const processingPath = path.join('uploads/processing', filename);
+                const convertedPath = path.join('uploads/converted', filename.replace('.mpp', '.xml'));
+                
+                // Verificar se arquivo existe em incoming
+                const fileExists = await this.fileExists(incomingPath);
+                if (!fileExists) {
                 throw new Error(`Arquivo não encontrado em incoming: ${filename}`);
             }
 
@@ -122,9 +145,14 @@ class FileConversionWorker {
 
             console.log(`✅ Job ${job.id} concluído: ${filename} → ${path.basename(convertedPath)}`);
             return result;
-
+            
+        })();
+        
+        // Race between timeout and processing
+        try {
+            return await Promise.race([processPromise, timeoutPromise]);
         } catch (error) {
-            console.error(`❌ Erro no job ${job.id}:`, error);
+            console.error(`❌ Erro no job ${job.id}:`, error.message || error);
             
             // Mover arquivo para quarentena em caso de erro
             await this.quarantineFile(filename);

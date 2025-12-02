@@ -164,7 +164,37 @@ app.get('/metrics/summary', (req, res) => {
     }
 });
 
-app.use(express.static(path.join(__dirname, '../public')));
+// 📁 STATIC FILES MIDDLEWARE COM CACHE HEADERS CORRETOS
+app.use(express.static(path.join(__dirname, '../public'), {
+    maxAge: '1d',                    // Cache por 1 dia
+    etag: true,                      // Enable ETag
+    lastModified: true,              // Enable Last-Modified
+    redirect: false,
+    dotfiles: 'deny'                 // Não servir arquivos ocultos
+}));
+
+// 🎯 MIDDLEWARE DE CACHE EXPLÍCITO PARA ASSETS
+app.use((req, res, next) => {
+    // CSS, JS, Fonts - Cache agressivo
+    if (req.url.match(/\.(css|js|woff|woff2|ttf|eot|svg)$/i)) {
+        res.set('Cache-Control', 'public, max-age=31536000, immutable'); // 1 ano
+        res.set('Content-Type', req.url.endsWith('.css') ? 'text/css' : 
+                               req.url.endsWith('.js') ? 'application/javascript' : 
+                               'application/font');
+    }
+    // HTML - Sem cache (sempre verificar)
+    else if (req.url.match(/\.html$/i) || req.url === '/') {
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+    }
+    // Imagens - Cache moderado
+    else if (req.url.match(/\.(jpg|jpeg|png|gif|webp|ico|svg)$/i)) {
+        res.set('Cache-Control', 'public, max-age=86400'); // 1 dia
+    }
+    
+    next();
+});
+
 app.use(compression());
 
 // 🛡️ RATE LIMITING - Proteção contra ataques
@@ -1007,8 +1037,24 @@ app.get('/api/analytics/counter', async (req, res) => {
     }
 });
 
-// Rota para servir o frontend
-app.get('*', (req, res) => {
+// ⚠️ SPA FALLBACK ROUTER - APENAS PARA ROTAS SEM EXTENSÃO
+// DEVE VIR DEPOIS DE TODOS OS app.use() E app.get() específicos
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+});
+
+// Rota catch-all SPA (APENAS para rotas HTML5, não para assets)
+app.get('*', (req, res, next) => {
+    // NÃO servir index.html para assets
+    if (req.path.match(/\.\w+$/)) {
+        // Tem extensão de arquivo (ex: .css, .js, .png) - deixar 404
+        return res.status(404).json({ 
+            error: 'Arquivo não encontrado',
+            path: req.path
+        });
+    }
+    
+    // Para rotas sem extensão, servir index.html (SPA)
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
