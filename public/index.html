@@ -19,10 +19,10 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #C41E3A 0%, #8B1528 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1.2rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -44,69 +44,73 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
             font-size: 1.5rem;
             font-weight: 700;
         }
 
         .nav {
             display: flex;
-            gap: 2rem;
+            gap: 3rem;
         }
 
         .nav-link {
             color: white;
             text-decoration: none;
-            transition: opacity 0.3s;
+            transition: color 0.3s;
+            font-size: 1.1rem;
+            font-weight: 500;
         }
 
         .nav-link:hover {
-            opacity: 0.8;
+            color: #0AC9D2;
         }
 
         .hero {
-            background: linear-gradient(135deg, rgba(196, 30, 58, 0.05) 0%, rgba(27, 94, 32, 0.05) 100%);
-            padding: 80px 0;
+            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+            padding: 100px 0;
             text-align: center;
+            color: white;
         }
 
         .hero-title {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: #222;
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-weight: 700;
         }
 
         .hero-title .highlight {
-            color: #C41E3A;
+            color: #0AC9D2;
             font-weight: 700;
         }
 
         .hero-subtitle {
-            font-size: 1.1rem;
-            color: #666;
-            margin-bottom: 2rem;
-            max-width: 600px;
+            font-size: 1.3rem;
+            color: #ccc;
+            margin-bottom: 2.5rem;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .cta-button {
             display: inline-block;
-            background: linear-gradient(135deg, #C41E3A 0%, #8B1528 100%);
+            background: linear-gradient(135deg, #0AC9D2 0%, #00A3B8 100%);
             color: white;
-            padding: 15px 40px;
+            padding: 16px 45px;
             border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
             transition: transform 0.3s, box-shadow 0.3s;
             border: none;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
 
         .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(196, 30, 58, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(10, 201, 210, 0.4);
         }
 
         .features {
@@ -130,38 +134,41 @@
         }
 
         .feature-icon {
-            font-size: 2.5rem;
+            font-size: 3rem;
             margin-bottom: 1rem;
         }
 
         .feature h3 {
-            color: #C41E3A;
-            margin-bottom: 0.5rem;
+            color: #0AC9D2;
+            margin-bottom: 0.8rem;
+            font-size: 1.3rem;
         }
 
         .feature p {
             color: #666;
-            font-size: 0.95rem;
+            font-size: 1rem;
+            line-height: 1.6;
         }
 
         .pricing-section {
-            background: white;
-            padding: 60px 0;
+            background: #f5f5f5;
+            padding: 80px 0;
             border-top: 1px solid #e0e0e0;
             border-bottom: 1px solid #e0e0e0;
         }
 
         .pricing-box {
-            background: linear-gradient(135deg, rgba(196, 30, 58, 0.05) 0%, rgba(27, 94, 32, 0.05) 100%);
-            border: 2px solid #C41E3A;
-            padding: 40px;
+            background: white;
+            border: 3px solid #0AC9D2;
+            padding: 50px;
             border-radius: 12px;
             text-align: center;
+            box-shadow: 0 4px 15px rgba(10, 201, 210, 0.15);
         }
 
         .price {
-            font-size: 3rem;
-            color: #C41E3A;
+            font-size: 3.5rem;
+            color: #0AC9D2;
             font-weight: 700;
             margin-bottom: 1rem;
         }
@@ -176,27 +183,29 @@
 
         .status-badge {
             display: inline-block;
-            background: #4CAF50;
+            background: #0AC9D2;
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
         }
 
         .upload-area {
             background: white;
-            border: 3px dashed #C41E3A;
+            border: 3px dashed #0AC9D2;
             border-radius: 12px;
-            padding: 40px;
+            padding: 50px;
             text-align: center;
             cursor: pointer;
-            transition: background 0.3s;
-            margin: 2rem 0;
+            transition: all 0.3s;
+            margin: 3rem 0;
         }
 
         .upload-area:hover {
-            background: rgba(196, 30, 58, 0.02);
+            background: rgba(10, 201, 210, 0.05);
+            border-color: #008FA3;
         }
 
         .upload-area input[type="file"] {
@@ -212,21 +221,23 @@
 
         .stat {
             background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
+            padding: 2rem;
+            border-radius: 12px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #0AC9D2;
         }
 
         .stat-number {
-            font-size: 2rem;
-            color: #C41E3A;
+            font-size: 2.5rem;
+            color: #0AC9D2;
             font-weight: 700;
         }
 
         .stat-label {
             color: #666;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            margin-top: 0.5rem;
         }
 
         @media (max-width: 768px) {
@@ -251,19 +262,10 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 10px;">
-                        <defs>
-                            <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#0AC9D2;stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:#006B7F;stop-opacity:1" />
-                            </linearGradient>
-                        </defs>
-                        <!-- Arco C em cyan -->
-                        <path d="M 24 6 A 18 18 0 0 1 24 42" stroke="url(#arcGrad)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-                        <!-- Seta vermelha pequena -->
-                        <polygon points="36,8 42,14 39,14 39,17 37,17 37,14 34,14" fill="#FF4444"/>
-                    </svg>
-                    <span style="font-weight: 700; color: white; font-size: 18px;">CannaConverter</span>
+                    <div style="width: 220px; height: 160px; background-color: #000000; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 30px; box-shadow: 0 0 25px rgba(0,0,0,0.7);">
+                        <img src="/images/logo.png" alt="CannaConverter Logo" width="140" height="140" style="filter: drop-shadow(0 0 16px rgba(0,201,210,0.5));"  />
+                    </div>
+                    <span style="font-weight: 700; color: white; font-size: 36px;">CannaConverter</span>
                 </div>
                 <nav class="nav">
                     <a href="#home" class="nav-link">Início</a>
