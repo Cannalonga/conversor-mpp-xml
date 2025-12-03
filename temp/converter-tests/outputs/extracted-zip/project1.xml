@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Project>
+  <Name>Projeto Test 1</Name>
+  <StartDate>2025-01-01</StartDate>
+  <Tasks>
+    <Task><ID>1</ID><Name>Tarefa 1</Name></Task>
+  </Tasks>
+</Project>

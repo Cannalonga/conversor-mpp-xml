@@ -1,0 +1,87 @@
+{
+  "format": "Microsoft Project (XML to MPP)",
+  "convertedAt": "2025-12-03T10:15:28.248Z",
+  "sourceFile": "test-project.xml",
+  "project": {
+    "name": "Projeto Exemplo",
+    "createdDate": "2025-01-01T00:00:00Z",
+    "startDate": "2025-01-01T00:00:00Z",
+    "finishDate": "2025-12-31T23:59:59Z",
+    "company": "CannaConverter",
+    "manager": "Gerente de Projeto",
+    "tasks": [
+      {
+        "id": "1",
+        "name": "Análise de Requisitos",
+        "startDate": "2025-01-05T08:00:00Z",
+        "finishDate": "2025-01-10T17:00:00Z",
+        "duration": "PT40H0M0S",
+        "percentComplete": 0,
+        "notes": "",
+        "priority": 500
+      },
+      {
+        "id": "2",
+        "name": "Desenvolvimento",
+        "startDate": "2025-01-13T08:00:00Z",
+        "finishDate": "2025-02-28T17:00:00Z",
+        "duration": "PT480H0M0S",
+        "percentComplete": 0,
+        "notes": "",
+        "priority": 500
+      }
+    ],
+    "resources": [
+      {
+        "id": "1",
+        "name": "Desenvolvedor Senior",
+        "type": "Work",
+        "maxUnits": "1.0",
+        "costPerUse": 0
+      }
+    ],
+    "assignments": [],
+    "rawProject": {
+      "Name": "Projeto Exemplo",
+      "CreatedDate": "2025-01-01T00:00:00Z",
+      "StartDate": "2025-01-01T00:00:00Z",
+      "FinishDate": "2025-12-31T23:59:59Z",
+      "Company": "CannaConverter",
+      "Manager": "Gerente de Projeto",
+      "Tasks": {
+        "Task": [
+          {
+            "ID": "1",
+            "Name": "Análise de Requisitos",
+            "Start": "2025-01-05T08:00:00Z",
+            "Finish": "2025-01-10T17:00:00Z",
+            "Duration": "PT40H0M0S"
+          },
+          {
+            "ID": "2",
+            "Name": "Desenvolvimento",
+            "Start": "2025-01-13T08:00:00Z",
+            "Finish": "2025-02-28T17:00:00Z",
+            "Duration": "PT480H0M0S"
+          }
+        ]
+      },
+      "Resources": {
+        "Resource": {
+          "ID": "1",
+          "Name": "Desenvolvedor Senior",
+          "Type": "Work",
+          "MaxUnits": "1.0"
+        }
+      }
+    }
+  },
+  "metadata": {
+    "projectName": "Projeto Exemplo",
+    "createdDate": "2025-01-01T00:00:00Z",
+    "createdBy": "CannaConverter XML to MPP",
+    "lastSaved": "2025-12-03T10:15:28.248Z",
+    "version": "MP2021",
+    "organization": "CannaConverter"
+  }
+}
