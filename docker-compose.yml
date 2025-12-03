@@ -2,12 +2,13 @@ version: '3.8'
 
 services:
   mpp-converter:
-    build: .
+    image: cannaconverter/mpp-converter:local
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - DISABLE_HTTPS_REDIRECT=true
     env_file:
       - .env
     volumes:

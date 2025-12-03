@@ -912,7 +912,7 @@ app.post('/api/premium/convert', async (req, res) => {
 // HTTPS REDIRECT - CRÍTICO #4
 // ============================================================================
 
-if (config.environment === 'production') {
+if (config.environment === 'production' && process.env.DISABLE_HTTPS_REDIRECT !== 'true') {
     app.use((req, res, next) => {
         const proto = req.headers['x-forwarded-proto'] || req.protocol;
         if (proto !== 'https') {

@@ -24,7 +24,7 @@
     "test:coverage": "jest --coverage",
     "syntax-check": "node scripts/syntax-check.js",
     "final-check": "node scripts/final-check.js",
-    "setup-dirs": "powershell -Command \"New-Item -ItemType Directory -Force uploads\\incoming, uploads\\processing, uploads\\converted, uploads\\expired, uploads\\quarantine, logs, temp, backups\"",
+    "setup-dirs": "node -e \"const fs=require('fs');const dirs=['uploads/incoming','uploads/processing','uploads/converted','uploads/expired','uploads/quarantine','logs','temp','backups'];dirs.forEach(d=>fs.mkdirSync(d,{recursive:true}))\"",
     "cleanup": "node scripts/cleanup.js",
     "doctor": "npm run syntax-check && npm run lint",
     "build": "npm ci --only=production",

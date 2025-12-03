@@ -9,7 +9,8 @@
 const http = require('http');
 const path = require('path');
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+// Use 127.0.0.1 em vez de localhost para evitar IPv6
+const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 const TESTS = [
     {
         name: 'CSS Main',
@@ -53,7 +54,7 @@ const TESTS = [
     },
     {
         name: 'Health Check',
-        path: '/health',
+        path: '/api/health',
         expectedStatusCode: 200
     }
 ];
