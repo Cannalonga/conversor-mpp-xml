@@ -145,7 +145,10 @@ class FileConversionWorker {
 
             console.log(`✅ Job ${job.id} concluído: ${filename} → ${path.basename(convertedPath)}`);
             return result;
-            
+            } catch (err) {
+                console.error(`❌ Erro durante processamento: ${err.message}`);
+                throw err;
+            }
         })();
         
         // Race between timeout and processing

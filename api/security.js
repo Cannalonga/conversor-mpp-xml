@@ -85,17 +85,6 @@ function decryptSensitiveData(encryptedData, masterKey) {
         return null;
     }
 }
-    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || crypto.randomBytes(32),
-    ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || '$2b$12$example_hash',
-    
-    // Configurações de rate limiting por funcionalidade
-    rateLimits: {
-        general: { windowMs: 15 * 60 * 1000, max: 100 },
-        upload: { windowMs: 5 * 60 * 1000, max: 5 },
-        payment: { windowMs: 10 * 60 * 1000, max: 10 },
-        admin: { windowMs: 15 * 60 * 1000, max: 20 }
-    }
-};
 
 // Helmet com configurações rigorosas de segurança
 app.use(helmet({
