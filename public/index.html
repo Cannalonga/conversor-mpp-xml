@@ -196,11 +196,11 @@
             background: white;
             border: 3px dashed #0AC9D2;
             border-radius: 12px;
-            padding: 50px;
+            padding: 30px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            margin: 3rem 0;
+            margin: 2rem 0;
         }
 
         .upload-area:hover {
@@ -295,13 +295,13 @@
                 <div id="converter" class="upload-area">
                     <input type="file" id="fileInput" accept=".mpp" />
                     <div>
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
-                        <h3>Clique para selecionar ou arraste um arquivo .mpp</h3>
-                        <p style="color: #999; margin-top: 0.5rem;">Máximo 50MB</p>
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📁</div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.3rem;">Clique para selecionar ou arraste um arquivo .mpp</h3>
+                        <p style="color: #999; margin-top: 0.3rem; font-size: 0.9rem;">Máximo 50MB</p>
                     </div>
                 </div>
 
-                <button class="cta-button" onclick="document.getElementById('fileInput').click()">
+                <button class="cta-button" onclick="document.getElementById('fileInput').click()" style="margin-bottom: 2rem;">
                     📤 Selecionar Arquivo
                 </button>
 
