@@ -37,6 +37,12 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Micrometer Prometheus Registry for metrics -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- MPXJ - Microsoft Project file reader/writer -->
         <dependency>
             <groupId>net.sf.mpxj</groupId>

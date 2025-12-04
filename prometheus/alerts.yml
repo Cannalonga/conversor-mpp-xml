@@ -1,0 +1,219 @@
+# CannaConverter Prometheus Alert Rules
+# Enterprise-level alerting for production monitoring
+
+groups:
+  - name: cannaconverter-critical
+    rules:
+      # =================================================================
+      # CRITICAL: Service Down Alerts
+      # =================================================================
+      
+      - alert: APIServiceDown
+        expr: up{job="cannaconverter-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "CannaConverter API is down"
+          description: "The main API service has been down for more than 1 minute."
+          runbook_url: "https://wiki.internal/runbooks/api-down"
+          
+      - alert: MPPMicroserviceDown
+        expr: mpp_microservice_status == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: mpp-converter
+        annotations:
+          summary: "MPP Converter Microservice is down"
+          description: "The Java MPP conversion microservice is unavailable. Conversions will fail."
+          runbook_url: "https://wiki.internal/runbooks/mpp-service-down"
+          
+      - alert: RedisDown
+        expr: redis_latency_ms == 0 or absent(redis_latency_ms)
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is unreachable"
+          description: "Cannot connect to Redis. Queue processing and caching will fail."
+          runbook_url: "https://wiki.internal/runbooks/redis-down"
+
+  - name: cannaconverter-queue
+    rules:
+      # =================================================================
+      # HIGH: Queue Health Alerts
+      # =================================================================
+      
+      - alert: QueueBacklogHigh
+        expr: queue_waiting_jobs > 100
+        for: 5m
+        labels:
+          severity: high
+          service: queue
+        annotations:
+          summary: "Job queue backlog is high"
+          description: "{{ $value }} jobs waiting in queue for more than 5 minutes. Consider scaling workers."
+          
+      - alert: QueueFailedJobsIncreasing
+        expr: increase(queue_failed_jobs[15m]) > 10
+        for: 0m
+        labels:
+          severity: high
+          service: queue
+        annotations:
+          summary: "High number of failed jobs"
+          description: "{{ $value }} jobs failed in the last 15 minutes. Check job processing logs."
+          
+      - alert: ConversionFailureRateHigh
+        expr: |
+          (
+            rate(conversion_jobs_total{status="failed"}[10m]) /
+            rate(conversion_jobs_total[10m])
+          ) * 100 > 20
+        for: 5m
+        labels:
+          severity: high
+          service: converter
+        annotations:
+          summary: "Conversion failure rate is high"
+          description: "{{ $value | printf \"%.1f\" }}% of conversions are failing. Check MPP service and input files."
+
+  - name: cannaconverter-performance
+    rules:
+      # =================================================================
+      # MEDIUM: Performance Degradation Alerts
+      # =================================================================
+      
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, rate(api_response_time_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: medium
+          service: api
+        annotations:
+          summary: "API response time is high"
+          description: "95th percentile response time is {{ $value | printf \"%.2f\" }}s (threshold: 2s)"
+          
+      - alert: ConversionSlowProcessing
+        expr: histogram_quantile(0.95, rate(worker_processing_duration_seconds_bucket[5m])) > 60
+        for: 5m
+        labels:
+          severity: medium
+          service: worker
+        annotations:
+          summary: "Conversion processing is slow"
+          description: "95th percentile processing time is {{ $value | printf \"%.0f\" }}s (threshold: 60s)"
+          
+      - alert: RedisHighLatency
+        expr: redis_latency_ms > 100
+        for: 5m
+        labels:
+          severity: medium
+          service: redis
+        annotations:
+          summary: "Redis latency is high"
+          description: "Redis latency is {{ $value }}ms (threshold: 100ms)"
+
+  - name: cannaconverter-payments
+    rules:
+      # =================================================================
+      # HIGH: Payment/Stripe Alerts
+      # =================================================================
+      
+      - alert: StripeWebhookFailures
+        expr: increase(stripe_webhook_failed_total[10m]) > 5
+        for: 0m
+        labels:
+          severity: high
+          service: stripe
+        annotations:
+          summary: "Stripe webhook failures detected"
+          description: "{{ $value }} webhook failures in the last 10 minutes. Check webhook signature and endpoint."
+          
+      - alert: StripeWebhookStale
+        expr: time() - stripe_webhook_last_success_timestamp > 600
+        for: 5m
+        labels:
+          severity: medium
+          service: stripe
+        annotations:
+          summary: "No recent Stripe webhook events"
+          description: "No successful webhook events in the last 10 minutes. Check Stripe dashboard."
+          
+      - alert: HighAutoRefundRate
+        expr: increase(auto_refund_triggered_total[1h]) > 10
+        for: 0m
+        labels:
+          severity: high
+          service: billing
+        annotations:
+          summary: "High auto-refund rate detected"
+          description: "{{ $value }} auto-refunds triggered in the last hour. Investigate conversion failures."
+          
+      - alert: PendingRefundsHigh
+        expr: refund_recovery_pending > 20
+        for: 10m
+        labels:
+          severity: medium
+          service: billing
+        annotations:
+          summary: "High number of pending refunds"
+          description: "{{ $value }} refunds pending recovery. Check admin panel for manual review."
+
+  - name: cannaconverter-resources
+    rules:
+      # =================================================================
+      # MEDIUM: Resource Usage Alerts
+      # =================================================================
+      
+      - alert: HighMemoryUsage
+        expr: |
+          (process_resident_memory_bytes{job="cannaconverter-api"} / 
+           (1024 * 1024 * 1024)) > 1.5
+        for: 10m
+        labels:
+          severity: medium
+          service: api
+        annotations:
+          summary: "High memory usage detected"
+          description: "API memory usage is {{ $value | printf \"%.2f\" }}GB (threshold: 1.5GB)"
+          
+      - alert: NodeJSHeapNearLimit
+        expr: |
+          (nodejs_heap_size_used_bytes / nodejs_heap_size_total_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: high
+          service: api
+        annotations:
+          summary: "Node.js heap usage near limit"
+          description: "Heap usage at {{ $value | printf \"%.1f\" }}%. Risk of OOM crash."
+
+  - name: cannaconverter-business
+    rules:
+      # =================================================================
+      # LOW: Business Metrics Alerts
+      # =================================================================
+      
+      - alert: LowConversionVolume
+        expr: increase(conversion_jobs_total{status="completed"}[1h]) < 1
+        for: 2h
+        labels:
+          severity: low
+          service: business
+        annotations:
+          summary: "Low conversion volume"
+          description: "Less than 1 conversion completed in the last 2 hours during business hours."
+          
+      - alert: NoActiveUsers
+        expr: active_users_24h == 0
+        for: 6h
+        labels:
+          severity: low
+          service: business
+        annotations:
+          summary: "No active users in 24 hours"
+          description: "No user activity detected. Check service availability and marketing."

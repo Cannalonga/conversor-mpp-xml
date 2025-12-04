@@ -1,5 +1,9 @@
 package com.canna.converter.controller;
 
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import net.sf.mpxj.ProjectFile;
 import net.sf.mpxj.reader.ProjectReader;
 import net.sf.mpxj.reader.UniversalProjectReader;
@@ -7,6 +11,7 @@ import net.sf.mpxj.writer.ProjectWriter;
 import net.sf.mpxj.mspdi.MSPDIWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,12 +22,38 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @CrossOrigin(origins = "*")
 public class ConvertController {
 
     private static final Logger logger = LoggerFactory.getLogger(ConvertController.class);
+
+    private final MeterRegistry meterRegistry;
+    private final Counter conversionSuccessCounter;
+    private final Counter conversionFailureCounter;
+    private final Timer conversionTimer;
+
+    @Autowired
+    public ConvertController(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+        
+        // Custom metrics for MPP conversion
+        this.conversionSuccessCounter = Counter.builder("mpp_conversion_total")
+            .tag("status", "success")
+            .description("Total successful MPP conversions")
+            .register(meterRegistry);
+            
+        this.conversionFailureCounter = Counter.builder("mpp_conversion_total")
+            .tag("status", "failure")
+            .description("Total failed MPP conversions")
+            .register(meterRegistry);
+            
+        this.conversionTimer = Timer.builder("mpp_conversion_duration_seconds")
+            .description("Duration of MPP file conversion")
+            .register(meterRegistry);
+    }
 
     /**
      * Health check endpoint
@@ -48,6 +79,7 @@ public class ConvertController {
         consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
         produces = MediaType.APPLICATION_XML_VALUE
     )
+    @Timed(value = "mpp_convert_request", description = "Time taken to process conversion request")
     public ResponseEntity<byte[]> convert(@RequestParam("file") MultipartFile file) {
         String originalFilename = file.getOriginalFilename();
         logger.info("Received conversion request for file: {}, size: {} bytes", 
@@ -56,12 +88,14 @@ public class ConvertController {
         // Validate file
         if (file.isEmpty()) {
             logger.warn("Empty file received");
+            conversionFailureCounter.increment();
             return errorResponse("File is empty", HttpStatus.BAD_REQUEST);
         }
 
         // Validate extension
         if (originalFilename != null && !isValidExtension(originalFilename)) {
             logger.warn("Invalid file extension: {}", originalFilename);
+            conversionFailureCounter.increment();
             return errorResponse("Invalid file type. Supported: .mpp, .mpx, .xml, .mpt", 
                 HttpStatus.BAD_REQUEST);
         }
@@ -75,6 +109,7 @@ public class ConvertController {
 
             if (project == null) {
                 logger.error("Failed to read project file: {}", originalFilename);
+                conversionFailureCounter.increment();
                 return errorResponse("Could not read project file", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
@@ -89,6 +124,11 @@ public class ConvertController {
 
             byte[] xmlContent = outputStream.toByteArray();
             long duration = System.currentTimeMillis() - startTime;
+
+            // Record metrics
+            conversionSuccessCounter.increment();
+            conversionTimer.record(duration, TimeUnit.MILLISECONDS);
+            meterRegistry.gauge("mpp_conversion_file_size_bytes", file.getSize());
 
             logger.info("Conversion completed in {}ms, output size: {} bytes", 
                 duration, xmlContent.length);
@@ -111,6 +151,7 @@ public class ConvertController {
 
         } catch (Exception ex) {
             logger.error("Conversion failed for file: {}", originalFilename, ex);
+            conversionFailureCounter.increment();
             return errorResponse("Conversion failed: " + ex.getMessage(), 
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }

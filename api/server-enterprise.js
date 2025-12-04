@@ -24,6 +24,10 @@ const https = require('https');
 const winston = require('winston');
 require('dotenv').config();
 
+// Observability imports
+const metrics = require('./lib/metrics');
+const health = require('./lib/health');
+
 // ============================================================================
 // CONFIGURATION & VALIDATION
 // ============================================================================
@@ -262,7 +266,7 @@ const globalRateLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => req.path === '/api/health',
+    skip: (req) => req.path === '/api/health' || req.path === '/api/metrics',
     handler: (req, res) => {
         log('warn', 'Rate limit exceeded', { ip: req.ip, path: req.path });
         res.status(429).json({ error: 'Too many requests' });
@@ -298,6 +302,32 @@ const webhookLimiter = rateLimit({
 app.use('/api/', globalRateLimiter);
 app.use('/api/upload', uploadRateLimiter);
 app.use('/api/auth/login', loginRateLimiter);
+
+// ============================================================================
+// METRICS MIDDLEWARE - Record request duration and count
+// ============================================================================
+
+app.use((req, res, next) => {
+    // Skip metrics for health/metrics endpoints to avoid noise
+    if (req.path === '/api/health' || req.path === '/api/metrics' || req.path.startsWith('/api/health/')) {
+        return next();
+    }
+    
+    const start = Date.now();
+    
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        const statusClass = `${Math.floor(res.statusCode / 100)}xx`;
+        
+        // Record API request counter
+        metrics.recordApiRequest(req.method, req.route?.path || req.path, res.statusCode);
+        
+        // Record response time histogram
+        metrics.recordApiResponseTime(req.method, req.route?.path || req.path, res.statusCode, duration / 1000);
+    });
+    
+    next();
+});
 
 // ============================================================================
 // FILE UPLOAD - CRÍTICO #2: Path Traversal Protection
@@ -621,6 +651,58 @@ app.get('/api/health', (req, res) => {
         },
         pid: process.pid
     });
+});
+
+// ============================================================================
+// ROUTES - Prometheus Metrics
+// ============================================================================
+
+app.get('/api/metrics', async (req, res) => {
+    try {
+        const metricsOutput = await metrics.getMetrics();
+        res.set('Content-Type', metrics.getContentType());
+        res.send(metricsOutput);
+    } catch (error) {
+        log('error', 'Failed to get metrics', { error: error.message });
+        res.status(500).json({ error: 'Failed to retrieve metrics' });
+    }
+});
+
+// ============================================================================
+// ROUTES - Advanced Health Checks (Liveness/Readiness probes)
+// ============================================================================
+
+app.get('/api/health/live', (req, res) => {
+    res.json(health.livenessCheck());
+});
+
+app.get('/api/health/ready', async (req, res) => {
+    try {
+        const readiness = await health.readinessCheck({});
+        const status = readiness.ready ? 200 : 503;
+        res.status(status).json(readiness);
+    } catch (error) {
+        log('error', 'Readiness check failed', { error: error.message });
+        res.status(503).json({
+            ready: false,
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+app.get('/api/health/detailed', async (req, res) => {
+    try {
+        const healthChecks = await health.runAllHealthChecks({});
+        res.json(healthChecks);
+    } catch (error) {
+        log('error', 'Detailed health check failed', { error: error.message });
+        res.status(500).json({
+            status: 'unhealthy',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // ============================================================================

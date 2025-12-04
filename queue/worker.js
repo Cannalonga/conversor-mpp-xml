@@ -7,6 +7,10 @@ require('dotenv').config();
 const converter = require('../converters/mppToXml');
 const uploadUtils = require('../api/upload-utils');
 
+// Observability imports
+const metrics = require('../api/lib/metrics');
+const queueMonitor = require('./monitor');
+
 // Configuração do Redis
 const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
     maxRetriesPerRequest: 3,
@@ -68,6 +72,7 @@ class FileConversionWorker {
      */
     async processJob(job) {
         const { filename, originalName } = job.data;
+        const startTime = Date.now();
         
         // MÉDIO FIX #3: Add internal timeout wrapper
         const JOB_TIMEOUT_MS = parseInt(process.env.JOB_TIMEOUT_MS || '300000'); // 5 minutes default
@@ -144,6 +149,12 @@ class FileConversionWorker {
             };
 
             console.log(`✅ Job ${job.id} concluído: ${filename} → ${path.basename(convertedPath)}`);
+            
+            // Record metrics for successful job
+            const durationSeconds = (Date.now() - startTime) / 1000;
+            metrics.recordConversionJob('completed');
+            metrics.recordWorkerProcessingDuration(durationSeconds);
+            
             return result;
             } catch (err) {
                 console.error(`❌ Erro durante processamento: ${err.message}`);
@@ -156,6 +167,12 @@ class FileConversionWorker {
             return await Promise.race([processPromise, timeoutPromise]);
         } catch (error) {
             console.error(`❌ Erro no job ${job.id}:`, error.message || error);
+            
+            // Record metrics for failed job
+            const durationSeconds = (Date.now() - startTime) / 1000;
+            metrics.recordConversionJob('failed');
+            metrics.recordJobFailure(error.code || error.message || 'unknown');
+            metrics.recordWorkerProcessingDuration(durationSeconds);
             
             // Mover arquivo para quarentena em caso de erro
             await this.quarantineFile(filename);
@@ -238,15 +255,24 @@ if (require.main === module) {
     
     const worker = new FileConversionWorker();
     
+    // Initialize queue monitor for metrics collection
+    queueMonitor.initMonitor().then(() => {
+        console.log('📊 Queue monitor initialized');
+    }).catch((err) => {
+        console.error('⚠️ Failed to initialize queue monitor:', err.message);
+    });
+    
     // Graceful shutdown
     process.on('SIGINT', async () => {
         console.log('\n📋 Sinal de interrupção recebido');
+        await queueMonitor.shutdown();
         await worker.stop();
         process.exit(0);
     });
 
     process.on('SIGTERM', async () => {
         console.log('\n📋 Sinal de término recebido');
+        await queueMonitor.shutdown();
         await worker.stop();
         process.exit(0);
     });
