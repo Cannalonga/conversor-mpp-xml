@@ -16,7 +16,13 @@ model User {
   email                  String    @unique
   name                   String?
   password               String?   // Hashed with bcrypt
+  role                   String    @default("USER")  // USER | ADMIN | SUPER_ADMIN
+  status                 String    @default("ACTIVE") // ACTIVE | SUSPENDED | BANNED
   accountBlockedForRefund Boolean  @default(false)  // True if user overused refunded credits
+  lastLoginAt            DateTime?               // Last login timestamp
+  lastActivityAt         DateTime?               // Last activity timestamp
+  monthlyConversions     Int       @default(0)   // Conversions this month
+  monthlyResetAt         DateTime?               // When to reset monthly limits
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   
@@ -27,6 +33,7 @@ model User {
   creditTransactions CreditTransaction[]
   refundRequests     RefundRequest[]
   refundRecoveries   RefundRecovery[]
+  jobs               Job[]
 }
 
 // Session model for NextAuth (optional - using JWT, but good for future)
@@ -115,18 +122,25 @@ model Job {
   progress    Int       @default(0)         // 0-100
   inputPath   String?                       // Path to input file
   outputPath  String?                       // Path to output file(s)
+  inputSize   Int?                          // Input file size in bytes
+  outputSize  Int?                          // Output file size in bytes
   metadata    String?                       // JSON string for extra data
   error       String?                       // Error message if failed
   cost        Int       @default(1)         // Credits charged
+  attempts    Int       @default(1)         // Number of processing attempts
+  logs        String?                       // Processing logs
   
   createdAt   DateTime  @default(now())
   startedAt   DateTime?
   finishedAt  DateTime?
   updatedAt   DateTime  @updatedAt
 
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([converterId])
 }
 
 // ============================================
@@ -259,3 +273,85 @@ model AlertChannelDelivery {
   @@index([channel])
   @@index([status])
 }
+
+// ============================================
+// ADMIN SYSTEM (Task J)
+// ============================================
+
+// Admin session tracking (separate from user sessions)
+model AdminSession {
+  id              String    @id @default(cuid())
+  adminId         String                  // User ID with admin role OR "SUPER_ADMIN"
+  token           String    @unique       // Session token
+  ipAddress       String?                 // IP for audit
+  userAgent       String?                 // Browser/client info
+  expiresAt       DateTime                // Session expiry
+  lastActivity    DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+
+  @@index([adminId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// Audit log for all admin actions
+model AuditLog {
+  id              String    @id @default(cuid())
+  adminId         String                  // Admin who performed the action
+  adminEmail      String                  // Admin email for quick reference
+  action          String                  // CREATE | UPDATE | DELETE | SUSPEND | BAN | REFUND | ADJUST_CREDITS | etc.
+  entityType      String                  // USER | JOB | CREDIT | REFUND | CONFIG | ALERT
+  entityId        String?                 // ID of affected entity
+  changes         String?                 // JSON: { before: {}, after: {} }
+  metadata        String?                 // Additional context JSON
+  ipAddress       String?                 // Request IP
+  userAgent       String?                 // Request User-Agent
+  severity        String    @default("INFO")  // INFO | WARNING | CRITICAL
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([severity])
+}
+
+// System configuration (feature flags, limits, etc.)
+model SystemConfig {
+  id              String    @id @default(cuid())
+  key             String    @unique       // Config key
+  value           String                  // Config value (JSON for complex values)
+  type            String    @default("STRING")  // STRING | NUMBER | BOOLEAN | JSON
+  category        String    @default("GENERAL") // GENERAL | LIMITS | FEATURES | BILLING | SECURITY
+  description     String?                 // Human-readable description
+  lastModifiedBy  String?                 // Admin who last modified
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([key])
+  @@index([category])
+}
+
+// Converter costs configuration
+model ConverterCost {
+  id              String    @id @default(cuid())
+  converterId     String    @unique       // e.g., "mpp-to-xml"
+  displayName     String                  // Human-readable name
+  description     String?                 // Description of converter
+  creditCost      Int       @default(1)   // Cost in credits
+  isActive        Boolean   @default(true) // Whether converter is available
+  processingTime  Int?                    // Estimated time in seconds
+  maxFileSize     Int?                    // Max file size in MB
+  supportedInputs String?                 // JSON array of supported extensions
+  lastModifiedBy  String?                 // Admin who last modified
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([converterId])
+  @@index([isActive])
+}
+

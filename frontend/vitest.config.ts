@@ -14,11 +14,6 @@ export default defineConfig({
     
     // Disable parallelism for API tests (sequential execution)
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
     
     // Timeout for each test (2 minutes for job polling)
     testTimeout: 120_000,
