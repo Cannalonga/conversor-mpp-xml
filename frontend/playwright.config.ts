@@ -31,8 +31,8 @@ export default defineConfig({
   // Retry on CI
   retries: process.env.CI ? 2 : (parseInt(process.env.E2E_RETRIES || '1', 10)),
   
-  // Workers
-  workers: 1, // Single worker for E2E stability
+  // Workers - more on CI for parallel execution
+  workers: process.env.CI ? 2 : 1,
   
   // Reporter
   reporter: process.env.CI 
