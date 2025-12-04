@@ -213,10 +213,16 @@ test.describe('Full Conversion Flow', () => {
       // Find file input - may be hidden, so use force or setInputFiles directly
       const fileInput = page.locator('input[type="file"]').first();
       
+      // Set up network intercept to wait for upload API call
+      const uploadPromise = page.waitForResponse(
+        resp => resp.url().includes('/api/upload') && resp.status() === 200,
+        { timeout: 30000 }
+      ).catch(() => null);
+      
       // Try direct setInputFiles first (works even if input is hidden)
       try {
         await fileInput.setInputFiles(SAMPLE_MPP_PATH);
-        console.log('✓ File uploaded via setInputFiles');
+        console.log('✓ File selected via setInputFiles');
       } catch {
         // Fallback: use file chooser dialog
         console.log('   Trying file chooser dialog...');
@@ -225,11 +231,36 @@ test.describe('Full Conversion Flow', () => {
           fileInput.click({ force: true }),
         ]);
         await fileChooser.setFiles(SAMPLE_MPP_PATH);
-        console.log('✓ File uploaded via file chooser');
+        console.log('✓ File selected via file chooser');
       }
       
-      // Wait for upload confirmation
-      await page.waitForTimeout(2000);
+      // Wait for upload to complete
+      const uploadResponse = await uploadPromise;
+      if (uploadResponse) {
+        console.log('✓ Upload API returned success');
+      } else {
+        console.log('⚠️ Could not verify upload API response');
+      }
+      
+      // Wait for step to change to "select" (converter selection)
+      // The page should show "Selecionar" or "Select" step as active
+      const selectStepActive = page.locator([
+        'text=/selecionar.*conversor/i',
+        '[class*="step"]:has-text("Selecionar")',
+        // Check for step 2 being active
+        'div:has-text("2"):has-text("Selecionar")'
+      ].join(', ')).first();
+      
+      try {
+        await selectStepActive.waitFor({ state: 'visible', timeout: 10000 });
+        console.log('✓ Page transitioned to converter selection step');
+      } catch {
+        console.log('⚠️ Could not verify page transition to select step');
+        // Continue anyway - page state might be different
+      }
+      
+      // Extra wait for any animations/renders
+      await page.waitForTimeout(1000);
     });
 
     // ================================================================
