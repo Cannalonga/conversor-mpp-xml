@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const _last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     // Parallel queries for performance
     const [

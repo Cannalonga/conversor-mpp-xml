@@ -67,7 +67,7 @@ export default function AdminMetricsPage() {
       setMetrics(parsed);
       setStats(calculateStats(parsed));
       setError(null);
-    } catch (err) {
+    } catch (_err) {
       setError('Could not load metrics. Is the API running?');
     }
   };
@@ -80,7 +80,7 @@ export default function AdminMetricsPage() {
       
       const data = await response.json();
       setHealth(data);
-    } catch (err) {
+    } catch (_err) {
       // Health check failure is not critical for display
     }
   };

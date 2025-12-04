@@ -1,0 +1,356 @@
+// Prisma Schema for CannaConverter Authentication
+// Database: PostgreSQL (for CI/staging/production)
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User model for authentication
+model User {
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  name                   String?
+  password               String?   // Hashed with bcrypt
+  role                   String    @default("USER")  // USER | ADMIN | SUPER_ADMIN
+  status                 String    @default("ACTIVE") // ACTIVE | SUSPENDED | BANNED
+  accountBlockedForRefund Boolean  @default(false)  // True if user overused refunded credits
+  lastLoginAt            DateTime?               // Last login timestamp
+  lastActivityAt         DateTime?               // Last activity timestamp
+  monthlyConversions     Int       @default(0)   // Conversions this month
+  monthlyResetAt         DateTime?               // When to reset monthly limits
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  
+  // Relations
+  sessions           Session[]
+  accounts           Account[]
+  credits            UserCredits?
+  creditTransactions CreditTransaction[]
+  refundRequests     RefundRequest[]
+  refundRecoveries   RefundRecovery[]
+  jobs               Job[]
+}
+
+// Session model for NextAuth (optional - using JWT, but good for future)
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Account model for OAuth providers (future: Google, GitHub)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Verification token for email verification (future)
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// CREDITS SYSTEM (CannaCredits)
+// ============================================
+
+// User's credit balance
+model UserCredits {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Credit transaction history
+model CreditTransaction {
+  id            String                @id @default(cuid())
+  userId        String
+  amount        Int                   // positive = purchase, negative = usage
+  type          String                // "PURCHASE" | "CONVERSION" | "REFUND" | "BONUS"
+  description   String
+  metadata      String?               // JSON string for extra data
+  jobId         String?               // Link to Job if type is CONVERSION
+  stripeEventId String?               // Link to StripeEvent if type is PURCHASE/REFUND
+  refunded      Boolean               @default(false) // Whether this transaction was refunded
+  createdAt     DateTime              @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([jobId])
+  @@index([stripeEventId])
+}
+
+// ============================================
+// JOB QUEUE SYSTEM
+// ============================================
+
+// Conversion Job tracking
+model Job {
+  id          String    @id @default(cuid())
+  userId      String
+  converterId String    // e.g., "mpp-to-xml"
+  status      String    @default("queued")  // queued | processing | completed | failed
+  progress    Int       @default(0)         // 0-100
+  inputPath   String?                       // Path to input file
+  outputPath  String?                       // Path to output file(s)
+  inputSize   Int?                          // Input file size in bytes
+  outputSize  Int?                          // Output file size in bytes
+  metadata    String?                       // JSON string for extra data
+  error       String?                       // Error message if failed
+  cost        Int       @default(1)         // Credits charged
+  attempts    Int       @default(1)         // Number of processing attempts
+  logs        String?                       // Processing logs
+  
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([converterId])
+}
+
+// ============================================
+// STRIPE INTEGRATION (Idempotency)
+// ============================================
+
+// Track processed Stripe events to prevent duplicate processing
+model StripeEvent {
+  id              String    @id @default(cuid())
+  stripeEventId   String    @unique  // Stripe event ID (evt_xxx)
+  stripeSessionId String?   @unique  // Checkout session ID (cs_xxx) for checkout events
+  eventType       String              // e.g., "checkout.session.completed"
+  status          String    @default("processed")  // processed | failed | pending
+  userId          String?             // Associated user (if applicable)
+  creditsAdded    Int?                // Credits added (for purchase events)
+  amountPaid      Int?                // Amount in cents (for audit)
+  metadata        String?             // JSON string for event data
+  error           String?             // Error message if processing failed
+  
+  processedAt     DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+
+  @@index([stripeEventId])
+  @@index([stripeSessionId])
+  @@index([eventType])
+  @@index([processedAt])
+}
+
+// ============================================
+// REFUND SYSTEM
+// ============================================
+
+// Refund request for failed jobs or disputed transactions
+model RefundRequest {
+  id                  String    @id @default(cuid())
+  userId              String
+  jobId               String?               // Job that failed (if applicable)
+  transactionId       String?               // Original CreditTransaction to refund
+  amount              Int                   // Credits to refund
+  reason              String                // User-provided or system reason
+  status              String    @default("PENDING")  // PENDING | APPROVED | REJECTED | AUTO_APPROVED
+  failureStage        String?               // PRE_PROCESS | DURING_PROCESS | POST_PROCESS
+  autoRefund          Boolean   @default(false)  // Was this auto-refunded?
+  adminNotes          String?               // Notes from admin review
+  processedAt         DateTime?             // When the refund was processed
+  processedBy         String?               // Admin who processed (or "SYSTEM" for auto)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([jobId])
+  @@index([createdAt])
+}
+
+// Track users with insufficient balance for Stripe-initiated refunds
+model RefundRecovery {
+  id                String    @id @default(cuid())
+  userId            String
+  stripeEventId     String?               // Stripe refund event
+  creditsOwed       Int                   // Credits that need to be recovered
+  originalAmount    Int                   // Original credits from purchase
+  status            String    @default("PENDING")  // PENDING | RECOVERED | WRITTEN_OFF
+  notes             String?               // Admin notes
+  createdAt         DateTime  @default(now())
+  resolvedAt        DateTime?
+  resolvedBy        String?               // Admin who resolved
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ============================================
+// ALERT DELIVERY SYSTEM (Task I)
+// ============================================
+
+// Log all alert deliveries for audit and monitoring
+model AlertDeliveryLog {
+  id              String    @id @default(cuid())
+  alertname       String                  // Alert name from Prometheus
+  severity        String                  // critical | high | medium | low
+  service         String                  // Service that triggered the alert
+  instance        String?                 // Instance identifier
+  status          String    @default("SENT")  // SENT | FAILED | SUPPRESSED
+  channels        String                  // JSON array of channels: ["email", "slack", "pagerduty"]
+  payload         String                  // Full JSON payload from Alertmanager
+  summary         String?                 // Alert summary
+  description     String?                 // Alert description
+  dashboardUrl    String?                 // Link to Grafana dashboard
+  firingCount     Int       @default(1)   // Number of firing alerts
+  resolvedCount   Int       @default(0)   // Number of resolved alerts
+  errorMessage    String?                 // Error if delivery failed
+  responseTime    Int?                    // Delivery time in ms
+  groupKey        String?                 // Alertmanager group key for dedup
+  fingerprint     String?                 // Alert fingerprint
+  startsAt        DateTime?               // When alert started firing
+  endsAt          DateTime?               // When alert resolved
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([alertname])
+  @@index([severity])
+  @@index([service])
+  @@index([status])
+  @@index([createdAt])
+  @@index([groupKey])
+}
+
+// Track individual channel delivery attempts
+model AlertChannelDelivery {
+  id              String    @id @default(cuid())
+  alertLogId      String                  // Reference to AlertDeliveryLog
+  channel         String                  // email | slack | discord | pagerduty | telegram | sms
+  status          String    @default("PENDING")  // PENDING | SENT | FAILED | RETRYING
+  attempts        Int       @default(1)   // Number of delivery attempts
+  lastAttempt     DateTime  @default(now())
+  responseCode    Int?                    // HTTP response code
+  responseBody    String?                 // Response from channel (truncated)
+  errorMessage    String?                 // Error message if failed
+  deliveredAt     DateTime?               // When successfully delivered
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([alertLogId])
+  @@index([channel])
+  @@index([status])
+}
+
+// ============================================
+// ADMIN SYSTEM (Task J)
+// ============================================
+
+// Admin session tracking (separate from user sessions)
+model AdminSession {
+  id              String    @id @default(cuid())
+  adminId         String                  // User ID with admin role OR "SUPER_ADMIN"
+  token           String    @unique       // Session token
+  ipAddress       String?                 // IP for audit
+  userAgent       String?                 // Browser/client info
+  expiresAt       DateTime                // Session expiry
+  lastActivity    DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+
+  @@index([adminId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// Audit log for all admin actions
+model AuditLog {
+  id              String    @id @default(cuid())
+  adminId         String                  // Admin who performed the action
+  adminEmail      String                  // Admin email for quick reference
+  action          String                  // CREATE | UPDATE | DELETE | SUSPEND | BAN | REFUND | ADJUST_CREDITS | etc.
+  entityType      String                  // USER | JOB | CREDIT | REFUND | CONFIG | ALERT
+  entityId        String?                 // ID of affected entity
+  changes         String?                 // JSON: { before: {}, after: {} }
+  metadata        String?                 // Additional context JSON
+  ipAddress       String?                 // Request IP
+  userAgent       String?                 // Request User-Agent
+  severity        String    @default("INFO")  // INFO | WARNING | CRITICAL
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([severity])
+}
+
+// System configuration (feature flags, limits, etc.)
+model SystemConfig {
+  id              String    @id @default(cuid())
+  key             String    @unique       // Config key
+  value           String                  // Config value (JSON for complex values)
+  type            String    @default("STRING")  // STRING | NUMBER | BOOLEAN | JSON
+  category        String    @default("GENERAL") // GENERAL | LIMITS | FEATURES | BILLING | SECURITY
+  description     String?                 // Human-readable description
+  lastModifiedBy  String?                 // Admin who last modified
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([key])
+  @@index([category])
+}
+
+// Converter costs configuration
+model ConverterCost {
+  id              String    @id @default(cuid())
+  converterId     String    @unique       // e.g., "mpp-to-xml"
+  displayName     String                  // Human-readable name
+  description     String?                 // Description of converter
+  creditCost      Int       @default(1)   // Cost in credits
+  isActive        Boolean   @default(true) // Whether converter is available
+  processingTime  Int?                    // Estimated time in seconds
+  maxFileSize     Int?                    // Max file size in MB
+  supportedInputs String?                 // JSON array of supported extensions
+  lastModifiedBy  String?                 // Admin who last modified
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([converterId])
+  @@index([isActive])
+}
