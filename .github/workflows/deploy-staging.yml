@@ -1,0 +1,100 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - 'staging/*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build and push API image
+        run: |
+          docker build -t ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }} .
+          docker tag ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }} ghcr.io/cannalonga/conversor-mpp-xml:latest
+          docker push ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }}
+          docker push ghcr.io/cannalonga/conversor-mpp-xml:latest
+
+      - name: Build and push converter image (if present)
+        run: |
+          if [ -d "converter" ]; then
+            docker build -t ghcr.io/cannalonga/mpp-converter:${{ github.sha }} -f converter/Dockerfile ./converter || true
+            docker tag ghcr.io/cannalonga/mpp-converter:${{ github.sha }} ghcr.io/cannalonga/mpp-converter:latest || true
+            docker push ghcr.io/cannalonga/mpp-converter:${{ github.sha }} || true
+            docker push ghcr.io/cannalonga/mpp-converter:latest || true
+          else
+            echo "No converter directory; skipping."
+          fi
+
+  deploy:
+    name: Deploy to Staging
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout infra files
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+
+      - name: Copy files to remote
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+        run: |
+          scp -o StrictHostKeyChecking=no deploy/staging/docker-compose.staging.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/docker-compose.staging.yml
+          scp -o StrictHostKeyChecking=no deploy/staging/.env.staging.example ${SSH_USER}@${SSH_HOST}:~/deploy/staging/.env.staging.example
+          scp -o StrictHostKeyChecking=no -r deploy/staging/scripts ${SSH_USER}@${SSH_HOST}:~/deploy/staging/scripts
+          scp -o StrictHostKeyChecking=no deploy/staging/prometheus.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/prometheus.yml
+          scp -o StrictHostKeyChecking=no deploy/staging/alertmanager.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/alertmanager.yml
+
+      - name: Remote deploy (pull + up)
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} '
+            set -eux
+            mkdir -p ~/deploy/staging
+            cd ~/deploy/staging
+            if [ ! -f .env.staging ]; then
+              echo "WARN: .env.staging not found on remote. Please populate it with production secrets."
+            fi
+            docker compose pull || true
+            docker compose up -d
+            docker compose ps
+          '
+
+      - name: Run smoke tests (remote)
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} 'cd ~/deploy/staging && ./scripts/smoke-test.sh'
