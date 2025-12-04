@@ -11,7 +11,6 @@ import {
   Pause,
   Play,
   Key,
-  Mail,
   ChevronLeft,
   ChevronRight,
   Loader2,
