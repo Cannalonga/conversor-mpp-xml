@@ -1,0 +1,278 @@
+# ============================================================================
+# CANNACONVERTER - ENTERPRISE ALERTMANAGER CONFIGURATION
+# Multi-channel notifications with severity-based routing
+# ============================================================================
+
+global:
+  resolve_timeout: 5m
+  
+  # SMTP Configuration (Primary Channel)
+  smtp_smarthost: '${SMTP_HOST}:${SMTP_PORT}'
+  smtp_from: '${SMTP_FROM}'
+  smtp_auth_username: '${SMTP_USERNAME}'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+  
+  # Slack API URL (Secondary Channel)
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+  
+  # PagerDuty (Critical Only)
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+# ============================================================================
+# TEMPLATES
+# ============================================================================
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+  - '/etc/alertmanager/templates/*.html'
+
+# ============================================================================
+# INHIBITION RULES - Suppress lower severity when higher is firing
+# ============================================================================
+inhibit_rules:
+  # Critical suppresses High
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'high'
+    equal: ['service', 'instance']
+    
+  # Critical suppresses Medium
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'medium'
+    equal: ['service', 'instance']
+    
+  # High suppresses Medium
+  - source_match:
+      severity: 'high'
+    target_match:
+      severity: 'medium'
+    equal: ['service', 'instance']
+    
+  # High suppresses Low
+  - source_match:
+      severity: 'high'
+    target_match:
+      severity: 'low'
+    equal: ['service', 'instance']
+
+# ============================================================================
+# ROUTING TREE - Severity-based routing
+# ============================================================================
+route:
+  # Default receiver (catches all)
+  receiver: 'email-primary'
+  
+  # Group alerts by these labels
+  group_by: ['alertname', 'severity', 'service']
+  
+  # Timing configuration
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  
+  # Child routes - processed in order, first match wins unless continue: true
+  routes:
+    # ========================================
+    # WEBHOOK LOGGER - Log ALL alerts to API
+    # ========================================
+    - match_re:
+        severity: .*
+      receiver: 'webhook-logger'
+      continue: true
+      
+    # ========================================
+    # CRITICAL ALERTS - All channels
+    # ========================================
+    - match:
+        severity: critical
+      receiver: 'critical-all-channels'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 15m
+      continue: false
+      routes:
+        # Also send to PagerDuty
+        - match:
+            severity: critical
+          receiver: 'pagerduty-critical'
+          continue: true
+        # Also send SMS
+        - match:
+            severity: critical
+          receiver: 'twilio-sms'
+          continue: true
+        # Also send to Telegram
+        - match:
+            severity: critical
+          receiver: 'telegram-oncall'
+          continue: true
+
+    # ========================================
+    # HIGH ALERTS - Email + Slack + Telegram
+    # ========================================
+    - match:
+        severity: high
+      receiver: 'high-multi-channel'
+      group_wait: 30s
+      group_interval: 3m
+      repeat_interval: 1h
+      continue: false
+      routes:
+        # Also send to Telegram
+        - match:
+            severity: high
+          receiver: 'telegram-oncall'
+          continue: true
+
+    # ========================================
+    # MEDIUM ALERTS - Email + Slack
+    # ========================================
+    - match:
+        severity: medium
+      receiver: 'medium-slack'
+      group_wait: 1m
+      group_interval: 5m
+      repeat_interval: 2h
+      continue: true
+      
+    # ========================================
+    # LOW ALERTS - Discord only
+    # ========================================
+    - match:
+        severity: low
+      receiver: 'discord-notifications'
+      group_wait: 5m
+      group_interval: 15m
+      repeat_interval: 6h
+      continue: true
+
+# ============================================================================
+# RECEIVERS - Multi-channel configuration
+# ============================================================================
+receivers:
+  # ========================================
+  # EMAIL - Primary channel for ALL severities
+  # ========================================
+  - name: 'email-primary'
+    email_configs:
+      - to: '${ALERT_EMAIL_TO}'
+        send_resolved: true
+        html: '{{ template "email.html" . }}'
+        headers:
+          Subject: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }} - {{ .GroupLabels.severity | toUpper }}'
+
+  # ========================================
+  # CRITICAL - All channels combined
+  # ========================================
+  - name: 'critical-all-channels'
+    email_configs:
+      - to: '${ALERT_EMAIL_TO}'
+        send_resolved: true
+        html: '{{ template "email.html" . }}'
+        headers:
+          Subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }} - IMMEDIATE ACTION REQUIRED'
+    slack_configs:
+      - channel: '#alerts-critical'
+        send_resolved: true
+        title: '{{ template "slack.title" . }}'
+        text: '{{ template "slack.text" . }}'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        actions:
+          - type: button
+            text: 'View in Grafana'
+            url: '{{ (index .Alerts 0).Annotations.dashboard_url }}'
+          - type: button
+            text: 'Silence Alert'
+            url: '{{ template "slack.silence_url" . }}'
+
+  # ========================================
+  # HIGH - Email + Slack
+  # ========================================
+  - name: 'high-multi-channel'
+    email_configs:
+      - to: '${ALERT_EMAIL_TO}'
+        send_resolved: true
+        html: '{{ template "email.html" . }}'
+        headers:
+          Subject: '⚠️ [HIGH] {{ .GroupLabels.alertname }} - Attention Required'
+    slack_configs:
+      - channel: '#alerts-high'
+        send_resolved: true
+        title: '{{ template "slack.title" . }}'
+        text: '{{ template "slack.text" . }}'
+        color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+
+  # ========================================
+  # MEDIUM - Slack #observability
+  # ========================================
+  - name: 'medium-slack'
+    email_configs:
+      - to: '${ALERT_EMAIL_TO}'
+        send_resolved: true
+        html: '{{ template "email.html" . }}'
+        headers:
+          Subject: 'ℹ️ [MEDIUM] {{ .GroupLabels.alertname }}'
+    slack_configs:
+      - channel: '#observability'
+        send_resolved: true
+        title: '{{ template "slack.title" . }}'
+        text: '{{ template "slack.text" . }}'
+        color: '{{ if eq .Status "firing" }}#ff9800{{ else }}good{{ end }}'
+
+  # ========================================
+  # DISCORD - Low severity notifications
+  # ========================================
+  - name: 'discord-notifications'
+    webhook_configs:
+      - url: '${DISCORD_WEBHOOK_URL}'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+  # ========================================
+  # PAGERDUTY - Critical incidents only
+  # ========================================
+  - name: 'pagerduty-critical'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        severity: 'critical'
+        description: '{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}'
+        details:
+          firing: '{{ template "pagerduty.instances" .Alerts.Firing }}'
+          resolved: '{{ template "pagerduty.instances" .Alerts.Resolved }}'
+          num_firing: '{{ .Alerts.Firing | len }}'
+          num_resolved: '{{ .Alerts.Resolved | len }}'
+
+  # ========================================
+  # TELEGRAM - On-call notifications
+  # ========================================
+  - name: 'telegram-oncall'
+    webhook_configs:
+      - url: 'https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+  # ========================================
+  # TWILIO SMS - Emergency only
+  # ========================================
+  - name: 'twilio-sms'
+    webhook_configs:
+      - url: '${CANNACONVERTER_API_URL}/api/webhooks/alerts/sms'
+        send_resolved: false
+        http_config:
+          basic_auth:
+            username: '${TWILIO_ACCOUNT_SID}'
+            password: '${TWILIO_AUTH_TOKEN}'
+
+  # ========================================
+  # WEBHOOK - Log all alerts to our API
+  # ========================================
+  - name: 'webhook-logger'
+    webhook_configs:
+      - url: '${CANNACONVERTER_API_URL}/api/webhooks/alerts'
+        send_resolved: true
+        max_alerts: 0

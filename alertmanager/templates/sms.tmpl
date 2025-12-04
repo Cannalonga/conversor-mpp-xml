@@ -1,0 +1,7 @@
+{{ define "sms.critical" }}
+🚨 CRITICAL: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }} DOWN. {{ (index .Alerts 0).Annotations.summary | truncate 60 }}
+{{ end }}
+
+{{ define "sms.short" }}
+{{ if eq .GroupLabels.severity "critical" }}🚨{{ else }}⚠️{{ end }} {{ .GroupLabels.alertname }}: {{ .GroupLabels.service }} - {{ .Alerts.Firing | len }} alerts
+{{ end }}

@@ -1,0 +1,51 @@
+{{ define "discord.embed" }}
+{
+  "content": "{{ if eq .Status "firing" }}{{ if eq .GroupLabels.severity "critical" }}🚨 **CRITICAL ALERT**{{ else if eq .GroupLabels.severity "high" }}⚠️ **HIGH ALERT**{{ else if eq .GroupLabels.severity "medium" }}ℹ️ **MEDIUM ALERT**{{ else }}🟢 **LOW ALERT**{{ end }}{{ else }}✅ **RESOLVED**{{ end }}",
+  "embeds": [
+    {
+      "title": "{{ .GroupLabels.alertname }}",
+      "description": "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}",
+      "color": {{ if eq .Status "resolved" }}3066993{{ else if eq .GroupLabels.severity "critical" }}15158332{{ else if eq .GroupLabels.severity "high" }}15105570{{ else if eq .GroupLabels.severity "medium" }}16776960{{ else }}3447003{{ end }},
+      "fields": [
+        {
+          "name": "🏷️ Severity",
+          "value": "{{ .GroupLabels.severity | toUpper }}",
+          "inline": true
+        },
+        {
+          "name": "🔧 Service",
+          "value": "{{ .GroupLabels.service }}",
+          "inline": true
+        },
+        {
+          "name": "📡 Instance",
+          "value": "{{ .GroupLabels.instance }}",
+          "inline": true
+        },
+        {
+          "name": "📊 Status",
+          "value": "🔥 Firing: {{ .Alerts.Firing | len }} | ✅ Resolved: {{ .Alerts.Resolved | len }}",
+          "inline": false
+        }
+      ],
+      "footer": {
+        "text": "CannaConverter Alert System"
+      },
+      "timestamp": "{{ (index .Alerts 0).StartsAt.Format "2006-01-02T15:04:05Z07:00" }}"
+    }
+  ]
+}
+{{ end }}
+
+{{ define "discord.message" }}
+{{ if eq .Status "firing" }}{{ if eq .GroupLabels.severity "critical" }}🚨{{ else if eq .GroupLabels.severity "high" }}⚠️{{ else if eq .GroupLabels.severity "medium" }}ℹ️{{ else }}🟢{{ end }}{{ else }}✅{{ end }} **[{{ .Status | toUpper }}]** {{ .GroupLabels.alertname }}
+
+**Severity:** {{ .GroupLabels.severity | toUpper }}
+**Service:** {{ .GroupLabels.service }}
+
+{{ range .Alerts }}
+> {{ .Annotations.summary }}
+{{ end }}
+
+📊 Firing: {{ .Alerts.Firing | len }} | Resolved: {{ .Alerts.Resolved | len }}
+{{ end }}

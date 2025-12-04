@@ -202,3 +202,60 @@ model RefundRecovery {
   @@index([userId])
   @@index([status])
 }
+
+// ============================================
+// ALERT DELIVERY SYSTEM (Task I)
+// ============================================
+
+// Log all alert deliveries for audit and monitoring
+model AlertDeliveryLog {
+  id              String    @id @default(cuid())
+  alertname       String                  // Alert name from Prometheus
+  severity        String                  // critical | high | medium | low
+  service         String                  // Service that triggered the alert
+  instance        String?                 // Instance identifier
+  status          String    @default("SENT")  // SENT | FAILED | SUPPRESSED
+  channels        String                  // JSON array of channels: ["email", "slack", "pagerduty"]
+  payload         String                  // Full JSON payload from Alertmanager
+  summary         String?                 // Alert summary
+  description     String?                 // Alert description
+  dashboardUrl    String?                 // Link to Grafana dashboard
+  firingCount     Int       @default(1)   // Number of firing alerts
+  resolvedCount   Int       @default(0)   // Number of resolved alerts
+  errorMessage    String?                 // Error if delivery failed
+  responseTime    Int?                    // Delivery time in ms
+  groupKey        String?                 // Alertmanager group key for dedup
+  fingerprint     String?                 // Alert fingerprint
+  startsAt        DateTime?               // When alert started firing
+  endsAt          DateTime?               // When alert resolved
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([alertname])
+  @@index([severity])
+  @@index([service])
+  @@index([status])
+  @@index([createdAt])
+  @@index([groupKey])
+}
+
+// Track individual channel delivery attempts
+model AlertChannelDelivery {
+  id              String    @id @default(cuid())
+  alertLogId      String                  // Reference to AlertDeliveryLog
+  channel         String                  // email | slack | discord | pagerduty | telegram | sms
+  status          String    @default("PENDING")  // PENDING | SENT | FAILED | RETRYING
+  attempts        Int       @default(1)   // Number of delivery attempts
+  lastAttempt     DateTime  @default(now())
+  responseCode    Int?                    // HTTP response code
+  responseBody    String?                 // Response from channel (truncated)
+  errorMessage    String?                 // Error message if failed
+  deliveredAt     DateTime?               // When successfully delivered
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([alertLogId])
+  @@index([channel])
+  @@index([status])
+}

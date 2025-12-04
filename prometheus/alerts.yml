@@ -1,61 +1,94 @@
-# CannaConverter Prometheus Alert Rules
-# Enterprise-level alerting for production monitoring
+# ============================================================================
+# CANNACONVERTER - PROMETHEUS ALERT RULES
+# Enterprise-level alerting with severity-based routing
+# ============================================================================
 
 groups:
+  # ==========================================================================
+  # CRITICAL ALERTS - Immediate action required
+  # ==========================================================================
   - name: cannaconverter-critical
     rules:
-      # =================================================================
-      # CRITICAL: Service Down Alerts
-      # =================================================================
-      
       - alert: APIServiceDown
         expr: up{job="cannaconverter-api"} == 0
         for: 1m
         labels:
           severity: critical
           service: api
+          tier: backend
         annotations:
-          summary: "CannaConverter API is down"
-          description: "The main API service has been down for more than 1 minute."
+          summary: "CannaConverter API is DOWN"
+          description: "The main API service has been down for more than 1 minute. All user operations are blocked."
           runbook_url: "https://wiki.internal/runbooks/api-down"
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
+          
+      - alert: WorkerServiceDown
+        expr: up{job="cannaconverter-worker"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: worker
+          tier: backend
+        annotations:
+          summary: "CannaConverter Worker is DOWN"
+          description: "The worker service is down. Job processing has stopped."
+          runbook_url: "https://wiki.internal/runbooks/worker-down"
+          dashboard_url: "http://localhost:3002/d/workers/cannaconverter-workers"
           
       - alert: MPPMicroserviceDown
-        expr: mpp_microservice_status == 0
+        expr: up{job="mpp-converter"} == 0
         for: 2m
         labels:
           severity: critical
           service: mpp-converter
+          tier: microservice
         annotations:
-          summary: "MPP Converter Microservice is down"
-          description: "The Java MPP conversion microservice is unavailable. Conversions will fail."
+          summary: "MPP Converter Microservice is DOWN"
+          description: "The Java MPP conversion microservice is unavailable. All MPP conversions will fail."
           runbook_url: "https://wiki.internal/runbooks/mpp-service-down"
+          dashboard_url: "http://localhost:3002/d/converters/cannaconverter-converters"
           
       - alert: RedisDown
-        expr: redis_latency_ms == 0 or absent(redis_latency_ms)
+        expr: absent(redis_latency_ms) or redis_latency_ms == 0
         for: 1m
         labels:
           severity: critical
           service: redis
+          tier: infrastructure
         annotations:
-          summary: "Redis is unreachable"
-          description: "Cannot connect to Redis. Queue processing and caching will fail."
+          summary: "Redis is UNREACHABLE"
+          description: "Cannot connect to Redis. Queue processing, caching, and sessions will fail."
           runbook_url: "https://wiki.internal/runbooks/redis-down"
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
 
-  - name: cannaconverter-queue
+      - alert: DatabaseDown
+        expr: prisma_pool_connections_active == 0 and prisma_pool_connections_idle == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+          tier: infrastructure
+        annotations:
+          summary: "Database is UNREACHABLE"
+          description: "No database connections available. All data operations will fail."
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
+
+  # ==========================================================================
+  # HIGH ALERTS - Urgent attention needed
+  # ==========================================================================
+  - name: cannaconverter-high
     rules:
-      # =================================================================
-      # HIGH: Queue Health Alerts
-      # =================================================================
-      
       - alert: QueueBacklogHigh
         expr: queue_waiting_jobs > 100
         for: 5m
         labels:
           severity: high
           service: queue
+          tier: backend
         annotations:
-          summary: "Job queue backlog is high"
+          summary: "Job queue backlog is HIGH"
           description: "{{ $value }} jobs waiting in queue for more than 5 minutes. Consider scaling workers."
+          dashboard_url: "http://localhost:3002/d/workers/cannaconverter-workers"
           
       - alert: QueueFailedJobsIncreasing
         expr: increase(queue_failed_jobs[15m]) > 10
@@ -63,85 +96,39 @@ groups:
         labels:
           severity: high
           service: queue
+          tier: backend
         annotations:
-          summary: "High number of failed jobs"
-          description: "{{ $value }} jobs failed in the last 15 minutes. Check job processing logs."
+          summary: "High number of FAILED jobs"
+          description: "{{ $value }} jobs failed in the last 15 minutes. Immediate investigation required."
+          dashboard_url: "http://localhost:3002/d/workers/cannaconverter-workers"
           
       - alert: ConversionFailureRateHigh
         expr: |
           (
             rate(conversion_jobs_total{status="failed"}[10m]) /
-            rate(conversion_jobs_total[10m])
+            (rate(conversion_jobs_total[10m]) > 0)
           ) * 100 > 20
         for: 5m
         labels:
           severity: high
           service: converter
+          tier: backend
         annotations:
-          summary: "Conversion failure rate is high"
+          summary: "Conversion failure rate is HIGH"
           description: "{{ $value | printf \"%.1f\" }}% of conversions are failing. Check MPP service and input files."
+          dashboard_url: "http://localhost:3002/d/converters/cannaconverter-converters"
 
-  - name: cannaconverter-performance
-    rules:
-      # =================================================================
-      # MEDIUM: Performance Degradation Alerts
-      # =================================================================
-      
-      - alert: APIHighLatency
-        expr: histogram_quantile(0.95, rate(api_response_time_seconds_bucket[5m])) > 2
-        for: 5m
-        labels:
-          severity: medium
-          service: api
-        annotations:
-          summary: "API response time is high"
-          description: "95th percentile response time is {{ $value | printf \"%.2f\" }}s (threshold: 2s)"
-          
-      - alert: ConversionSlowProcessing
-        expr: histogram_quantile(0.95, rate(worker_processing_duration_seconds_bucket[5m])) > 60
-        for: 5m
-        labels:
-          severity: medium
-          service: worker
-        annotations:
-          summary: "Conversion processing is slow"
-          description: "95th percentile processing time is {{ $value | printf \"%.0f\" }}s (threshold: 60s)"
-          
-      - alert: RedisHighLatency
-        expr: redis_latency_ms > 100
-        for: 5m
-        labels:
-          severity: medium
-          service: redis
-        annotations:
-          summary: "Redis latency is high"
-          description: "Redis latency is {{ $value }}ms (threshold: 100ms)"
-
-  - name: cannaconverter-payments
-    rules:
-      # =================================================================
-      # HIGH: Payment/Stripe Alerts
-      # =================================================================
-      
       - alert: StripeWebhookFailures
         expr: increase(stripe_webhook_failed_total[10m]) > 5
         for: 0m
         labels:
           severity: high
           service: stripe
+          tier: payments
         annotations:
-          summary: "Stripe webhook failures detected"
-          description: "{{ $value }} webhook failures in the last 10 minutes. Check webhook signature and endpoint."
-          
-      - alert: StripeWebhookStale
-        expr: time() - stripe_webhook_last_success_timestamp > 600
-        for: 5m
-        labels:
-          severity: medium
-          service: stripe
-        annotations:
-          summary: "No recent Stripe webhook events"
-          description: "No successful webhook events in the last 10 minutes. Check Stripe dashboard."
+          summary: "Stripe webhook FAILURES detected"
+          description: "{{ $value }} webhook failures in the last 10 minutes. Revenue tracking may be affected."
+          dashboard_url: "http://localhost:3002/d/stripe/cannaconverter-stripe"
           
       - alert: HighAutoRefundRate
         expr: increase(auto_refund_triggered_total[1h]) > 10
@@ -149,37 +136,11 @@ groups:
         labels:
           severity: high
           service: billing
+          tier: payments
         annotations:
-          summary: "High auto-refund rate detected"
-          description: "{{ $value }} auto-refunds triggered in the last hour. Investigate conversion failures."
-          
-      - alert: PendingRefundsHigh
-        expr: refund_recovery_pending > 20
-        for: 10m
-        labels:
-          severity: medium
-          service: billing
-        annotations:
-          summary: "High number of pending refunds"
-          description: "{{ $value }} refunds pending recovery. Check admin panel for manual review."
-
-  - name: cannaconverter-resources
-    rules:
-      # =================================================================
-      # MEDIUM: Resource Usage Alerts
-      # =================================================================
-      
-      - alert: HighMemoryUsage
-        expr: |
-          (process_resident_memory_bytes{job="cannaconverter-api"} / 
-           (1024 * 1024 * 1024)) > 1.5
-        for: 10m
-        labels:
-          severity: medium
-          service: api
-        annotations:
-          summary: "High memory usage detected"
-          description: "API memory usage is {{ $value | printf \"%.2f\" }}GB (threshold: 1.5GB)"
+          summary: "High AUTO-REFUND rate detected"
+          description: "{{ $value }} auto-refunds triggered in the last hour. Conversion pipeline may be broken."
+          dashboard_url: "http://localhost:3002/d/stripe/cannaconverter-stripe"
           
       - alert: NodeJSHeapNearLimit
         expr: |
@@ -188,25 +149,135 @@ groups:
         labels:
           severity: high
           service: api
+          tier: backend
         annotations:
-          summary: "Node.js heap usage near limit"
-          description: "Heap usage at {{ $value | printf \"%.1f\" }}%. Risk of OOM crash."
+          summary: "Node.js heap usage NEAR LIMIT"
+          description: "Heap usage at {{ $value | printf \"%.1f\" }}%. Risk of OOM crash imminent."
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
 
-  - name: cannaconverter-business
+      - alert: ErrorRateHigh
+        expr: |
+          (
+            rate(api_requests_total{status_code=~"5.."}[5m]) /
+            rate(api_requests_total[5m])
+          ) * 100 > 10
+        for: 5m
+        labels:
+          severity: high
+          service: api
+          tier: backend
+        annotations:
+          summary: "API error rate is HIGH"
+          description: "{{ $value | printf \"%.1f\" }}% of requests returning 5xx errors."
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
+
+  # ==========================================================================
+  # MEDIUM ALERTS - Investigation needed
+  # ==========================================================================
+  - name: cannaconverter-medium
     rules:
-      # =================================================================
-      # LOW: Business Metrics Alerts
-      # =================================================================
-      
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, rate(api_response_time_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: medium
+          service: api
+          tier: backend
+        annotations:
+          summary: "API response time is HIGH"
+          description: "95th percentile response time is {{ $value | printf \"%.2f\" }}s (threshold: 2s)"
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
+          
+      - alert: ConversionSlowProcessing
+        expr: histogram_quantile(0.95, rate(worker_processing_duration_seconds_bucket[5m])) > 60
+        for: 5m
+        labels:
+          severity: medium
+          service: worker
+          tier: backend
+        annotations:
+          summary: "Conversion processing is SLOW"
+          description: "95th percentile processing time is {{ $value | printf \"%.0f\" }}s (threshold: 60s)"
+          dashboard_url: "http://localhost:3002/d/workers/cannaconverter-workers"
+          
+      - alert: RedisHighLatency
+        expr: redis_latency_ms > 100
+        for: 5m
+        labels:
+          severity: medium
+          service: redis
+          tier: infrastructure
+        annotations:
+          summary: "Redis latency is HIGH"
+          description: "Redis latency is {{ $value }}ms (threshold: 100ms). Check network and Redis load."
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
+          
+      - alert: StripeWebhookStale
+        expr: time() - stripe_webhook_last_success_timestamp > 600
+        for: 5m
+        labels:
+          severity: medium
+          service: stripe
+          tier: payments
+        annotations:
+          summary: "No recent Stripe webhook events"
+          description: "No successful webhook events in the last 10 minutes. Check Stripe dashboard."
+          dashboard_url: "http://localhost:3002/d/stripe/cannaconverter-stripe"
+          
+      - alert: PendingRefundsHigh
+        expr: refund_recovery_pending > 20
+        for: 10m
+        labels:
+          severity: medium
+          service: billing
+          tier: payments
+        annotations:
+          summary: "High number of pending refunds"
+          description: "{{ $value }} refunds pending recovery. Manual review may be required."
+          dashboard_url: "http://localhost:3002/d/stripe/cannaconverter-stripe"
+          
+      - alert: HighMemoryUsage
+        expr: |
+          (process_resident_memory_bytes{job="cannaconverter-api"} / 
+           (1024 * 1024 * 1024)) > 1.5
+        for: 10m
+        labels:
+          severity: medium
+          service: api
+          tier: backend
+        annotations:
+          summary: "High memory usage detected"
+          description: "API memory usage is {{ $value | printf \"%.2f\" }}GB (threshold: 1.5GB)"
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
+
+      - alert: QueueDelayedJobsHigh
+        expr: queue_delayed_jobs > 50
+        for: 15m
+        labels:
+          severity: medium
+          service: queue
+          tier: backend
+        annotations:
+          summary: "High number of delayed jobs"
+          description: "{{ $value }} jobs in delayed state. Check retry configuration."
+          dashboard_url: "http://localhost:3002/d/workers/cannaconverter-workers"
+
+  # ==========================================================================
+  # LOW ALERTS - Informational / business metrics
+  # ==========================================================================
+  - name: cannaconverter-low
+    rules:
       - alert: LowConversionVolume
         expr: increase(conversion_jobs_total{status="completed"}[1h]) < 1
         for: 2h
         labels:
           severity: low
           service: business
+          tier: metrics
         annotations:
           summary: "Low conversion volume"
           description: "Less than 1 conversion completed in the last 2 hours during business hours."
+          dashboard_url: "http://localhost:3002/d/converters/cannaconverter-converters"
           
       - alert: NoActiveUsers
         expr: active_users_24h == 0
@@ -214,6 +285,32 @@ groups:
         labels:
           severity: low
           service: business
+          tier: metrics
         annotations:
           summary: "No active users in 24 hours"
           description: "No user activity detected. Check service availability and marketing."
+          dashboard_url: "http://localhost:3002/d/infra/cannaconverter-infrastructure"
+
+      - alert: LowCreditBalance
+        expr: user_credits_total < 100
+        for: 1h
+        labels:
+          severity: low
+          service: business
+          tier: metrics
+        annotations:
+          summary: "Low total credit balance"
+          description: "Total credits in system is low ({{ $value }}). Users may need to purchase more."
+          dashboard_url: "http://localhost:3002/d/stripe/cannaconverter-stripe"
+
+      - alert: MicroserviceResponseSlow
+        expr: histogram_quantile(0.95, rate(microservice_response_time_seconds_bucket[5m])) > 5
+        for: 10m
+        labels:
+          severity: low
+          service: mpp-converter
+          tier: microservice
+        annotations:
+          summary: "MPP Microservice response slow"
+          description: "95th percentile response time is {{ $value | printf \"%.1f\" }}s"
+          dashboard_url: "http://localhost:3002/d/converters/cannaconverter-converters"

@@ -1,0 +1,31 @@
+{{ define "slack.title" }}
+{{ if eq .Status "firing" }}{{ if eq .GroupLabels.severity "critical" }}🚨{{ else if eq .GroupLabels.severity "high" }}⚠️{{ else if eq .GroupLabels.severity "medium" }}ℹ️{{ else }}🔔{{ end }}{{ else }}✅{{ end }} [{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "slack.text" }}
+*Severity:* {{ .GroupLabels.severity | toUpper }}
+*Service:* {{ .GroupLabels.service }}
+*Instance:* {{ .GroupLabels.instance }}
+
+{{ range .Alerts }}
+📋 *Summary:* {{ .Annotations.summary }}
+📝 *Description:* {{ .Annotations.description }}
+⏰ *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+{{ if .EndsAt }}🏁 *Ended:* {{ .EndsAt.Format "2006-01-02 15:04:05" }}{{ end }}
+---
+{{ end }}
+
+*Firing:* {{ .Alerts.Firing | len }} | *Resolved:* {{ .Alerts.Resolved | len }}
+{{ end }}
+
+{{ define "slack.silence_url" }}
+{{ .ExternalURL }}/#/silences/new?filter=%7B{{ range .GroupLabels.SortedPairs }}{{ .Name }}%3D%22{{ .Value }}%22%2C{{ end }}%7D
+{{ end }}
+
+{{ define "slack.color" }}
+{{ if eq .Status "resolved" }}good{{ else if eq .GroupLabels.severity "critical" }}danger{{ else if eq .GroupLabels.severity "high" }}warning{{ else }}#439FE0{{ end }}
+{{ end }}
+
+{{ define "slack.icon_emoji" }}
+{{ if eq .Status "resolved" }}:white_check_mark:{{ else if eq .GroupLabels.severity "critical" }}:rotating_light:{{ else if eq .GroupLabels.severity "high" }}:warning:{{ else }}:information_source:{{ end }}
+{{ end }}

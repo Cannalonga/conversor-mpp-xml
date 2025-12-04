@@ -1,0 +1,36 @@
+{{ define "telegram.message" }}
+{{ if eq .Status "firing" }}{{ if eq .GroupLabels.severity "critical" }}🚨 *CRITICAL*{{ else if eq .GroupLabels.severity "high" }}⚠️ *HIGH*{{ else if eq .GroupLabels.severity "medium" }}ℹ️ *MEDIUM*{{ else }}🔔 *LOW*{{ end }}{{ else }}✅ *RESOLVED*{{ end }}
+
+*Alert:* {{ .GroupLabels.alertname }}
+*Service:* {{ .GroupLabels.service }}
+*Instance:* {{ .GroupLabels.instance }}
+
+{{ range .Alerts }}
+📋 {{ .Annotations.summary }}
+{{ end }}
+
+🔥 Firing: {{ .Alerts.Firing | len }} | ✅ Resolved: {{ .Alerts.Resolved | len }}
+
+{{ range .Alerts }}{{ if .Annotations.dashboard_url }}📊 [Dashboard]({{ .Annotations.dashboard_url }}){{ end }}{{ end }}
+{{ end }}
+
+{{ define "telegram.short" }}
+{{ if eq .Status "firing" }}{{ if eq .GroupLabels.severity "critical" }}🚨{{ else if eq .GroupLabels.severity "high" }}⚠️{{ else }}ℹ️{{ end }}{{ else }}✅{{ end }} {{ .GroupLabels.alertname }} | {{ .GroupLabels.service }} | {{ .Alerts.Firing | len }} firing
+{{ end }}
+
+{{ define "telegram.oncall" }}
+🆘 *ON-CALL ALERT*
+
+{{ if eq .GroupLabels.severity "critical" }}🚨 *CRITICAL*{{ else }}⚠️ *HIGH*{{ end }} - {{ .GroupLabels.alertname }}
+
+*Service:* `{{ .GroupLabels.service }}`
+*Instance:* `{{ .GroupLabels.instance }}`
+
+{{ range .Alerts }}
+> {{ .Annotations.summary }}
+{{ end }}
+
+⏰ Started: {{ (index .Alerts 0).StartsAt.Format "15:04:05" }}
+
+{{ range .Alerts }}{{ if .Annotations.dashboard_url }}[📊 View Dashboard]({{ .Annotations.dashboard_url }}){{ end }}{{ end }}
+{{ end }}

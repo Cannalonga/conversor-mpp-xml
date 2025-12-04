@@ -1,0 +1,44 @@
+{{ define "pagerduty.instances" }}
+{{ range . }}
+  - {{ .Labels.instance }}: {{ .Annotations.summary }}
+{{ end }}
+{{ end }}
+
+{{ define "pagerduty.default" }}
+{
+  "routing_key": "{{ .GroupLabels.service }}",
+  "event_action": "{{ if eq .Status "firing" }}trigger{{ else }}resolve{{ end }}",
+  "dedup_key": "{{ .GroupLabels.alertname }}-{{ .GroupLabels.service }}-{{ .GroupLabels.instance }}",
+  "payload": {
+    "summary": "[{{ .GroupLabels.severity | toUpper }}] {{ .GroupLabels.alertname }}: {{ (index .Alerts 0).Annotations.summary }}",
+    "source": "{{ .GroupLabels.instance }}",
+    "severity": "{{ if eq .GroupLabels.severity "critical" }}critical{{ else if eq .GroupLabels.severity "high" }}error{{ else if eq .GroupLabels.severity "medium" }}warning{{ else }}info{{ end }}",
+    "timestamp": "{{ (index .Alerts 0).StartsAt.Format "2006-01-02T15:04:05Z07:00" }}",
+    "component": "{{ .GroupLabels.service }}",
+    "group": "cannaconverter",
+    "class": "{{ .GroupLabels.alertname }}",
+    "custom_details": {
+      "alertname": "{{ .GroupLabels.alertname }}",
+      "severity": "{{ .GroupLabels.severity }}",
+      "service": "{{ .GroupLabels.service }}",
+      "instance": "{{ .GroupLabels.instance }}",
+      "description": "{{ (index .Alerts 0).Annotations.description }}",
+      "dashboard_url": "{{ (index .Alerts 0).Annotations.dashboard_url }}",
+      "runbook_url": "{{ (index .Alerts 0).Annotations.runbook_url }}",
+      "firing_count": {{ .Alerts.Firing | len }},
+      "resolved_count": {{ .Alerts.Resolved | len }}
+    }
+  },
+  "links": [
+    {
+      "href": "{{ (index .Alerts 0).Annotations.dashboard_url }}",
+      "text": "View in Grafana"
+    },
+    {
+      "href": "{{ .ExternalURL }}",
+      "text": "View in Alertmanager"
+    }
+  ],
+  "images": []
+}
+{{ end }}

@@ -1461,6 +1461,14 @@ app.post('/api/premium/convert', async (req, res) => {
 });
 
 // ============================================================================
+// ALERT WEBHOOK ROUTES - Alertmanager integration
+// ============================================================================
+
+const alertWebhook = require('./routes/alert-webhook');
+app.use('/api/webhooks', alertWebhook);
+app.use('/api/admin/alerts', alertWebhook);
+
+// ============================================================================
 // HTTPS REDIRECT - CRÍTICO #4
 // ============================================================================
 
