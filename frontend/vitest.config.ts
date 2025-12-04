@@ -6,8 +6,8 @@ export default defineConfig({
     // Test environment
     environment: 'node',
     
-    // Test files pattern
-    include: ['e2e/api-tests/**/*.spec.ts'],
+    // Test files pattern - include both unit and API tests
+    include: ['tests/unit/**/*.test.ts', 'e2e/api-tests/**/*.spec.ts'],
     
     // Exclude playwright tests
     exclude: ['e2e/tests/**', 'node_modules/**'],
