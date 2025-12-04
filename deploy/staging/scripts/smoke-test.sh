@@ -8,6 +8,34 @@ cd "${ROOT_DIR}"
 # Prefer docker-compose exec when available
 COMPOSE_FILE="${ROOT_DIR}/docker-compose.staging.yml"
 
+# Wait for services to be ready (max 60 seconds)
+echo ">> Waiting for services to start..."
+MAX_RETRIES=12
+RETRY_DELAY=5
+
+check_api() {
+  if command -v docker >/dev/null 2>&1 && [ -f "${COMPOSE_FILE}" ]; then
+    docker compose -f "${COMPOSE_FILE}" exec -T api curl -sSf http://localhost:3000/api/health 2>/dev/null
+  else
+    curl -sSf http://localhost:8080/api/health 2>/dev/null
+  fi
+}
+
+for i in $(seq 1 $MAX_RETRIES); do
+  echo "Attempt $i/$MAX_RETRIES..."
+  if check_api; then
+    echo "API is ready!"
+    break
+  fi
+  if [ $i -eq $MAX_RETRIES ]; then
+    echo "API failed to become ready after $((MAX_RETRIES * RETRY_DELAY)) seconds"
+    # Show container logs for debugging
+    docker compose -f "${COMPOSE_FILE}" logs --tail=50 api 2>/dev/null || true
+    exit 1
+  fi
+  sleep $RETRY_DELAY
+done
+
 echo ">> Checking API health (http://localhost:8080/api/health)"
 if ! curl -sSf http://localhost:8080/api/health; then
   echo "API healthcheck failed (trying docker compose exec)"
