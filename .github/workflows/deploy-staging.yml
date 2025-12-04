@@ -59,10 +59,27 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Normalize SSH key
+        id: ssh_key
+        run: |
+          # Write key to file
+          echo "${{ secrets.STAGING_SSH_KEY }}" > rawkey.txt
+          # Normalize: remove CRLF, BOM, ensure newline
+          bash deploy/staging/scripts/normalize-key.sh rawkey.txt cleankey.txt
+          # Read normalized key
+          CLEAN_KEY=$(cat cleankey.txt)
+          # Set as output (multiline)
+          echo "key<<EOF" >> $GITHUB_OUTPUT
+          echo "$CLEAN_KEY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          # Cleanup
+          rm -f rawkey.txt cleankey.txt
+        shell: bash
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+          ssh-private-key: ${{ steps.ssh_key.outputs.key }}
 
       - name: Copy files to remote
         env:
