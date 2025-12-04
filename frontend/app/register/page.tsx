@@ -62,7 +62,7 @@ export default function RegisterPage() {
         router.push('/dashboard');
         router.refresh();
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);

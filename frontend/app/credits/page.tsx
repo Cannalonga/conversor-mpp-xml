@@ -136,7 +136,7 @@ function CreditsContent() {
       } else {
         setToast({ message: data.message || 'Erro ao processar compra', type: 'error' });
       }
-    } catch (error) {
+    } catch (_error) {
       setToast({ message: 'Erro ao conectar com o servidor', type: 'error' });
     } finally {
       setBuying(null);
@@ -161,7 +161,7 @@ function CreditsContent() {
       } else {
         setToast({ message: data.message || 'Erro ao adicionar créditos', type: 'error' });
       }
-    } catch (error) {
+    } catch (_error) {
       setToast({ message: 'Erro ao conectar com o servidor', type: 'error' });
     } finally {
       setAddingDemo(false);

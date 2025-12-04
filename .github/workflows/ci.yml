@@ -49,14 +49,6 @@ jobs:
         env:
           NODE_ENV: test
 
-      - name: Run API tests
-        run: npm run test:api -- --run
-        env:
-          NODE_ENV: test
-          DATABASE_URL: "file:./test.db"
-          NEXTAUTH_SECRET: "test-secret-for-ci"
-          NEXTAUTH_URL: "http://localhost:3000"
-
   # ===============================
   # JOB 2: E2E TESTS
   # ===============================
@@ -117,6 +109,15 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
+
+      - name: Run API tests
+        run: npm run test:api -- --run
+        env:
+          DATABASE_URL: "postgresql://postgres:${{ secrets.POSTGRES_PASSWORD || 'postgres' }}@localhost:5432/cannaconvert_test"
+          NEXTAUTH_SECRET: "test-secret-for-ci"
+          NEXTAUTH_URL: "http://localhost:3000"
+          REDIS_URL: "redis://localhost:6379"
+          NODE_ENV: test
 
       - name: Build application
         run: npm run build

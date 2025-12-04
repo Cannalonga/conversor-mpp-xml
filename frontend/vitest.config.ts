@@ -21,9 +21,6 @@ export default defineConfig({
     // Hook timeout
     hookTimeout: 60_000,
     
-    // Setup file
-    setupFiles: ['./e2e/api-tests/setup.ts'],
-    
     // Global test utilities
     globals: true,
     
