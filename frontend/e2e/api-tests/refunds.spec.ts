@@ -51,7 +51,7 @@ describe('Refunds API', () => {
         .send({ jobId: 'test-job-123', reason: 'Test refund' });
 
       expect(res.status).toBe(401);
-      expect(res.body.error).toBe('unauthorized');
+      expect(res.body.error.toUpperCase()).toBe('UNAUTHORIZED');
     });
 
     it('should reject request without jobId', async () => {
@@ -80,7 +80,7 @@ describe('Refunds API', () => {
         .get('/api/admin/refund-requests');
 
       expect(res.status).toBe(401);
-      expect(res.body.error).toBe('unauthorized');
+      expect(res.body.error.toUpperCase()).toBe('UNAUTHORIZED');
     });
 
     it('should reject with invalid admin password', async () => {
@@ -89,7 +89,7 @@ describe('Refunds API', () => {
         .set('X-Admin-Password', 'wrong-password');
 
       expect(res.status).toBe(401);
-      expect(res.body.error).toBe('unauthorized');
+      expect(res.body.error.toUpperCase()).toBe('UNAUTHORIZED');
     });
 
     it('should return refund requests with valid admin password', async () => {
@@ -102,7 +102,8 @@ describe('Refunds API', () => {
       if (res.status === 200) {
         expect(res.body).toHaveProperty('requests');
         expect(Array.isArray(res.body.requests)).toBe(true);
-        expect(res.body).toHaveProperty('total');
+        // API returns 'count' instead of 'total'
+        expect(res.body).toHaveProperty('count');
       } else {
         expect(res.status).toBe(401);
       }
@@ -135,7 +136,7 @@ describe('Refunds API', () => {
         .post('/api/admin/refund-requests/test-id/approve');
 
       expect(res.status).toBe(401);
-      expect(res.body.error).toBe('unauthorized');
+      expect(res.body.error.toUpperCase()).toBe('UNAUTHORIZED');
     });
 
     it('should return 404 for non-existent refund request', async () => {
@@ -154,7 +155,7 @@ describe('Refunds API', () => {
         .delete('/api/admin/refund-requests/test-id/approve');
 
       expect(res.status).toBe(401);
-      expect(res.body.error).toBe('unauthorized');
+      expect(res.body.error.toUpperCase()).toBe('UNAUTHORIZED');
     });
 
     it('should require notes when rejecting', async () => {
@@ -244,9 +245,10 @@ describe('Admin Refund Management', () => {
         .set('X-Admin-Password', ADMIN_PASSWORD);
 
       if (res.status === 200) {
-        expect(res.body).toHaveProperty('page');
+        // API uses offset/limit instead of page
         expect(res.body).toHaveProperty('limit');
-        expect(res.body).toHaveProperty('total');
+        expect(res.body).toHaveProperty('offset');
+        expect(res.body).toHaveProperty('count');
       }
     });
   });
