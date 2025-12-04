@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import stripe, { verifyWebhookSignature, getCreditsFromSession } from '@/lib/stripe';
 import prisma from '@/lib/prisma';
+import { handleStripeRefund } from '@/lib/refunds';
 
 // ============================================
 // Structured Logging
@@ -17,6 +18,10 @@ interface LogContext {
   amountPaid?: number;
   error?: string;
   duration?: number;
+  // Refund-related fields
+  creditsDeducted?: number;
+  accountBlocked?: boolean;
+  recoveryCreated?: boolean;
 }
 
 function log(level: 'info' | 'warn' | 'error', message: string, context: LogContext = {}) {
@@ -271,19 +276,15 @@ async function handleChargeRefunded(
     eventType: event.type,
   };
 
-  log('info', 'Charge refunded', logCtx);
+  log('info', 'Charge refunded - processing credits deduction', logCtx);
 
-  // Record refund event - in production you'd want to:
-  // 1. Find the original purchase
-  // 2. Deduct credits or mark them as refunded
-  // 3. Send notification to user
-  
+  // Record refund event first
   try {
     await prisma.stripeEvent.create({
       data: {
         stripeEventId: event.id,
         eventType: event.type,
-        status: 'processed',
+        status: 'processing',
         amountPaid: charge.amount_refunded ? -charge.amount_refunded : null,
         metadata: JSON.stringify({
           chargeId: charge.id,
@@ -294,12 +295,107 @@ async function handleChargeRefunded(
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
-    if (!message.includes('Unique constraint')) {
-      log('error', 'Failed to record charge.refunded event', { ...logCtx, error: message });
+    if (message.includes('Unique constraint')) {
+      log('warn', 'Duplicate charge.refunded event ignored', logCtx);
+      return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+    }
+    log('error', 'Failed to record charge.refunded event', { ...logCtx, error: message });
+  }
+
+  // Find the user via payment_intent metadata or customer
+  const paymentIntentId = typeof charge.payment_intent === 'string' 
+    ? charge.payment_intent 
+    : charge.payment_intent?.id;
+
+  let userId: string | null = null;
+
+  // Try to find user from payment intent
+  if (paymentIntentId) {
+    const paymentIntent = await stripe?.paymentIntents.retrieve(paymentIntentId);
+    userId = paymentIntent?.metadata?.userId ?? null;
+  }
+
+  // Fallback: find user from original transaction via metadata search
+  if (!userId) {
+    const transactions = await prisma.creditTransaction.findMany({
+      where: { type: 'PURCHASE' },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    
+    for (const tx of transactions) {
+      if (tx.metadata) {
+        try {
+          const meta = JSON.parse(tx.metadata);
+          if (meta.stripePaymentIntent === paymentIntentId || meta.chargeId === charge.id) {
+            userId = tx.userId;
+            break;
+          }
+        } catch {
+          // Invalid JSON, skip
+        }
+      }
     }
   }
 
-  return NextResponse.json({ received: true }, { status: 200 });
+  if (!userId) {
+    log('error', 'Could not find user for refunded charge', { 
+      ...logCtx, 
+    });
+    // Still return 200 to avoid Stripe retries
+    return NextResponse.json({ received: true, error: 'user_not_found' }, { status: 200 });
+  }
+
+  // Calculate credits to deduct based on refund amount
+  // Using the same rate as CREDIT_PACK_PRICE_CENTS = 1000 for 10 credits
+  const refundedCents = charge.amount_refunded ?? 0;
+  const creditsToDeduct = Math.floor(refundedCents / 100); // 1 credit per $1
+
+  // Use the refund library to handle credits deduction or account blocking
+  const result = await handleStripeRefund({
+    userId,
+    stripeEventId: event.id,
+    creditsToDeduct,
+    amountRefunded: refundedCents,
+    reason: charge.refunds?.data[0]?.reason ?? 'unknown',
+  });
+
+  // Update event status
+  try {
+    await prisma.stripeEvent.update({
+      where: { stripeEventId: event.id },
+      data: { 
+        status: 'processed',
+        metadata: JSON.stringify({
+          chargeId: charge.id,
+          amountRefunded: charge.amount_refunded,
+          refundReason: charge.refunds?.data[0]?.reason,
+          creditsDeducted: result.creditsDeducted,
+          accountBlocked: result.accountBlocked,
+          recoveryCreated: result.recoveryCreated,
+        }),
+      },
+    });
+  } catch (updateError) {
+    log('error', 'Failed to update event status', { 
+      ...logCtx, 
+      error: updateError instanceof Error ? updateError.message : 'unknown',
+    });
+  }
+
+  log('info', 'Charge refund processed', {
+    ...logCtx,
+    userId,
+    creditsDeducted: result.creditsDeducted,
+    accountBlocked: result.accountBlocked,
+    recoveryCreated: result.recoveryCreated,
+  });
+
+  return NextResponse.json({ 
+    received: true, 
+    creditsDeducted: result.creditsDeducted,
+    accountBlocked: result.accountBlocked,
+  }, { status: 200 });
 }
 
 // ============================================

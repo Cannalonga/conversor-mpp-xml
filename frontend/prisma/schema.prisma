@@ -12,18 +12,21 @@ generator client {
 
 // User model for authentication
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String?
-  password  String?   // Hashed with bcrypt
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  name                   String?
+  password               String?   // Hashed with bcrypt
+  accountBlockedForRefund Boolean  @default(false)  // True if user overused refunded credits
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
   
   // Relations
   sessions           Session[]
   accounts           Account[]
   credits            UserCredits?
   creditTransactions CreditTransaction[]
+  refundRequests     RefundRequest[]
+  refundRecoveries   RefundRecovery[]
 }
 
 // Session model for NextAuth (optional - using JWT, but good for future)
@@ -80,18 +83,23 @@ model UserCredits {
 
 // Credit transaction history
 model CreditTransaction {
-  id          String                @id @default(cuid())
-  userId      String
-  amount      Int                   // positive = purchase, negative = usage
-  type        String                // "PURCHASE" | "CONVERSION" | "REFUND" | "BONUS"
-  description String
-  metadata    String?               // JSON string for extra data
-  createdAt   DateTime              @default(now())
+  id            String                @id @default(cuid())
+  userId        String
+  amount        Int                   // positive = purchase, negative = usage
+  type          String                // "PURCHASE" | "CONVERSION" | "REFUND" | "BONUS"
+  description   String
+  metadata      String?               // JSON string for extra data
+  jobId         String?               // Link to Job if type is CONVERSION
+  stripeEventId String?               // Link to StripeEvent if type is PURCHASE/REFUND
+  refunded      Boolean               @default(false) // Whether this transaction was refunded
+  createdAt     DateTime              @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
+  @@index([jobId])
+  @@index([stripeEventId])
 }
 
 // ============================================
@@ -145,4 +153,52 @@ model StripeEvent {
   @@index([stripeSessionId])
   @@index([eventType])
   @@index([processedAt])
+}
+
+// ============================================
+// REFUND SYSTEM
+// ============================================
+
+// Refund request for failed jobs or disputed transactions
+model RefundRequest {
+  id                  String    @id @default(cuid())
+  userId              String
+  jobId               String?               // Job that failed (if applicable)
+  transactionId       String?               // Original CreditTransaction to refund
+  amount              Int                   // Credits to refund
+  reason              String                // User-provided or system reason
+  status              String    @default("PENDING")  // PENDING | APPROVED | REJECTED | AUTO_APPROVED
+  failureStage        String?               // PRE_PROCESS | DURING_PROCESS | POST_PROCESS
+  autoRefund          Boolean   @default(false)  // Was this auto-refunded?
+  adminNotes          String?               // Notes from admin review
+  processedAt         DateTime?             // When the refund was processed
+  processedBy         String?               // Admin who processed (or "SYSTEM" for auto)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([jobId])
+  @@index([createdAt])
+}
+
+// Track users with insufficient balance for Stripe-initiated refunds
+model RefundRecovery {
+  id                String    @id @default(cuid())
+  userId            String
+  stripeEventId     String?               // Stripe refund event
+  creditsOwed       Int                   // Credits that need to be recovered
+  originalAmount    Int                   // Original credits from purchase
+  status            String    @default("PENDING")  // PENDING | RECOVERED | WRITTEN_OFF
+  notes             String?               // Admin notes
+  createdAt         DateTime  @default(now())
+  resolvedAt        DateTime?
+  resolvedBy        String?               // Admin who resolved
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }
