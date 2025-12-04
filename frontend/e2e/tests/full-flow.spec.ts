@@ -210,17 +210,23 @@ test.describe('Full Conversion Flow', () => {
         await createMockMppFile(SAMPLE_MPP_PATH);
       }
       
-      // Find file input
-      const fileInput = page.locator('input[type="file"]');
+      // Find file input - may be hidden, so use force or setInputFiles directly
+      const fileInput = page.locator('input[type="file"]').first();
       
-      // Handle file chooser
-      const [fileChooser] = await Promise.all([
-        page.waitForEvent('filechooser'),
-        fileInput.click(),
-      ]);
-      
-      await fileChooser.setFiles(SAMPLE_MPP_PATH);
-      console.log('✓ File uploaded');
+      // Try direct setInputFiles first (works even if input is hidden)
+      try {
+        await fileInput.setInputFiles(SAMPLE_MPP_PATH);
+        console.log('✓ File uploaded via setInputFiles');
+      } catch {
+        // Fallback: use file chooser dialog
+        console.log('   Trying file chooser dialog...');
+        const [fileChooser] = await Promise.all([
+          page.waitForEvent('filechooser', { timeout: 10000 }),
+          fileInput.click({ force: true }),
+        ]);
+        await fileChooser.setFiles(SAMPLE_MPP_PATH);
+        console.log('✓ File uploaded via file chooser');
+      }
       
       // Wait for upload confirmation
       await page.waitForTimeout(2000);
