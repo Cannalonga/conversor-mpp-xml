@@ -106,10 +106,12 @@ jobs:
             cd ~/deploy/staging
             if [ ! -f .env.staging ]; then
               echo "WARN: .env.staging not found on remote. Please populate it with production secrets."
+              # Copy example as initial template
+              cp .env.staging.example .env.staging 2>/dev/null || true
             fi
-            docker compose pull || true
-            docker compose up -d
-            docker compose ps
+            docker compose -f docker-compose.staging.yml pull || true
+            docker compose -f docker-compose.staging.yml up -d
+            docker compose -f docker-compose.staging.yml ps
           '
 
       - name: Run smoke tests (remote)
@@ -117,4 +119,4 @@ jobs:
           SSH_USER: ${{ secrets.STAGING_SSH_USER }}
           SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} 'cd ~/deploy/staging && ./scripts/smoke-test.sh'
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} 'cd ~/deploy/staging && chmod +x ./scripts/*.sh && ./scripts/smoke-test.sh'
