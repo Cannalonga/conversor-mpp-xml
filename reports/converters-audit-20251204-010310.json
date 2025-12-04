@@ -1,0 +1,393 @@
+{
+  "timestamp": "2025-12-04T01:03:10.364Z",
+  "environment": {
+    "nodeVersion": "v25.2.0",
+    "platform": "win32",
+    "minConvertersThreshold": 5
+  },
+  "summary": {
+    "totalConverters": 10,
+    "withConvertFunction": 9,
+    "withTests": 6,
+    "withDryRun": 6,
+    "withErrorHandling": 9,
+    "fullyImplemented": 5,
+    "totalLinesOfCode": 2444
+  },
+  "converters": [
+    {
+      "name": "excelToCsv",
+      "path": "converters/excelToCsv.js",
+      "hasExportedConvert": true,
+      "hasTest": true,
+      "testPath": "C:\\Users\\rafae\\Desktop\\PROJETOS DE ESTUDOS\\CONVERSOR MPP XML\\scripts\\test-all-converters.js",
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": true,
+        "hasRequiredTools": false,
+        "exportedMethods": [
+          "convertExcelToCsv",
+          "convertCsvToExcel",
+          "fileExists",
+          "listSheets"
+        ],
+        "requiredTools": [],
+        "supportedExtensions": [
+          ".xlsx",
+          ".xls"
+        ],
+        "linesOfCode": 198,
+        "hasDryRunMode": false,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": []
+      },
+      "status": "fully-implemented",
+      "notes": [
+        "No dry-run mode implemented",
+        "Supports: .xlsx, .xls"
+      ]
+    },
+    {
+      "name": "ffmpegConverter",
+      "path": "converters/ffmpegConverter.js",
+      "hasExportedConvert": true,
+      "hasTest": false,
+      "testPath": null,
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": false,
+        "hasRequiredTools": true,
+        "exportedMethods": [],
+        "requiredTools": [
+          "ffmpeg"
+        ],
+        "supportedExtensions": [],
+        "linesOfCode": 247,
+        "hasDryRunMode": true,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": [
+          "checkDependencies",
+          "convert",
+          "extractThumbnail",
+          "getMediaInfo",
+          "getInfo"
+        ]
+      },
+      "status": "partially-implemented",
+      "notes": [
+        "No dedicated test file found"
+      ]
+    },
+    {
+      "name": "jsonToCsv",
+      "path": "converters/jsonToCsv.js",
+      "hasExportedConvert": true,
+      "hasTest": true,
+      "testPath": "C:\\Users\\rafae\\Desktop\\PROJETOS DE ESTUDOS\\CONVERSOR MPP XML\\scripts\\test-all-converters.js",
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": true,
+        "hasRequiredTools": false,
+        "exportedMethods": [
+          "convertJsonToCsv",
+          "fileExists"
+        ],
+        "requiredTools": [],
+        "supportedExtensions": [
+          ".json"
+        ],
+        "linesOfCode": 229,
+        "hasDryRunMode": false,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": []
+      },
+      "status": "fully-implemented",
+      "notes": [
+        "No dry-run mode implemented",
+        "Supports: .json"
+      ]
+    },
+    {
+      "name": "libreofficeConverter",
+      "path": "converters/libreofficeConverter.js",
+      "hasExportedConvert": true,
+      "hasTest": false,
+      "testPath": null,
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": false,
+        "hasRequiredTools": true,
+        "exportedMethods": [],
+        "requiredTools": [
+          "soffice"
+        ],
+        "supportedExtensions": [],
+        "linesOfCode": 208,
+        "hasDryRunMode": true,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": [
+          "checkDependencies",
+          "convert",
+          "convertToPdf",
+          "getDocumentType",
+          "getInfo"
+        ]
+      },
+      "status": "partially-implemented",
+      "notes": [
+        "No dedicated test file found"
+      ]
+    },
+    {
+      "name": "mppToXml",
+      "path": "converters/mppToXml.js",
+      "hasExportedConvert": true,
+      "hasTest": false,
+      "testPath": null,
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": true,
+        "hasRequiredTools": false,
+        "exportedMethods": [
+          "convertMPPtoXML",
+          "generateXMLFromMPP",
+          "simulateProcessing",
+          "fileExists"
+        ],
+        "requiredTools": [],
+        "supportedExtensions": [
+          ".mpp"
+        ],
+        "linesOfCode": 368,
+        "hasDryRunMode": true,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": []
+      },
+      "status": "partially-implemented",
+      "notes": [
+        "No dedicated test file found",
+        "Supports: .mpp"
+      ]
+    },
+    {
+      "name": "pandocConverter",
+      "path": "converters/pandocConverter.js",
+      "hasExportedConvert": true,
+      "hasTest": false,
+      "testPath": null,
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": false,
+        "hasRequiredTools": true,
+        "exportedMethods": [],
+        "requiredTools": [
+          "pandoc"
+        ],
+        "supportedExtensions": [],
+        "linesOfCode": 257,
+        "hasDryRunMode": true,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": [
+          "checkDependencies",
+          "convert",
+          "markdownToHtml",
+          "markdownToPdf",
+          "htmlToMarkdown",
+          "getInfo"
+        ]
+      },
+      "status": "partially-implemented",
+      "notes": [
+        "No dedicated test file found"
+      ]
+    },
+    {
+      "name": "template-converter",
+      "path": "converters/template-converter.js",
+      "hasExportedConvert": true,
+      "hasTest": true,
+      "testPath": "C:\\Users\\rafae\\Desktop\\PROJETOS DE ESTUDOS\\CONVERSOR MPP XML\\tests\\converters\\template-converter.test.js",
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": true,
+        "hasRequiredTools": true,
+        "exportedMethods": [
+          "checkDependencies",
+          "convert"
+        ],
+        "requiredTools": [
+          "example-tool"
+        ],
+        "supportedExtensions": [],
+        "linesOfCode": 218,
+        "hasDryRunMode": true,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": [
+          "TemplateConverter"
+        ]
+      },
+      "status": "fully-implemented",
+      "notes": []
+    },
+    {
+      "name": "utils",
+      "path": "converters/utils.js",
+      "hasExportedConvert": false,
+      "hasTest": true,
+      "testPath": "C:\\Users\\rafae\\Desktop\\PROJETOS DE ESTUDOS\\CONVERSOR MPP XML\\scripts\\test-all-converters.js",
+      "analysis": {
+        "hasConvertFunction": false,
+        "hasClassExport": false,
+        "hasRequiredTools": false,
+        "exportedMethods": [],
+        "requiredTools": [],
+        "supportedExtensions": [],
+        "linesOfCode": 298,
+        "hasDryRunMode": true,
+        "hasErrorHandling": false,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": [
+          "fileExists",
+          "ensureOutputDir",
+          "getFileInfo",
+          "formatBytes",
+          "checkToolInstalled",
+          "executeCommand",
+          "validateInput",
+          "createDryRunOutput",
+          "measureTime",
+          "cleanupTempFiles"
+        ]
+      },
+      "status": "stub-only",
+      "notes": [
+        "Missing convert function export",
+        "Missing try-catch error handling"
+      ]
+    },
+    {
+      "name": "xmlToMpp",
+      "path": "converters/xmlToMpp.js",
+      "hasExportedConvert": true,
+      "hasTest": true,
+      "testPath": "C:\\Users\\rafae\\Desktop\\PROJETOS DE ESTUDOS\\CONVERSOR MPP XML\\scripts\\test-all-converters.js",
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": true,
+        "hasRequiredTools": false,
+        "exportedMethods": [
+          "convertXmlToMpp",
+          "fileExists",
+          "validateXml"
+        ],
+        "requiredTools": [],
+        "supportedExtensions": [
+          ".xml"
+        ],
+        "linesOfCode": 226,
+        "hasDryRunMode": false,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": []
+      },
+      "status": "fully-implemented",
+      "notes": [
+        "No dry-run mode implemented",
+        "Supports: .xml"
+      ]
+    },
+    {
+      "name": "zipToXml",
+      "path": "converters/zipToXml.js",
+      "hasExportedConvert": true,
+      "hasTest": true,
+      "testPath": "C:\\Users\\rafae\\Desktop\\PROJETOS DE ESTUDOS\\CONVERSOR MPP XML\\scripts\\test-all-converters.js",
+      "analysis": {
+        "hasConvertFunction": true,
+        "hasClassExport": true,
+        "hasRequiredTools": false,
+        "exportedMethods": [
+          "convertZipToXml",
+          "_extractZip",
+          "listZipContents",
+          "fileExists"
+        ],
+        "requiredTools": [],
+        "supportedExtensions": [
+          ".zip"
+        ],
+        "linesOfCode": 195,
+        "hasDryRunMode": false,
+        "hasErrorHandling": true,
+        "hasLogging": true,
+        "loadable": true,
+        "type": "object",
+        "isClass": false,
+        "isInstance": true,
+        "methods": []
+      },
+      "status": "fully-implemented",
+      "notes": [
+        "No dry-run mode implemented",
+        "Supports: .zip"
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "message": "Add tests for 4 converters without tests"
+    },
+    {
+      "priority": "medium",
+      "message": "Implement dry-run mode for testing without external tools"
+    },
+    {
+      "priority": "high",
+      "message": "Add proper error handling (try-catch) to all converters"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+# Dockerfile.test — imagem para executar os testes de conversores (Ubuntu)
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NODE_VERSION=20
+
+# base deps
+RUN apt-get update && apt-get install -y \
+    curl ca-certificates gnupg build-essential git \
+    ffmpeg libreoffice ghostscript poppler-utils imagemagick \
+    pandoc python3 unzip wget jq && \
+    rm -rf /var/lib/apt/lists/*
+
+# Node.js install (setup)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get update && apt-get install -y nodejs && \
+    npm install -g npm@latest
+
+WORKDIR /usr/src/app
+
+# copy package files first for caching
+COPY package*.json ./
+RUN npm ci --prefer-offline --no-audit --no-progress
+
+# copy full repo
+COPY . .
+
+# build step (if you have a build)
+RUN if [ -f package.json ] && jq -e '.scripts.build' package.json >/dev/null 2>&1; then npm run build || true; fi
+
+# default command runs tests (you can override)
+CMD ["bash", "-lc", "unset CONVERTER_DRY_RUN && node scripts/test-all-converters.js || (echo 'TESTS EXITED $?'; exit 1)"]

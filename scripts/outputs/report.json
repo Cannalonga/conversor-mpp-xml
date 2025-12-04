@@ -1,0 +1,527 @@
+{
+  "timestamp": "2025-12-04T02:04:17.371Z",
+  "summary": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0
+  },
+  "dryRunMode": false,
+  "results": [
+    {
+      "id": "docx-to-pdf",
+      "name": "DOCX to PDF",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 2588,
+        "inputSize": 940,
+        "outputSize": 9058,
+        "outputPath": "/usr/src/app/scripts/outputs/docx-to-pdf/output.pdf"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.docx",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/docx-to-pdf/output.pdf",
+          "size": 9058,
+          "isFile": true
+        }
+      ],
+      "duration": 2812,
+      "dependenciesOk": true
+    },
+    {
+      "id": "excel-to-csv",
+      "name": "excelToCsv",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "success": true,
+        "inputFile": "sample.xlsx",
+        "outputFile": "output.out",
+        "inputSize": 1584,
+        "outputSize": 30,
+        "sheetName": "Sheet1",
+        "sheetsAvailable": [
+          "Sheet1"
+        ],
+        "rowsProcessed": 3,
+        "timestamp": "2025-12-04T02:04:10.816Z"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.xlsx",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/excel-to-csv/output.out",
+          "size": 30,
+          "isFile": true
+        }
+      ],
+      "duration": 31,
+      "dependenciesOk": true
+    },
+    {
+      "id": "ffmpeg-converter",
+      "name": "ffmpegConverter",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "inputPath": "/usr/src/app/scripts/samples/sample.mp4",
+        "outputPath": "/usr/src/app/scripts/outputs/ffmpeg-converter/output.mp4",
+        "outputSize": 3616,
+        "duration": 234,
+        "format": "mp4"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.mp4",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/ffmpeg-converter/output.mp4",
+          "size": 3616,
+          "isFile": true
+        }
+      ],
+      "duration": 316,
+      "dependenciesOk": true
+    },
+    {
+      "id": "image-optimize-whatsapp",
+      "name": "Optimize Image for WhatsApp",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 71,
+        "inputSize": 338,
+        "originalDimensions": {
+          "width": 1,
+          "height": 1
+        },
+        "outputSize": 321,
+        "outputSizeKB": 0,
+        "compressionRatio": "5.0%",
+        "finalQuality": 85,
+        "finalDimensions": {
+          "width": 1,
+          "height": 1
+        },
+        "attempts": 1,
+        "outputPath": "/usr/src/app/scripts/outputs/image-optimize-whatsapp/output.jpg"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.jpg",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/image-optimize-whatsapp/output.jpg",
+          "size": 321,
+          "isFile": true
+        }
+      ],
+      "duration": 106,
+      "dependenciesOk": true
+    },
+    {
+      "id": "image-to-pdf",
+      "name": "Image to PDF",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 68,
+        "outputSize": 1756,
+        "pages": 1
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.png",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/image-to-pdf/output.pdf",
+          "size": 1756,
+          "isFile": true
+        }
+      ],
+      "duration": 162,
+      "dependenciesOk": true
+    },
+    {
+      "id": "jpg-to-webp",
+      "name": "JPG to WebP",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 35,
+        "inputSize": 338,
+        "outputSize": 44,
+        "quality": 80,
+        "compressionRatio": "87.0%"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.jpg",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/jpg-to-webp/output.webp",
+          "size": 44,
+          "isFile": true
+        }
+      ],
+      "duration": 38,
+      "dependenciesOk": true
+    },
+    {
+      "id": "json-to-csv",
+      "name": "jsonToCsv",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "success": true,
+        "inputFile": "sample.json",
+        "outputFile": "output.out",
+        "inputSize": 326,
+        "outputSize": 219,
+        "rowsProcessed": 1,
+        "columnsProcessed": 3,
+        "headers": [
+          "name",
+          "items",
+          "metadata"
+        ],
+        "timestamp": "2025-12-04T02:04:11.488Z"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.json",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/json-to-csv/output.out",
+          "size": 219,
+          "isFile": true
+        }
+      ],
+      "duration": 20,
+      "dependenciesOk": true
+    },
+    {
+      "id": "libreoffice-converter",
+      "name": "libreofficeConverter",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "inputPath": "/usr/src/app/scripts/samples/sample.docx",
+        "outputPath": "/usr/src/app/scripts/outputs/libreoffice-converter/output.pdf",
+        "outputSize": 9058,
+        "duration": 2537,
+        "format": "pdf",
+        "tool": "soffice"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.docx",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/libreoffice-converter/output.pdf",
+          "size": 9058,
+          "isFile": true
+        }
+      ],
+      "duration": 2700,
+      "dependenciesOk": true
+    },
+    {
+      "id": "mpp-to-xml",
+      "name": "mppToXml",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "success": true,
+        "inputFile": "/usr/src/app/scripts/samples/sample.mpp",
+        "outputFile": "/usr/src/app/scripts/outputs/mpp-to-xml/output.out",
+        "inputSize": 520,
+        "outputSize": 9061,
+        "processingTime": 1,
+        "timestamp": "2025-12-04T02:04:15.217Z"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.mpp",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/mpp-to-xml/output.out",
+          "size": 9073,
+          "isFile": true
+        }
+      ],
+      "duration": 1015,
+      "dependenciesOk": true
+    },
+    {
+      "id": "pandoc-converter",
+      "name": "pandocConverter",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "inputPath": "/usr/src/app/scripts/samples/sample.md",
+        "outputPath": "/usr/src/app/scripts/outputs/pandoc-converter/output.html",
+        "outputSize": 7801,
+        "duration": 109,
+        "format": "html"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.md",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/pandoc-converter/output.html",
+          "size": 7801,
+          "isFile": true
+        },
+        {
+          "path": "/usr/src/app/scripts/outputs/pandoc-converter/output.out",
+          "size": 7801,
+          "isFile": true
+        }
+      ],
+      "duration": 143,
+      "dependenciesOk": true
+    },
+    {
+      "id": "pdf-compress",
+      "name": "PDF Compress",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 110,
+        "inputSize": 585,
+        "outputSize": 2418,
+        "compressionRatio": "-313.3%",
+        "quality": "ebook",
+        "outputPath": "/usr/src/app/scripts/outputs/pdf-compress/output.pdf"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.pdf",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/pdf-compress/output.pdf",
+          "size": 2418,
+          "isFile": true
+        }
+      ],
+      "duration": 134,
+      "dependenciesOk": true
+    },
+    {
+      "id": "pdf-to-image",
+      "name": "PDF to Image",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "pages": 1,
+        "outputs": [
+          "/usr/src/app/scripts/outputs/pdf-to-image/output.png"
+        ],
+        "durationMs": 139
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.pdf",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/pdf-to-image/output.png",
+          "size": 11964,
+          "isFile": true
+        }
+      ],
+      "duration": 148,
+      "dependenciesOk": true
+    },
+    {
+      "id": "png-to-jpg",
+      "name": "PNG to JPG",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 35,
+        "inputSize": 414,
+        "outputSize": 343,
+        "outputPath": "/usr/src/app/scripts/outputs/png-to-jpg/output.jpg",
+        "quality": 85,
+        "compressionRatio": "17.1%"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.png",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/png-to-jpg/output.jpg",
+          "size": 343,
+          "isFile": true
+        }
+      ],
+      "duration": 39,
+      "dependenciesOk": true
+    },
+    {
+      "id": "template-converter",
+      "name": "Template Converter",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "converter": "template-converter",
+        "inputPath": "/usr/src/app/scripts/samples/sample.txt",
+        "outputPath": "/usr/src/app/scripts/outputs/template-converter/output.txt",
+        "outputs": [
+          "/usr/src/app/scripts/outputs/template-converter/output.txt"
+        ],
+        "durationMs": 14,
+        "inputSize": 65,
+        "outputSize": 65
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.txt",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/template-converter/output.txt",
+          "size": 65,
+          "isFile": true
+        }
+      ],
+      "duration": 17,
+      "dependenciesOk": true
+    },
+    {
+      "id": "video-compress-whatsapp",
+      "name": "Video Compress for WhatsApp",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 351,
+        "inputSize": 3364,
+        "videoDuration": 1,
+        "calculatedVideoBitrate": "125733k",
+        "outputSize": 3833,
+        "outputSizeMB": 0,
+        "compressionRatio": "-13.9%",
+        "withinLimit": true,
+        "outputPath": "/usr/src/app/scripts/outputs/video-compress-whatsapp/output.mp4"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.mp4",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/video-compress-whatsapp/output.mp4",
+          "size": 3833,
+          "isFile": true
+        }
+      ],
+      "duration": 422,
+      "dependenciesOk": true
+    },
+    {
+      "id": "video-to-mp4",
+      "name": "Video to MP4",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 258,
+        "inputSize": 3364,
+        "outputSize": 3616,
+        "compressionRatio": "-7.5%",
+        "quality": "medium",
+        "crf": 23,
+        "outputPath": "/usr/src/app/scripts/outputs/video-to-mp4/output.mp4"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.mp4",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/video-to-mp4/output.mp4",
+          "size": 3616,
+          "isFile": true
+        }
+      ],
+      "duration": 329,
+      "dependenciesOk": true
+    },
+    {
+      "id": "video-to-social",
+      "name": "Video to Social Media",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "durationMs": 728,
+        "inputSize": 3364,
+        "outputSize": 5402,
+        "platform": "reels",
+        "targetDimensions": {
+          "width": 1080,
+          "height": 1920
+        },
+        "maxDuration": 90,
+        "cropMode": "center",
+        "outputPath": "/usr/src/app/scripts/outputs/video-to-social/output.mp4"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.mp4",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/video-to-social/output.mp4",
+          "size": 5402,
+          "isFile": true
+        }
+      ],
+      "duration": 796,
+      "dependenciesOk": true
+    },
+    {
+      "id": "xml-to-mpp",
+      "name": "xmlToMpp",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "success": true,
+        "inputFile": "sample.xml",
+        "outputFile": "output.out",
+        "inputSize": 662,
+        "outputSize": 1880,
+        "format": "JSON (compatible with MPP structure)",
+        "tasksExtracted": 2,
+        "resourcesExtracted": 1,
+        "timestamp": "2025-12-04T02:04:17.330Z",
+        "warning": "Este é um arquivo MPP simulado em formato JSON. Para conversão real de XML para .mpp binário, use bibliotecas como MPXJ."
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.xml",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/xml-to-mpp/output.out",
+          "size": 1880,
+          "isFile": true
+        }
+      ],
+      "duration": 25,
+      "dependenciesOk": true
+    },
+    {
+      "id": "zip-to-xml",
+      "name": "zipToXml",
+      "success": true,
+      "errors": [],
+      "warnings": [],
+      "metadata": {
+        "success": true,
+        "inputFile": "sample.zip",
+        "outputDirectory": "/usr/src/app/scripts/outputs/zip-to-xml/output.out",
+        "inputSize": 473,
+        "filesExtracted": 2,
+        "xmlFilesExtracted": 1,
+        "xmlFiles": [
+          "data.xml"
+        ],
+        "otherFiles": [],
+        "timestamp": "2025-12-04T02:04:17.365Z"
+      },
+      "inputFile": "/usr/src/app/scripts/samples/sample.zip",
+      "outputFiles": [
+        {
+          "path": "/usr/src/app/scripts/outputs/zip-to-xml/output.out",
+          "size": 4096,
+          "isFile": false
+        }
+      ],
+      "duration": 29,
+      "dependenciesOk": true
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  tester:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./scripts/samples:/usr/src/app/scripts/samples:cached
+      - ./scripts/outputs:/usr/src/app/scripts/outputs:cached
+    environment:
+      - NODE_ENV=test
+      - CONVERTER_DRY_RUN=
+    tty: true
+    # Override CMD if you want interactive shell:
+    # command: bash

@@ -1,0 +1,13 @@
+{
+  "dryRun": true,
+  "timestamp": "2025-12-03T14:43:16.158Z",
+  "outputPath": "./temp/test-template/test.output-ext",
+  "metadata": {
+    "converter": "TemplateConverter",
+    "wouldConvert": {
+      "from": "./temp/test-template/test.input-ext",
+      "to": "./temp/test-template/test.output-ext"
+    }
+  },
+  "message": "This is a dry-run placeholder file. Real conversion was skipped."
+}

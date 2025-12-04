@@ -12,6 +12,15 @@ require('dotenv').config();
 const uploadUtils = require('./upload-utils');
 const downloadToken = require('../utils/downloadToken');
 
+// Import converter routes (4 novos conversores)
+const converterRoutes = require('./converter-routes');
+
+// Import v1 API routes (list converters)
+const convertersV1Routes = require('./routes/converters-v1');
+
+// Import queue API routes
+const queueRoutes = require('./routes/queue');
+
 // Import memory-based queue (no Redis required)
 let fileQueue;
 try {
@@ -196,6 +205,29 @@ app.use((req, res, next) => {
 });
 
 app.use(compression());
+
+// 🔌 ROTAS DOS 4 NOVOS CONVERSORES
+// - POST /api/converters/excel-to-csv
+// - POST /api/converters/json-to-csv
+// - POST /api/converters/zip-to-xml
+// - POST /api/converters/xml-to-mpp
+// - GET /api/converters/health
+app.use('/api/converters', converterRoutes);
+
+// 🔌 API V1 - LISTA DE CONVERSORES
+// - GET /api/v1/converters (lista todos)
+// - GET /api/v1/converters/:id (detalhes)
+// - GET /api/v1/converters/supported/inputs
+// - GET /api/v1/converters/supported/outputs
+app.use('/api/v1/converters', convertersV1Routes);
+
+// 🔌 QUEUE API - Gerenciamento de fila
+// - GET /api/queue/info
+// - GET /api/queue/stats
+// - GET /api/queue/health
+// - GET /api/queue/job/:id
+// - POST /api/queue/job
+app.use('/api/queue', queueRoutes);
 
 // 🛡️ RATE LIMITING - Proteção contra ataques
 const apiLimiter = rateLimit({
@@ -1193,9 +1225,25 @@ app.listen(PORT, () => {
     logger.info('SERVER_ENDPOINTS_AVAILABLE', {
         baseUrl: `http://localhost:${PORT}`,
         healthCheck: `http://localhost:${PORT}/health`,
-        uploadApi: `http://localhost:${PORT}/api/upload-test`
+        uploadApi: `http://localhost:${PORT}/api/upload-test`,
+        converters: `http://localhost:${PORT}/api/converters/health`
     });
     
+    console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║  🚀 CANNACONVERTER - SERVIDOR INICIADO                       ║
+╠══════════════════════════════════════════════════════════════╣
+║  📍 URL: http://localhost:${PORT}                              ║
+║  🏥 Health: http://localhost:${PORT}/health                    ║
+╠══════════════════════════════════════════════════════════════╣
+║  🔌 CONVERSORES DISPONÍVEIS:                                 ║
+║     1. MPP → XML   (Principal)                               ║
+║     2. Excel → CSV (POST /api/converters/excel-to-csv)       ║
+║     3. JSON → CSV  (POST /api/converters/json-to-csv)        ║
+║     4. ZIP → XML   (POST /api/converters/zip-to-xml)         ║
+║     5. XML → MPP   (POST /api/converters/xml-to-mpp)         ║
+╚══════════════════════════════════════════════════════════════╝
+    `);
     console.log(`Servidor rodando na porta ${PORT}`);
     console.log(`Acesse: http://localhost:${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);

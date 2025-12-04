@@ -1,0 +1,223 @@
+# ============================================================================
+# CANNACONVERTER - Full Stack Docker Compose
+# ============================================================================
+# 
+# Includes:
+# - Node.js Backend API (port 3001)
+# - Java MPP Converter Microservice (port 8080)
+# - Redis for queue management
+# - Next.js Frontend (port 3000)
+#
+# Usage:
+#   Development: docker-compose -f docker-compose.full.yml up
+#   Production:  docker-compose -f docker-compose.full.yml --profile production up -d
+#
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # REDIS - Queue & Cache
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: canna-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - canna-network
+
+  # ==========================================================================
+  # MPP CONVERTER - Java MPXJ Microservice
+  # ==========================================================================
+  mpp-converter:
+    build:
+      context: ./microservices/mpp-converter
+      dockerfile: Dockerfile
+    container_name: canna-mpp-converter
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_OPTS=-Xms128m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+      - SERVER_PORT=8080
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
+    networks:
+      - canna-network
+
+  # ==========================================================================
+  # BACKEND API - Node.js Express
+  # ==========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: canna-api
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOST=0.0.0.0
+      - DISABLE_HTTPS_REDIRECT=true
+      # Redis connection
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # MPP Converter microservice
+      - MPP_CONVERTER_URL=http://mpp-converter:8080
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      mpp-converter:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - canna-network
+
+  # ==========================================================================
+  # FRONTEND - Next.js (for production)
+  # ==========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: canna-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_BACKEND_URL=http://api:3001
+    env_file:
+      - ./frontend/.env.local
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    profiles:
+      - production
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - canna-network
+
+  # ==========================================================================
+  # NGINX - Production Reverse Proxy
+  # ==========================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: canna-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - frontend
+    restart: unless-stopped
+    profiles:
+      - production
+    networks:
+      - canna-network
+
+  # ==========================================================================
+  # WORKER - BullMQ Background Jobs
+  # ==========================================================================
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: canna-worker
+    command: npm run start:worker
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=${DATABASE_URL}
+      - MPP_CONVERTER_URL=http://mpp-converter:8080
+      - WORKER_NAME=worker-docker
+      - WORKER_CONCURRENCY=2
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      mpp-converter:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - canna-network
+
+# ==========================================================================
+# NETWORKS
+# ==========================================================================
+networks:
+  canna-network:
+    driver: bridge
+
+# ==========================================================================
+# VOLUMES
+# ==========================================================================
+volumes:
+  redis_data:
+    driver: local

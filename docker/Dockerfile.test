@@ -1,0 +1,54 @@
+# Dockerfile for Testing with All Converter Dependencies
+FROM node:20-bookworm
+
+# Install all converter dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # FFmpeg for video conversion
+    ffmpeg \
+    # Ghostscript for PDF compression
+    ghostscript \
+    # Poppler for PDF to image
+    poppler-utils \
+    # Pandoc for document conversion
+    pandoc \
+    # LibreOffice for Office documents
+    libreoffice-common \
+    libreoffice-writer \
+    # ImageMagick (optional, for image processing)
+    imagemagick \
+    # Fonts for better document rendering
+    fonts-liberation \
+    fonts-dejavu-core \
+    # Cleanup
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files first (for better caching)
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm ci
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p \
+    uploads/incoming \
+    uploads/processing \
+    uploads/converted \
+    uploads/expired \
+    uploads/quarantine \
+    logs \
+    scripts/samples \
+    scripts/outputs
+
+# Set environment
+ENV NODE_ENV=test
+ENV CONVERTER_DRY_RUN=
+
+# Default command: run converter tests
+CMD ["node", "scripts/test-all-converters.js"]

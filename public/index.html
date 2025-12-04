@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CannaConverter - Conversor MPP para XML</title>
+    <title>CannaConverter - Conversores de Arquivos Online</title>
     <style>
         * {
             margin: 0;
@@ -32,7 +32,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
@@ -46,7 +46,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 0;
+            padding: 0.5rem 0;
         }
 
         .logo {
@@ -57,16 +57,33 @@
             font-weight: 700;
         }
 
+        .logo-circle {
+            width: 60px;
+            height: 60px;
+            background-color: #000000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .logo-circle img {
+            width: 45px;
+            height: 45px;
+            filter: drop-shadow(0 0 8px rgba(0,201,210,0.5));
+        }
+
         .nav {
             display: flex;
-            gap: 3rem;
+            gap: 2rem;
         }
 
         .nav-link {
             color: white;
             text-decoration: none;
             transition: color 0.3s;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 500;
         }
 
@@ -76,179 +93,407 @@
 
         .hero {
             background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
-            padding: 100px 0;
+            padding: 60px 0;
             text-align: center;
             color: white;
         }
 
         .hero-title {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
             color: white;
             font-weight: 700;
         }
 
         .hero-title .highlight {
             color: #0AC9D2;
-            font-weight: 700;
         }
 
         .hero-subtitle {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: #ccc;
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.5rem;
             max-width: 700px;
             margin-left: auto;
             margin-right: auto;
         }
 
-        .cta-button {
+        .status-badge {
             display: inline-block;
-            background: linear-gradient(135deg, #0AC9D2 0%, #00A3B8 100%);
+            background: #28a745;
             color: white;
-            padding: 16px 45px;
-            border-radius: 8px;
-            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
             font-weight: 600;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: none;
-            cursor: pointer;
+        }
+
+        .converters-section {
+            padding: 60px 0;
+            background: #fff;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #1a1a2e;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 3rem;
             font-size: 1.1rem;
         }
 
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(10, 201, 210, 0.4);
-        }
-
-        .features {
+        .converters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            padding: 60px 0;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
-        .feature {
-            background: white;
+        .converter-card {
+            background: #fff;
+            border-radius: 16px;
             padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            transition: transform 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
-        .feature:hover {
-            transform: translateY(-4px);
+        .converter-card:hover {
+            transform: translateY(-5px);
+            border-color: #0AC9D2;
+            box-shadow: 0 8px 30px rgba(10, 201, 210, 0.2);
         }
 
-        .feature-icon {
+        .converter-card.featured {
+            border-color: #0AC9D2;
+            background: linear-gradient(135deg, rgba(10, 201, 210, 0.05) 0%, rgba(255,255,255,1) 100%);
+        }
+
+        .converter-card.featured::before {
+            content: '⭐ PRINCIPAL';
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: #0AC9D2;
+            color: white;
+            padding: 5px 40px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            transform: rotate(45deg);
+        }
+
+        .converter-icon {
             font-size: 3rem;
             margin-bottom: 1rem;
         }
 
-        .feature h3 {
-            color: #0AC9D2;
-            margin-bottom: 0.8rem;
+        .converter-title {
             font-size: 1.4rem;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            color: #1a1a2e;
         }
 
-        .feature p {
-            color: #666;
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-
-        .pricing-section {
-            background: #f5f5f5;
-            padding: 80px 0;
-            border-top: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .pricing-box {
-            background: white;
-            border: 3px solid #0AC9D2;
-            padding: 50px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(10, 201, 210, 0.15);
-        }
-
-        .price {
-            font-size: 3.5rem;
+        .converter-arrow {
             color: #0AC9D2;
-            font-weight: 700;
-            margin-bottom: 1rem;
+            font-weight: bold;
         }
 
-        .footer {
-            background: #222;
-            color: #fff;
-            text-align: center;
-            padding: 2rem 0;
-            margin-top: 60px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            background: #0AC9D2;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 0.95rem;
+        .converter-description {
+            color: #666;
             margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .converter-formats {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .format-badge {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .format-badge.input {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .format-badge.output {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .converter-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #0AC9D2 0%, #00A3B8 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .converter-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(10, 201, 210, 0.4);
+        }
+
+        .converter-status {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 0.75rem;
+            background: #28a745;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 10px;
             font-weight: 600;
         }
 
-        .upload-area {
+        /* Modal de Upload */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
             background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #1a1a2e;
+        }
+
+        .upload-area {
             border: 3px dashed #0AC9D2;
             border-radius: 12px;
-            padding: 30px;
+            padding: 40px 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
         }
 
-        .upload-area:hover {
+        .upload-area:hover, .upload-area.dragover {
             background: rgba(10, 201, 210, 0.05);
-            border-color: #008FA3;
+            border-color: #00A3B8;
         }
 
         .upload-area input[type="file"] {
             display: none;
         }
 
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .upload-formats {
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 0.5rem;
+        }
+
+        .result-area {
+            display: none;
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .result-area.success {
+            display: block;
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+        }
+
+        .result-area.error {
+            display: block;
+            background: #ffebee;
+            border: 1px solid #f44336;
+        }
+
+        .result-area.loading {
+            display: block;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0AC9D2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .pricing-section {
+            background: #f5f5f5;
+            padding: 60px 0;
+        }
+
+        .pricing-box {
+            background: white;
+            border: 3px solid #0AC9D2;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(10, 201, 210, 0.15);
+        }
+
+        .price {
+            font-size: 3rem;
+            color: #0AC9D2;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .price-note {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .free-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
-            margin: 2rem 0;
+            margin-top: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .stat {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            border-left: 4px solid #0AC9D2;
+            padding: 1rem;
         }
 
         .stat-number {
-            font-size: 2.5rem;
+            font-size: 2rem;
             color: #0AC9D2;
             font-weight: 700;
         }
 
         .stat-label {
             color: #666;
-            font-size: 1rem;
-            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            background: #1a1a2e;
+            color: #fff;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer a {
+            color: #0AC9D2;
+            text-decoration: none;
         }
 
         @media (max-width: 768px) {
@@ -264,6 +509,10 @@
                 flex-direction: column;
                 gap: 1rem;
             }
+
+            .converters-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -273,15 +522,15 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div style="width: 220px; height: 160px; background-color: #000000; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 30px; box-shadow: 0 0 25px rgba(0,0,0,0.7);">
-                        <img src="/images/logo.png" alt="CannaConverter Logo" width="140" height="140" style="filter: drop-shadow(0 0 16px rgba(0,201,210,0.5));"  />
+                    <div class="logo-circle">
+                        <img src="/images/logo.png" alt="CannaConverter Logo" onerror="this.style.display='none'" />
                     </div>
-                    <span style="font-weight: 700; color: white; font-size: 36px;">CannaConverter</span>
+                    <span style="font-weight: 700; color: white; font-size: 1.8rem;">CannaConverter</span>
                 </div>
                 <nav class="nav">
                     <a href="#home" class="nav-link">Início</a>
-                    <a href="#converter" class="nav-link">Converter</a>
-                    <a href="#como-usar" class="nav-link">Como Usar</a>
+                    <a href="#conversores" class="nav-link">Conversores</a>
+                    <a href="#precos" class="nav-link">Preços</a>
                 </nav>
             </div>
         </div>
@@ -291,102 +540,146 @@
     <main>
         <section id="home" class="hero">
             <div class="container">
-                <div class="status-badge">✅ Status: Operacional</div>
+                <div class="status-badge">✅ 5 Conversores Disponíveis</div>
                 
                 <h1 class="hero-title">
-                    Converta Arquivos <span class="highlight">MPP para XML</span>
+                    <span class="highlight">Converta</span> seus arquivos <span class="highlight">online</span>
                 </h1>
                 
                 <p class="hero-subtitle">
-                    Transforme seus arquivos Microsoft Project de forma rápida, segura e online.
-                    Processamento instantâneo por apenas R$ 10,00.
+                    Transforme MPP, Excel, JSON, ZIP e XML de forma rápida e segura. 
+                    Sem instalação, direto no navegador.
                 </p>
 
-                <!-- Upload Area -->
-                <div id="converter" class="upload-area">
-                    <input type="file" id="fileInput" accept=".mpp" />
-                    <div>
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📁</div>
-                        <h3 style="font-size: 1.1rem; margin-bottom: 0.3rem;">Clique para selecionar ou arraste um arquivo .mpp</h3>
-                        <p style="color: #999; margin-top: 0.3rem; font-size: 0.9rem;">Máximo 50MB</p>
-                    </div>
-                </div>
-
-                <button class="cta-button" onclick="document.getElementById('fileInput').click()" style="margin-bottom: 2rem;">
-                    📤 Selecionar Arquivo
-                </button>
-
-                <!-- Stats -->
                 <div class="stats">
                     <div class="stat">
-                        <div class="stat-number">1000+</div>
-                        <div class="stat-label">Conversões Realizadas</div>
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">Conversores</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-number">99.9%</div>
-                        <div class="stat-label">Taxa de Sucesso</div>
+                        <div class="stat-number">8+</div>
+                        <div class="stat-label">Formatos</div>
                     </div>
                     <div class="stat">
                         <div class="stat-number">&lt;5s</div>
                         <div class="stat-label">Tempo Médio</div>
                     </div>
+                    <div class="stat">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Online</div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Features -->
-        <section id="como-usar" class="container" style="padding: 60px 0;">
-            <h2 style="text-align: center; margin-bottom: 3rem; font-size: 2rem;">Por que usar o CannaConverter?</h2>
-            
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Conversão Instantânea</h3>
-                    <p>Processe seus arquivos em segundos sem lentidão ou complicações.</p>
-                </div>
+        <!-- Converters Section -->
+        <section id="conversores" class="converters-section">
+            <div class="container">
+                <h2 class="section-title">Escolha seu Conversor</h2>
+                <p class="section-subtitle">Clique em um conversor para começar</p>
 
-                <div class="feature">
-                    <div class="feature-icon">🔒</div>
-                    <h3>100% Seguro</h3>
-                    <p>Seus arquivos são criptografados e deletados após o processamento.</p>
-                </div>
+                <div class="converters-grid">
+                    <!-- 1. MPP → XML (Principal) -->
+                    <div class="converter-card featured" onclick="openConverter('mpp-xml')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📊</div>
+                        <h3 class="converter-title">MPP <span class="converter-arrow">→</span> XML</h3>
+                        <p class="converter-description">
+                            Converta arquivos do Microsoft Project para XML. 
+                            Ideal para integração com outros sistemas.
+                        </p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.mpp</span>
+                            <span class="format-badge output">.xml</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
 
-                <div class="feature">
-                    <div class="feature-icon">☁️</div>
-                    <h3>Sem Instalação</h3>
-                    <p>Não precisa instalar software. Tudo funciona online via navegador.</p>
-                </div>
+                    <!-- 2. Excel ↔ CSV -->
+                    <div class="converter-card" onclick="openConverter('excel-csv')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📗</div>
+                        <h3 class="converter-title">Excel <span class="converter-arrow">↔</span> CSV</h3>
+                        <p class="converter-description">
+                            Converta planilhas Excel para CSV ou vice-versa.
+                            Suporta múltiplas abas e formatos.
+                        </p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.xlsx</span>
+                            <span class="format-badge input">.xls</span>
+                            <span class="format-badge output">.csv</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
 
-                <div class="feature">
-                    <div class="feature-icon">💰</div>
-                    <h3>Preço Justo</h3>
-                    <p>Apenas R$ 10,00 por conversão. PIX, débito e crédito aceitos.</p>
-                </div>
+                    <!-- 3. JSON → CSV -->
+                    <div class="converter-card" onclick="openConverter('json-csv')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📋</div>
+                        <h3 class="converter-title">JSON <span class="converter-arrow">→</span> CSV</h3>
+                        <p class="converter-description">
+                            Transforme dados JSON em planilha CSV.
+                            Perfeito para análise de dados.
+                        </p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.json</span>
+                            <span class="format-badge output">.csv</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
 
-                <div class="feature">
-                    <div class="feature-icon">📊</div>
-                    <h3>XML Completo</h3>
-                    <p>Exporta todas as informações do seu projeto para XML válido.</p>
-                </div>
+                    <!-- 4. ZIP → XML -->
+                    <div class="converter-card" onclick="openConverter('zip-xml')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📦</div>
+                        <h3 class="converter-title">ZIP <span class="converter-arrow">→</span> XML</h3>
+                        <p class="converter-description">
+                            Extraia arquivos XML de dentro de arquivos ZIP.
+                            Preserva estrutura de diretórios.
+                        </p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.zip</span>
+                            <span class="format-badge output">.xml</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
 
-                <div class="feature">
-                    <div class="feature-icon">🌐</div>
-                    <h3>Multi-plataforma</h3>
-                    <p>Funciona em Windows, Mac, Linux e dispositivos móveis.</p>
+                    <!-- 5. XML → MPP -->
+                    <div class="converter-card" onclick="openConverter('xml-mpp')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">🔄</div>
+                        <h3 class="converter-title">XML <span class="converter-arrow">→</span> MPP</h3>
+                        <p class="converter-description">
+                            Converta XML de projeto para formato MPP.
+                            Extrai tarefas, recursos e alocações.
+                        </p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.xml</span>
+                            <span class="format-badge output">.mpp</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- Pricing -->
-        <section class="pricing-section">
+        <section id="precos" class="pricing-section">
             <div class="container">
-                <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">Planos e Preços</h2>
+                <h2 class="section-title">Simples e Acessível</h2>
+                <p class="section-subtitle">Pague apenas pelo que usar</p>
                 
                 <div class="pricing-box">
                     <h3>Conversão Única</h3>
                     <div class="price">R$ 10,00</div>
-                    <p style="margin-bottom: 1.5rem;">Uma conversão de arquivo .mpp para .xml</p>
-                    <button class="cta-button">Converter Agora</button>
+                    <p class="price-note">Por conversão • Qualquer formato</p>
+                    <p class="price-note" style="margin-top: 1rem;">
+                        ✓ Processamento instantâneo<br>
+                        ✓ Download imediato<br>
+                        ✓ Arquivos até 50MB<br>
+                        ✓ Suporte a todos os conversores
+                    </p>
+                    <div class="free-badge">🎁 Teste Grátis Disponível</div>
                 </div>
             </div>
         </section>
@@ -396,33 +689,109 @@
     <footer class="footer">
         <div class="container">
             <p>&copy; 2025 CannaConverter. Todos os direitos reservados.</p>
-            <p style="margin-top: 1rem; font-size: 0.9rem; color: #aaa;">
-                Desenvolvido com ❤️ | 
-                <a href="#" style="color: #C41E3A; text-decoration: none;">Privacidade</a> | 
-                <a href="#" style="color: #C41E3A; text-decoration: none;">Termos</a>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #aaa;">
+                <a href="#">Privacidade</a> | <a href="#">Termos</a> | <a href="/api/converters/health">Status API</a>
             </p>
         </div>
     </footer>
 
+    <!-- Modal de Upload -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h2 class="modal-title" id="modalTitle">Converter Arquivo</h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" />
+                <div class="upload-icon">📁</div>
+                <p class="upload-text">Clique ou arraste um arquivo aqui</p>
+                <p class="upload-formats" id="acceptedFormats">Formatos aceitos: .mpp</p>
+            </div>
+
+            <div class="result-area" id="resultArea">
+                <div class="spinner"></div>
+                <p id="resultText">Processando...</p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Upload handling
+        // Configuração dos conversores
+        const converters = {
+            'mpp-xml': {
+                title: 'Converter MPP → XML',
+                formats: '.mpp',
+                accept: '.mpp',
+                endpoint: '/api/upload-test',
+                description: 'Microsoft Project para XML'
+            },
+            'excel-csv': {
+                title: 'Converter Excel → CSV',
+                formats: '.xlsx, .xls',
+                accept: '.xlsx,.xls',
+                endpoint: '/api/converters/excel-to-csv',
+                description: 'Excel para CSV'
+            },
+            'json-csv': {
+                title: 'Converter JSON → CSV',
+                formats: '.json',
+                accept: '.json',
+                endpoint: '/api/converters/json-to-csv',
+                description: 'JSON para CSV'
+            },
+            'zip-xml': {
+                title: 'Extrair ZIP → XML',
+                formats: '.zip',
+                accept: '.zip',
+                endpoint: '/api/converters/zip-to-xml',
+                description: 'Extrair XMLs de ZIP'
+            },
+            'xml-mpp': {
+                title: 'Converter XML → MPP',
+                formats: '.xml',
+                accept: '.xml',
+                endpoint: '/api/converters/xml-to-mpp',
+                description: 'XML para MPP'
+            }
+        };
+
+        let currentConverter = null;
+
+        function openConverter(type) {
+            currentConverter = converters[type];
+            if (!currentConverter) return;
+
+            document.getElementById('modalTitle').textContent = currentConverter.title;
+            document.getElementById('acceptedFormats').textContent = `Formatos aceitos: ${currentConverter.formats}`;
+            document.getElementById('fileInput').accept = currentConverter.accept;
+            document.getElementById('resultArea').className = 'result-area';
+            document.getElementById('resultArea').style.display = 'none';
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+            currentConverter = null;
+        }
+
+        // Upload Area Events
+        const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
-        const uploadArea = document.querySelector('.upload-area');
 
         uploadArea.addEventListener('click', () => fileInput.click());
 
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.style.background = 'rgba(196, 30, 58, 0.05)';
+            uploadArea.classList.add('dragover');
         });
 
         uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.background = '';
+            uploadArea.classList.remove('dragover');
         });
 
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.style.background = '';
+            uploadArea.classList.remove('dragover');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 handleFile(files[0]);
@@ -435,13 +804,76 @@
             }
         });
 
-        function handleFile(file) {
-            if (file.name.endsWith('.mpp')) {
-                alert(`Arquivo selecionado: ${file.name}\n\nEm breve: Sistema de pagamento via PIX`);
-            } else {
-                alert('Por favor, selecione um arquivo .mpp');
+        async function handleFile(file) {
+            if (!currentConverter) return;
+
+            const resultArea = document.getElementById('resultArea');
+            const resultText = document.getElementById('resultText');
+
+            // Show loading
+            resultArea.className = 'result-area loading';
+            resultArea.style.display = 'block';
+            resultText.textContent = 'Processando conversão...';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(currentConverter.endpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    resultArea.className = 'result-area success';
+                    
+                    let html = `<h3 style="color: #388e3c; margin-bottom: 1rem;">✅ Conversão concluída!</h3>`;
+                    
+                    if (data.conversion) {
+                        html += `<p><strong>Arquivo:</strong> ${file.name}</p>`;
+                        if (data.conversion.rowsProcessed) {
+                            html += `<p><strong>Linhas processadas:</strong> ${data.conversion.rowsProcessed}</p>`;
+                        }
+                        if (data.tasksCount) {
+                            html += `<p><strong>Tarefas extraídas:</strong> ${data.tasksCount}</p>`;
+                        }
+                    }
+
+                    if (data.csvPreview) {
+                        html += `<p style="margin-top: 1rem;"><strong>Preview:</strong></p>`;
+                        html += `<pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 0.8rem;">${data.csvPreview}</pre>`;
+                    }
+
+                    if (data.downloadUrl) {
+                        html += `<a href="${data.downloadUrl}" class="download-btn" download>📥 Baixar Arquivo</a>`;
+                    }
+
+                    resultText.innerHTML = html;
+                } else {
+                    resultArea.className = 'result-area error';
+                    resultText.innerHTML = `<h3 style="color: #d32f2f;">❌ Erro na conversão</h3><p>${data.error || 'Erro desconhecido'}</p>`;
+                }
+            } catch (error) {
+                resultArea.className = 'result-area error';
+                resultText.innerHTML = `<h3 style="color: #d32f2f;">❌ Erro</h3><p>${error.message}</p>`;
             }
         }
+
+        // Close modal on outside click
+        document.getElementById('uploadModal').addEventListener('click', (e) => {
+            if (e.target.id === 'uploadModal') {
+                closeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
     </script>
 </body>
 </html>

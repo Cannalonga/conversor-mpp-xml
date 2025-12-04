@@ -1,0 +1,79 @@
+{
+  "format": "Microsoft Project (XML to MPP)",
+  "convertedAt": "2025-12-04T02:04:17.321Z",
+  "sourceFile": "sample.xml",
+  "project": {
+    "name": "Sample Project",
+    "createdDate": "2025-12-04T02:04:17.320Z",
+    "startDate": "2025-12-04T02:04:17.320Z",
+    "finishDate": null,
+    "company": "",
+    "manager": "",
+    "tasks": [
+      {
+        "id": "1",
+        "name": "Task 1",
+        "startDate": "2024-01-01T08:00:00",
+        "finishDate": "2024-01-02T17:00:00",
+        "percentComplete": 0,
+        "notes": "",
+        "priority": 500
+      },
+      {
+        "id": "2",
+        "name": "Task 2",
+        "startDate": "2024-01-03T08:00:00",
+        "finishDate": "2024-01-04T17:00:00",
+        "percentComplete": 0,
+        "notes": "",
+        "priority": 500
+      }
+    ],
+    "resources": [
+      {
+        "id": "1",
+        "name": "Resource 1",
+        "type": "Work",
+        "maxUnits": 1,
+        "costPerUse": 0
+      }
+    ],
+    "assignments": [],
+    "rawProject": {
+      "$": {
+        "xmlns": "http://schemas.microsoft.com/project"
+      },
+      "Name": "Sample Project",
+      "Tasks": {
+        "Task": [
+          {
+            "UID": "1",
+            "Name": "Task 1",
+            "Start": "2024-01-01T08:00:00",
+            "Finish": "2024-01-02T17:00:00"
+          },
+          {
+            "UID": "2",
+            "Name": "Task 2",
+            "Start": "2024-01-03T08:00:00",
+            "Finish": "2024-01-04T17:00:00"
+          }
+        ]
+      },
+      "Resources": {
+        "Resource": {
+          "UID": "1",
+          "Name": "Resource 1"
+        }
+      }
+    }
+  },
+  "metadata": {
+    "projectName": "Sample Project",
+    "createdDate": "2025-12-04T02:04:17.320Z",
+    "createdBy": "CannaConverter XML to MPP",
+    "lastSaved": "2025-12-04T02:04:17.321Z",
+    "version": "MP2021",
+    "organization": "CannaConverter"
+  }
+}

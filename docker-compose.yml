@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # Main application
   mpp-converter:
     image: cannaconverter/mpp-converter:local
     ports:
@@ -27,6 +28,21 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+
+  # Test runner with all converter dependencies
+  test-converters:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    volumes:
+      - ./scripts/samples:/app/scripts/samples
+      - ./scripts/outputs:/app/scripts/outputs
+    environment:
+      - NODE_ENV=test
+      - CONVERTER_DRY_RUN=
+    profiles:
+      - test
+    command: node scripts/test-all-converters.js
 
   # Optional: Nginx reverse proxy for production
   nginx:

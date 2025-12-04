@@ -1,5 +1,6 @@
 # 🚀 Conversor MPP para XML - Sistema Enterprise
 
+[![CI Tests](https://github.com/Cannalonga/conversor-mpp-xml/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/Cannalonga/conversor-mpp-xml/actions/workflows/ci-tests.yml)
 [![Status](https://img.shields.io/badge/Status-Produção-green.svg)](http://localhost:3000)
 [![Node.js](https://img.shields.io/badge/Node.js-v20+-blue.svg)](https://nodejs.org/)
 [![PM2](https://img.shields.io/badge/PM2-Enabled-brightgreen.svg)](https://pm2.keymetrics.io/)
@@ -117,7 +118,56 @@ pm2 save
 
 ---
 
-## ✅ Checklist de Validação
+## 🧪 Testes de Conversores
+
+### Rodar Testes em Docker (Recomendado)
+
+Docker garante ambiente consistente com todas as dependências (ffmpeg, libreoffice, ghostscript, poppler, pandoc):
+
+```bash
+# Build da imagem de teste
+docker build -f Dockerfile.test -t canna-converters-test .
+
+# Rodar testes
+docker run --rm -v "$(pwd)/scripts/outputs:/usr/src/app/scripts/outputs" canna-converters-test
+
+# Ou usar docker-compose
+docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+```
+
+### Rodar Testes Localmente
+
+**Linux (Ubuntu/Debian):**
+```bash
+# Instalar dependências do sistema
+sudo apt-get update
+sudo apt-get install -y ffmpeg libreoffice ghostscript poppler-utils imagemagick pandoc
+
+# Gerar samples e rodar testes
+node scripts/generate-samples.js
+node scripts/test-all-converters.js
+```
+
+**Windows (PowerShell Admin com Chocolatey):**
+```powershell
+# Instalar dependências
+choco install ffmpeg libreoffice-fresh ghostscript poppler pandoc -y
+
+# Gerar samples e rodar testes
+node scripts/generate-samples.js
+node scripts/test-all-converters.js
+```
+
+### Ver Relatório de Testes
+```bash
+# JSON completo
+cat scripts/outputs/report.json
+
+# Listar outputs gerados
+ls -la scripts/outputs/
+```
+
+---## ✅ Checklist de Validação
 
 Antes de colocar em produção, valide cada ponto:
 

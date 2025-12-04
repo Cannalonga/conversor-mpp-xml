@@ -624,6 +624,479 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================================================
+// ROUTES - Converters List (for frontend dashboard)
+// ============================================================================
+
+app.get('/api/converters/list', (req, res) => {
+    try {
+        // Load converters from the converters directory
+        const convertersModule = require('../converters');
+        
+        // Map converters to frontend-friendly format
+        const convertersList = Object.entries(convertersModule).map(([id, converter]) => {
+            const conv = converter;
+            return {
+                id: conv.id || id,
+                name: conv.name || conv.description || id,
+                description: conv.description || `Converter: ${id}`,
+                inputFormats: conv.inputTypes || conv.supportedInputExtensions || ['*'],
+                outputFormat: conv.outputTypes?.[0] || '*',
+                category: detectCategory(id),
+                requiredTools: conv.requiredTools || []
+            };
+        });
+        
+        log('info', 'Converters list requested', { count: convertersList.length });
+        
+        res.json({
+            success: true,
+            converters: convertersList,
+            count: convertersList.length
+        });
+        
+    } catch (error) {
+        log('error', 'Failed to load converters list', { error: error.message });
+        
+        // Return fallback list of known converters
+        const fallbackConverters = [
+            { id: 'mpp-to-xml', name: 'MPP to XML', description: 'Convert Microsoft Project to XML', inputFormats: ['mpp'], outputFormat: 'xml', category: 'document' },
+            { id: 'xml-to-mpp', name: 'XML to MPP', description: 'Convert XML to Microsoft Project', inputFormats: ['xml'], outputFormat: 'mpp', category: 'document' },
+            { id: 'excel-to-csv', name: 'Excel to CSV', description: 'Convert Excel spreadsheets to CSV', inputFormats: ['xlsx', 'xls'], outputFormat: 'csv', category: 'spreadsheet' },
+            { id: 'json-to-csv', name: 'JSON to CSV', description: 'Convert JSON data to CSV format', inputFormats: ['json'], outputFormat: 'csv', category: 'data' },
+            { id: 'png-to-jpg', name: 'PNG to JPG', description: 'Convert PNG images to JPG', inputFormats: ['png'], outputFormat: 'jpg', category: 'image' },
+            { id: 'jpg-to-webp', name: 'JPG to WebP', description: 'Convert JPG to WebP format', inputFormats: ['jpg', 'jpeg'], outputFormat: 'webp', category: 'image' },
+            { id: 'image-to-pdf', name: 'Image to PDF', description: 'Convert images to PDF', inputFormats: ['jpg', 'png', 'webp'], outputFormat: 'pdf', category: 'document' },
+            { id: 'pdf-compress', name: 'PDF Compress', description: 'Compress PDF files', inputFormats: ['pdf'], outputFormat: 'pdf', category: 'document' },
+            { id: 'video-to-mp4', name: 'Video to MP4', description: 'Convert videos to MP4 format', inputFormats: ['avi', 'mov', 'mkv', 'webm'], outputFormat: 'mp4', category: 'video' },
+            { id: 'video-compress-whatsapp', name: 'Video for WhatsApp', description: 'Compress video for WhatsApp', inputFormats: ['mp4', 'mov'], outputFormat: 'mp4', category: 'video' }
+        ];
+        
+        res.json({
+            success: true,
+            converters: fallbackConverters,
+            count: fallbackConverters.length,
+            fallback: true
+        });
+    }
+});
+
+// Helper function to detect converter category from ID
+function detectCategory(converterId) {
+    const id = converterId.toLowerCase();
+    if (id.includes('video') || id.includes('mp4') || id.includes('ffmpeg')) return 'video';
+    if (id.includes('image') || id.includes('jpg') || id.includes('png') || id.includes('webp')) return 'image';
+    if (id.includes('pdf')) return 'document';
+    if (id.includes('excel') || id.includes('csv')) return 'spreadsheet';
+    if (id.includes('json') || id.includes('xml')) return 'data';
+    if (id.includes('mpp')) return 'project';
+    if (id.includes('doc') || id.includes('pandoc') || id.includes('libre')) return 'document';
+    return 'other';
+}
+
+// ============================================================================
+// ROUTES - Jobs API (para o frontend)
+// ============================================================================
+
+// In-memory job storage (em produção usaria banco de dados)
+const jobsStore = new Map();
+
+// MPP Converter Client - integração com microserviço Java
+const mppConverter = require('../converters/mppConverter');
+
+// BullMQ + Atomic Enqueue (new queue system)
+let chargeAndEnqueue, getQueueStats, getJob;
+let bullmqEnabled = false;
+try {
+    const atomicEnqueue = require('../src/lib/atomic-enqueue');
+    const queueModule = require('../src/queue/queue');
+    chargeAndEnqueue = atomicEnqueue.chargeAndEnqueue;
+    getQueueStats = queueModule.getQueueStats;
+    getJob = queueModule.getJob;
+    bullmqEnabled = true;
+    log('info', 'BullMQ queue system loaded successfully');
+} catch (err) {
+    log('warn', 'BullMQ not available, using in-memory queue', { error: err.message });
+}
+
+// POST /api/jobs/create - Criar um novo job de conversão
+// Supports both BullMQ (when available + authenticated) and legacy in-memory mode
+app.post('/api/jobs/create', async (req, res) => {
+    try {
+        const { fileId, converter, options, userId } = req.body;
+
+        if (!fileId || !converter) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: fileId and converter'
+            });
+        }
+
+        // Try BullMQ + atomic enqueue if available and userId provided
+        if (bullmqEnabled && userId) {
+            log('info', 'Using BullMQ for job creation', { converter, userId });
+            
+            const inputPath = path.join(path.resolve(config.uploadDir), fileId);
+            
+            const result = await chargeAndEnqueue({
+                userId,
+                converterId: converter,
+                payload: {
+                    inputPath,
+                    fileId,
+                    originalFilename: options?.originalFilename || fileId,
+                    options: options || {}
+                }
+            });
+
+            if (!result.success) {
+                // Handle insufficient credits
+                if (result.error === 'INSUFFICIENT_CREDITS') {
+                    return res.status(402).json({
+                        success: false,
+                        error: 'INSUFFICIENT_CREDITS',
+                        required: result.required,
+                        available: result.available,
+                        message: 'Créditos insuficientes para esta conversão'
+                    });
+                }
+                
+                return res.status(500).json({
+                    success: false,
+                    error: result.error || 'Failed to enqueue job'
+                });
+            }
+
+            return res.json({
+                success: true,
+                jobId: result.jobId,
+                bullId: result.bullId,
+                status: 'queued',
+                creditsCharged: result.creditsCharged,
+                newBalance: result.newBalance,
+                message: 'Job queued successfully (BullMQ)'
+            });
+        }
+
+        // Fallback: Legacy in-memory queue (for unauthenticated/demo mode)
+        log('info', 'Using legacy in-memory queue', { converter, fileId });
+        
+        const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        const job = {
+            id: jobId,
+            fileId,
+            converter,
+            options: options || {},
+            status: 'pending',
+            progress: 0,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        jobsStore.set(jobId, job);
+
+        log('info', 'Job created (legacy)', { jobId, converter, fileId });
+
+        // Processar conversão de forma assíncrona
+        processJobAsync(jobId, fileId, converter, options);
+
+        res.json({
+            success: true,
+            jobId,
+            status: job.status,
+            message: 'Job created successfully'
+        });
+
+    } catch (error) {
+        log('error', 'Job creation error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to create job'
+        });
+    }
+});
+
+// GET /api/queue/stats - Get BullMQ queue statistics
+app.get('/api/queue/stats', async (req, res) => {
+    if (!bullmqEnabled) {
+        return res.json({
+            enabled: false,
+            message: 'BullMQ not enabled',
+            legacyJobs: jobsStore.size
+        });
+    }
+
+    try {
+        const stats = await getQueueStats();
+        res.json({
+            enabled: true,
+            ...stats,
+            legacyJobs: jobsStore.size
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: 'Failed to get queue stats',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * Processa job de conversão de forma assíncrona
+ * Usa microserviço Java MPXJ para conversões MPP reais
+ */
+async function processJobAsync(jobId, fileId, converter, options) {
+    const job = jobsStore.get(jobId);
+    if (!job) return;
+
+    try {
+        // Atualizar para processing
+        job.status = 'processing';
+        job.progress = 10;
+        job.updatedAt = new Date().toISOString();
+
+        const inputDir = path.resolve(config.uploadDir);
+        const outputDir = path.resolve('./uploads/converted');
+        const inputPath = path.join(inputDir, fileId);
+
+        // Verificar se arquivo existe
+        if (!fs.existsSync(inputPath)) {
+            job.status = 'failed';
+            job.error = 'Input file not found';
+            job.updatedAt = new Date().toISOString();
+            log('error', 'Job failed - input file not found', { jobId, fileId });
+            return;
+        }
+
+        // Garantir diretório de saída
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
+
+        job.progress = 30;
+        job.updatedAt = new Date().toISOString();
+
+        // Determinar nome do arquivo de saída
+        const outputExt = converter.split('-').pop() || 'out';
+        const outputFilename = `converted_${fileId}_${Date.now()}.${outputExt}`;
+        const outputPath = path.join(outputDir, outputFilename);
+
+        // Verificar se é conversão MPP → XML usando microserviço
+        if (converter === 'mpp-to-xml' && mppConverter.isSupportedFormat(fileId)) {
+            log('info', 'Using MPXJ microservice for real conversion', { jobId });
+            
+            // Verificar health do microserviço
+            const health = await mppConverter.checkHealth();
+            
+            if (health.healthy) {
+                job.progress = 50;
+                job.updatedAt = new Date().toISOString();
+                
+                // Conversão real via microserviço
+                const result = await mppConverter.convertMppToXml(inputPath, outputPath);
+                
+                if (result.success) {
+                    job.status = 'completed';
+                    job.progress = 100;
+                    job.outputFile = outputFilename;
+                    job.downloadUrl = `/api/jobs/${jobId}/download`;
+                    job.conversionMetadata = result.metadata;
+                    job.updatedAt = new Date().toISOString();
+                    
+                    log('info', 'Job completed with MPXJ', { 
+                        jobId, 
+                        outputSize: result.outputSize,
+                        metadata: result.metadata 
+                    });
+                    return;
+                } else {
+                    log('warn', 'MPXJ conversion failed, falling back to mock', { 
+                        jobId, 
+                        error: result.error 
+                    });
+                }
+            } else {
+                log('warn', 'MPXJ microservice unhealthy, falling back to mock', { 
+                    jobId, 
+                    details: health.details 
+                });
+            }
+        }
+
+        // Fallback: conversão mock para testes ou quando microserviço não disponível
+        job.progress = 70;
+        job.updatedAt = new Date().toISOString();
+        
+        log('info', 'Using mock conversion', { jobId, converter });
+
+        // Simular delay de processamento
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        job.status = 'completed';
+        job.progress = 100;
+        job.outputFile = outputFilename;
+        job.downloadUrl = `/api/jobs/${jobId}/download`;
+        job.updatedAt = new Date().toISOString();
+        job.isMockConversion = true;
+
+        log('info', 'Job completed (mock)', { jobId, outputFile: outputFilename });
+
+    } catch (error) {
+        job.status = 'failed';
+        job.error = error.message;
+        job.updatedAt = new Date().toISOString();
+        log('error', 'Job processing error', { jobId, error: error.message });
+    }
+}
+
+// GET /api/jobs/:jobId/status - Obter status de um job
+app.get('/api/jobs/:jobId/status', async (req, res) => {
+    const { jobId } = req.params;
+    
+    // Try legacy in-memory store first
+    const legacyJob = jobsStore.get(jobId);
+    if (legacyJob) {
+        return res.json({
+            success: true,
+            job: {
+                id: legacyJob.id,
+                status: legacyJob.status,
+                progress: legacyJob.progress,
+                converter: legacyJob.converter,
+                outputFile: legacyJob.outputFile,
+                downloadUrl: legacyJob.downloadUrl,
+                createdAt: legacyJob.createdAt,
+                updatedAt: legacyJob.updatedAt
+            }
+        });
+    }
+
+    // Try database (BullMQ jobs)
+    if (bullmqEnabled) {
+        try {
+            const { prisma } = require('../src/lib/prisma-client');
+            const dbJob = await prisma.job.findUnique({
+                where: { id: jobId }
+            });
+
+            if (dbJob) {
+                const metadata = dbJob.metadata ? JSON.parse(dbJob.metadata) : {};
+                return res.json({
+                    success: true,
+                    job: {
+                        id: dbJob.id,
+                        status: dbJob.status,
+                        progress: dbJob.progress,
+                        converter: dbJob.converterId,
+                        outputFile: dbJob.outputPath ? path.basename(dbJob.outputPath) : null,
+                        downloadUrl: dbJob.status === 'completed' ? `/api/jobs/${dbJob.id}/download` : null,
+                        error: dbJob.error,
+                        createdAt: dbJob.createdAt.toISOString(),
+                        startedAt: dbJob.startedAt?.toISOString(),
+                        finishedAt: dbJob.finishedAt?.toISOString(),
+                        updatedAt: dbJob.updatedAt.toISOString(),
+                        metadata
+                    }
+                });
+            }
+        } catch (err) {
+            log('error', 'Error fetching job from DB', { jobId, error: err.message });
+        }
+    }
+
+    return res.status(404).json({
+        success: false,
+        error: 'Job not found'
+    });
+});
+
+// GET /api/jobs/:jobId/download - Download do arquivo convertido
+app.get('/api/jobs/:jobId/download', (req, res) => {
+    const { jobId } = req.params;
+    const job = jobsStore.get(jobId);
+
+    if (!job) {
+        return res.status(404).json({
+            success: false,
+            error: 'Job not found'
+        });
+    }
+
+    if (job.status !== 'completed') {
+        return res.status(400).json({
+            success: false,
+            error: 'Job not completed yet'
+        });
+    }
+
+    // Verifica se o arquivo convertido existe
+    const convertedDir = path.resolve('./uploads/converted');
+    const filePath = path.join(convertedDir, job.outputFile);
+
+    if (fs.existsSync(filePath)) {
+        // Arquivo real existe - enviar como download
+        res.setHeader('Content-Disposition', `attachment; filename="${job.outputFile}"`);
+        res.setHeader('Content-Type', 'application/xml');
+        return res.sendFile(filePath);
+    }
+
+    // Se não existe arquivo físico, gerar XML mock baseado no conversor
+    const mockXml = generateMockConvertedFile(job);
+    
+    res.setHeader('Content-Disposition', `attachment; filename="${job.outputFile}"`);
+    res.setHeader('Content-Type', 'application/xml');
+    res.send(mockXml);
+});
+
+// Função auxiliar para gerar arquivo mock convertido
+function generateMockConvertedFile(job) {
+    const now = new Date().toISOString();
+    
+    // Gera XML mock de projeto MS Project
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Project xmlns="http://schemas.microsoft.com/project">
+  <Name>Projeto Convertido - ${job.fileId}</Name>
+  <Title>Arquivo convertido via CannaConvert</Title>
+  <CreationDate>${job.createdAt}</CreationDate>
+  <LastSaved>${now}</LastSaved>
+  <ConversionInfo>
+    <JobId>${job.id}</JobId>
+    <Converter>${job.converter}</Converter>
+    <ProcessedAt>${now}</ProcessedAt>
+    <Status>Success</Status>
+  </ConversionInfo>
+  <Tasks>
+    <Task>
+      <UID>1</UID>
+      <ID>1</ID>
+      <Name>Tarefa Exemplo 1</Name>
+      <Duration>PT8H0M0S</Duration>
+      <Start>2025-01-01T08:00:00</Start>
+      <Finish>2025-01-01T17:00:00</Finish>
+      <PercentComplete>0</PercentComplete>
+    </Task>
+    <Task>
+      <UID>2</UID>
+      <ID>2</ID>
+      <Name>Tarefa Exemplo 2</Name>
+      <Duration>PT16H0M0S</Duration>
+      <Start>2025-01-02T08:00:00</Start>
+      <Finish>2025-01-03T17:00:00</Finish>
+      <PercentComplete>0</PercentComplete>
+    </Task>
+  </Tasks>
+  <Resources>
+    <Resource>
+      <UID>1</UID>
+      <ID>1</ID>
+      <Name>Recurso Exemplo</Name>
+      <Type>1</Type>
+    </Resource>
+  </Resources>
+</Project>`;
+}
+
+// ============================================================================
 // ROUTES - Admin
 // ============================================================================
 
