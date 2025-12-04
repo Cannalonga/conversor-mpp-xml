@@ -1,0 +1,265 @@
+# =============================================================================
+# CannaConvert - Staging Environment
+# =============================================================================
+# This docker-compose replicates production with scale=1 for integration testing.
+# Run: docker compose -f docker-compose.staging.yml up --build -d
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # DATABASE: PostgreSQL 15
+  # ===========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: cannaconvert-postgres-staging
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: cannaconvert_staging
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./data/staging/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cannaconvert_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - staging_net
+
+  # ===========================================================================
+  # CACHE: Redis 7
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: cannaconvert-redis-staging
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./data/staging/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - staging_net
+
+  # ===========================================================================
+  # MICROSERVICE: MPP Converter (Java Spring Boot)
+  # ===========================================================================
+  mpp-converter:
+    build:
+      context: ./microservices/mpp-converter
+      dockerfile: Dockerfile
+    container_name: cannaconvert-mpp-staging
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+      SERVER_PORT: 8080
+      JAVA_OPTS: "-Xms256m -Xmx512m"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./data/staging/mpp-temp:/tmp/mpp
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - staging_net
+
+  # ===========================================================================
+  # FRONTEND: Next.js Application
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: cannaconvert-frontend-staging
+    restart: unless-stopped
+    environment:
+      NODE_ENV: staging
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/cannaconvert_staging
+      REDIS_URL: redis://redis:6379
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-staging-secret-change-in-production}
+      NEXT_PUBLIC_BACKEND_PROXY: http://api:3001
+      MPP_CONVERTER_URL: http://mpp-converter:8080
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-staging-admin}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - staging_net
+
+  # ===========================================================================
+  # BACKEND API: Node.js Express (Legacy)
+  # ===========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    container_name: cannaconvert-api-staging
+    restart: unless-stopped
+    environment:
+      NODE_ENV: staging
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/cannaconvert_staging
+      REDIS_URL: redis://redis:6379
+      MPP_CONVERTER_URL: http://mpp-converter:8080
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-staging-admin}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mpp-converter:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - staging_net
+
+  # ===========================================================================
+  # WORKER: Background Job Processor
+  # ===========================================================================
+  worker:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cannaconvert-worker-staging
+    restart: unless-stopped
+    command: ["node", "worker.js"]
+    environment:
+      NODE_ENV: staging
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/cannaconvert_staging
+      REDIS_URL: redis://redis:6379
+      MPP_CONVERTER_URL: http://mpp-converter:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mpp-converter:
+        condition: service_healthy
+    networks:
+      - staging_net
+
+  # ===========================================================================
+  # MONITORING: Prometheus
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: cannaconvert-prometheus-staging
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./data/staging/prometheus:/prometheus
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - staging_net
+
+  # ===========================================================================
+  # MONITORING: Grafana
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: cannaconvert-grafana-staging
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SERVER_ROOT_URL: http://localhost:3002
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./data/staging/grafana:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - staging_net
+
+  # ===========================================================================
+  # ALERTING: Alertmanager
+  # ===========================================================================
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: cannaconvert-alertmanager-staging
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./data/staging/alertmanager:/alertmanager
+    networks:
+      - staging_net
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  staging_net:
+    driver: bridge
+    name: cannaconvert-staging-network
+
+# =============================================================================
+# VOLUMES (named volumes for better management)
+# =============================================================================
+volumes:
+  postgres_staging_data:
+  redis_staging_data:
+  prometheus_staging_data:
+  grafana_staging_data:
+  alertmanager_staging_data:
