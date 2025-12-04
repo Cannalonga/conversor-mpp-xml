@@ -86,9 +86,12 @@ jobs:
           SSH_USER: ${{ secrets.STAGING_SSH_USER }}
           SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
         run: |
+          # Create remote directory structure first
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} 'mkdir -p ~/deploy/staging/scripts'
+          # Copy files
           scp -o StrictHostKeyChecking=no deploy/staging/docker-compose.staging.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/docker-compose.staging.yml
           scp -o StrictHostKeyChecking=no deploy/staging/.env.staging.example ${SSH_USER}@${SSH_HOST}:~/deploy/staging/.env.staging.example
-          scp -o StrictHostKeyChecking=no -r deploy/staging/scripts ${SSH_USER}@${SSH_HOST}:~/deploy/staging/scripts
+          scp -o StrictHostKeyChecking=no -r deploy/staging/scripts ${SSH_USER}@${SSH_HOST}:~/deploy/staging/
           scp -o StrictHostKeyChecking=no deploy/staging/prometheus.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/prometheus.yml
           scp -o StrictHostKeyChecking=no deploy/staging/alertmanager.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/alertmanager.yml
 
