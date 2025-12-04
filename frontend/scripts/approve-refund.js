@@ -145,10 +145,9 @@ async function approveRefund(refundId) {
     
     logSuccess(`Refund approved successfully!`);
     console.log('');
-    console.log(`  Request ID:  ${data.request.id}`);
-    console.log(`  User:        ${data.request.userId}`);
-    console.log(`  Credits:     ${data.refund.creditsRefunded} credits refunded`);
-    console.log(`  New Balance: ${data.refund.newBalance} credits`);
+    console.log(`  Request ID:  ${data.refundRequestId || refundId}`);
+    console.log(`  New Balance: ${data.newBalance ?? 'N/A'} credits`);
+    console.log(`  Message:     ${data.message || 'Approved'}`);
     console.log('');
     
   } catch (error) {
@@ -183,8 +182,8 @@ async function rejectRefund(refundId, args) {
     
     logSuccess(`Refund rejected.`);
     console.log('');
-    console.log(`  Request ID: ${data.request.id}`);
-    console.log(`  User:       ${data.request.userId}`);
+    console.log(`  Request ID: ${data.refundRequestId || refundId}`);
+    console.log(`  Message:    ${data.message || 'Rejected'}`);
     console.log(`  Reason:     ${notes}`);
     console.log('');
     
