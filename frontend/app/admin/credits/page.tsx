@@ -146,7 +146,7 @@ export default function CreditsPage() {
         a.click();
         window.URL.revokeObjectURL(url);
       }
-    } catch (error) {
+    } catch (_error) {
       setToast({ type: 'error', message: 'Failed to export CSV' });
     }
   }

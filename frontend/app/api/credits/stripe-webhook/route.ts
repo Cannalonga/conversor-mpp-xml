@@ -403,7 +403,7 @@ async function handleChargeRefunded(
 // ============================================
 
 export async function POST(request: NextRequest) {
-  const startTime = Date.now();
+  const _startTime = Date.now();
   metrics.webhookReceived++;
 
   // Check if Stripe is configured

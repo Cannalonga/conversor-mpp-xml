@@ -6,7 +6,6 @@ import {
   Bell,
   AlertTriangle,
   AlertCircle,
-  CheckCircle,
   Info,
   Filter,
   RefreshCw,
@@ -103,7 +102,7 @@ const channelIcons: Record<string, React.ReactNode> = {
 };
 
 export default function AlertsPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [stats, setStats] = useState<AlertStats | null>(null);
   const [pagination, setPagination] = useState<Pagination>({

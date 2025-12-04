@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   RefreshCw,
-  Search,
   Filter,
   CheckCircle,
   XCircle,
