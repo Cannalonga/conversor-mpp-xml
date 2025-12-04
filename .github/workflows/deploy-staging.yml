@@ -33,20 +33,20 @@ jobs:
 
       - name: Build and push API image
         run: |
-          docker build -t ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }} .
+          docker build -t ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }} -f docker/Dockerfile .
           docker tag ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }} ghcr.io/cannalonga/conversor-mpp-xml:latest
           docker push ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }}
           docker push ghcr.io/cannalonga/conversor-mpp-xml:latest
 
       - name: Build and push converter image (if present)
         run: |
-          if [ -d "converter" ]; then
-            docker build -t ghcr.io/cannalonga/mpp-converter:${{ github.sha }} -f converter/Dockerfile ./converter || true
+          if [ -d "microservices/mpp-converter" ]; then
+            docker build -t ghcr.io/cannalonga/mpp-converter:${{ github.sha }} -f microservices/mpp-converter/Dockerfile ./microservices/mpp-converter || true
             docker tag ghcr.io/cannalonga/mpp-converter:${{ github.sha }} ghcr.io/cannalonga/mpp-converter:latest || true
             docker push ghcr.io/cannalonga/mpp-converter:${{ github.sha }} || true
             docker push ghcr.io/cannalonga/mpp-converter:latest || true
           else
-            echo "No converter directory; skipping."
+            echo "No microservices/mpp-converter directory; skipping."
           fi
 
   deploy:
