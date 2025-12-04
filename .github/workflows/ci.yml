@@ -119,15 +119,6 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run API tests
-        run: npm run test:api -- --run
-        env:
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/cannaconvert_test"
-          NEXTAUTH_SECRET: "test-secret-for-ci"
-          NEXTAUTH_URL: "http://localhost:3000"
-          REDIS_URL: "redis://localhost:6379"
-          NODE_ENV: test
-
       - name: Build application
         run: npm run build
         env:
@@ -145,6 +136,15 @@ jobs:
           NEXTAUTH_URL: "http://localhost:3000"
           REDIS_URL: "redis://localhost:6379"
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD_TEST || 'admin123' }}
+
+      - name: Run API tests
+        run: npm run test:api -- --run
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/cannaconvert_test"
+          NEXTAUTH_SECRET: "test-secret-for-ci"
+          NEXTAUTH_URL: "http://localhost:3000"
+          REDIS_URL: "redis://localhost:6379"
+          NODE_ENV: test
 
       - name: Run E2E tests
         run: npm run test:e2e -- --reporter=html
