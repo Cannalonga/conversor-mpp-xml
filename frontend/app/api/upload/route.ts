@@ -6,8 +6,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { randomUUID } from 'crypto';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -30,9 +28,9 @@ const UPLOAD_DIR = join(process.cwd(), 'uploads', 'temp');
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication (optional - allows guest uploads with limitations)
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.id || 'guest';
+    // For now, we allow anonymous uploads
+    // In production, you might want to validate session from cookies
+    const userId = 'guest';
 
     // Parse form data
     const formData = await request.formData();
