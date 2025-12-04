@@ -317,13 +317,10 @@ app.use((req, res, next) => {
     
     res.on('finish', () => {
         const duration = Date.now() - start;
-        const statusClass = `${Math.floor(res.statusCode / 100)}xx`;
         
-        // Record API request counter
-        metrics.recordApiRequest(req.method, req.route?.path || req.path, res.statusCode);
-        
-        // Record response time histogram
-        metrics.recordApiResponseTime(req.method, req.route?.path || req.path, res.statusCode, duration / 1000);
+        // Record API request counter and response time histogram
+        // recordApiRequest handles both counter and histogram
+        metrics.recordApiRequest(req.method, req.route?.path || req.path, res.statusCode, duration / 1000);
     });
     
     next();

@@ -2,8 +2,8 @@
 # Production-ready scraping and alerting configuration
 
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 5s
+  evaluation_interval: 5s
   external_labels:
     environment: production
     project: cannaconverter
@@ -13,7 +13,7 @@ alerting:
   alertmanagers:
     - static_configs:
         - targets:
-            - alertmanager:9093
+            - 'host.docker.internal:9093'
 
 # Load alert rules
 rule_files:
@@ -22,63 +22,48 @@ rule_files:
 # Scrape configurations
 scrape_configs:
   # =================================================================
-  # Node.js API Backend
+  # Node.js API Backend + Worker (same endpoint)
   # =================================================================
   - job_name: 'cannaconverter-api'
     static_configs:
-      - targets: ['localhost:3001']
+      - targets: ['host.docker.internal:3001']
         labels:
           service: 'api'
           tier: 'backend'
     metrics_path: '/api/metrics'
-    scrape_interval: 10s
-    scrape_timeout: 5s
+    scrape_interval: 5s
+    scrape_timeout: 3s
+
+  # =================================================================
+  # Worker (exposes metrics on same API endpoint)
+  # =================================================================
+  - job_name: 'cannaconverter-worker'
+    static_configs:
+      - targets: ['host.docker.internal:3001']
+        labels:
+          service: 'worker'
+          tier: 'backend'
+    metrics_path: '/api/metrics'
+    scrape_interval: 5s
+    scrape_timeout: 3s
 
   # =================================================================
   # Java MPP Converter Microservice
   # =================================================================
   - job_name: 'mpp-converter'
     static_configs:
-      - targets: ['localhost:8080']
+      - targets: ['host.docker.internal:8080']
         labels:
           service: 'mpp-converter'
           tier: 'microservice'
     metrics_path: '/actuator/prometheus'
-    scrape_interval: 15s
-    scrape_timeout: 10s
-
-  # =================================================================
-  # Next.js Frontend (if exposing metrics)
-  # =================================================================
-  - job_name: 'cannaconverter-frontend'
-    static_configs:
-      - targets: ['localhost:3000']
-        labels:
-          service: 'frontend'
-          tier: 'web'
-    metrics_path: '/api/metrics'
-    scrape_interval: 30s
+    scrape_interval: 10s
     scrape_timeout: 5s
-    # Only enable if frontend exposes metrics
-    honor_labels: true
 
   # =================================================================
-  # Redis Exporter (optional - requires redis_exporter)
+  # Prometheus self-monitoring
   # =================================================================
-  - job_name: 'redis'
+  - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9121']
-        labels:
-          service: 'redis'
-          tier: 'cache'
-    scrape_interval: 15s
-
-  # =================================================================
-  # Node Exporter (optional - for host metrics)
-  # =================================================================
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['localhost:9100']
-        labels:
-          instance: 'cannaconverter-host'
-    scrape_interval: 30s
+      - targets: ['localhost:9090']
+    scrape_interval: 10s
