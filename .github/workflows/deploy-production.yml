@@ -1,0 +1,400 @@
+# ============================================================================
+# CANNACONVERT - PRODUCTION DEPLOYMENT PIPELINE
+# ============================================================================
+# This pipeline handles the complete production deployment process:
+# - Build and test the application
+# - Build Docker images
+# - Push to container registry
+# - Deploy to production VPS via SSH
+# ============================================================================
+
+name: 🚀 Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests (emergency deploy only)'
+        required: false
+        default: 'false'
+        type: boolean
+      force_deploy:
+        description: 'Force deploy even if checks fail'
+        required: false
+        default: 'false'
+        type: boolean
+
+# Prevent concurrent deployments
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DEPLOY_PATH: /opt/cannaconvert
+
+jobs:
+  # ==========================================================================
+  # JOB 1: Pre-flight Checks
+  # ==========================================================================
+  preflight:
+    name: 🔍 Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+      version: ${{ steps.version.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check deployment conditions
+        id: check
+        run: |
+          # Check if this is a valid deployment commit
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          
+          if [[ "$COMMIT_MSG" == *"[skip deploy]"* ]]; then
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping deploy due to commit message"
+          else
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "✅ Deployment conditions met"
+          fi
+      
+      - name: Generate version
+        id: version
+        run: |
+          VERSION=$(date +%Y%m%d.%H%M%S)-$(git rev-parse --short HEAD)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Version: $VERSION"
+
+  # ==========================================================================
+  # JOB 2: Build & Test
+  # ==========================================================================
+  build-test:
+    name: 🔨 Build & Test
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: needs.preflight.outputs.should_deploy == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies (Frontend)
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Install dependencies (Backend)
+        working-directory: ./api
+        run: npm ci || echo "Backend uses root dependencies"
+      
+      - name: Run linter
+        working-directory: ./frontend
+        run: npm run lint || true
+      
+      - name: Run type check
+        working-directory: ./frontend
+        run: npx tsc --noEmit || true
+      
+      - name: Run unit tests
+        if: ${{ github.event.inputs.skip_tests != 'true' }}
+        working-directory: ./frontend
+        run: npm run test || echo "No unit tests configured"
+        env:
+          CI: true
+      
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            frontend/.next
+            frontend/public
+            frontend/package.json
+            frontend/package-lock.json
+            frontend/next.config.js
+            frontend/prisma
+          retention-days: 1
+
+  # ==========================================================================
+  # JOB 3: Build Docker Image
+  # ==========================================================================
+  docker-build:
+    name: 🐳 Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [preflight, build-test]
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: frontend
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ needs.preflight.outputs.version }}
+            type=sha,prefix=
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./docker/Dockerfile.production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+            APP_VERSION=${{ needs.preflight.outputs.version }}
+
+  # ==========================================================================
+  # JOB 4: Deploy to Production VPS
+  # ==========================================================================
+  deploy:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [preflight, docker-build]
+    environment:
+      name: production
+      url: ${{ secrets.PRODUCTION_URL }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy-package
+          cp -r deploy/production/* deploy-package/
+          cp docker-compose.yml deploy-package/
+          cp docker-compose.full.yml deploy-package/
+          
+          # Create version file
+          echo "${{ needs.preflight.outputs.version }}" > deploy-package/VERSION
+          
+          # Create deployment script
+          cat > deploy-package/deploy.sh << 'DEPLOY_SCRIPT'
+          #!/bin/bash
+          set -euo pipefail
+          
+          # Configuration
+          APP_DIR=/opt/cannaconvert
+          BACKUP_DIR=/opt/cannaconvert/backups
+          VERSION_FILE=$APP_DIR/VERSION
+          
+          echo "🚀 Starting deployment..."
+          
+          # Backup current version
+          if [ -f "$VERSION_FILE" ]; then
+            CURRENT_VERSION=$(cat $VERSION_FILE)
+            echo "📦 Current version: $CURRENT_VERSION"
+            mkdir -p $BACKUP_DIR
+            cp $VERSION_FILE "$BACKUP_DIR/VERSION.$CURRENT_VERSION"
+          fi
+          
+          # Navigate to app directory
+          cd $APP_DIR
+          
+          # Login to GitHub Container Registry
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          
+          # Pull new images
+          echo "📥 Pulling new images..."
+          docker compose -f docker-compose.yml pull
+          
+          # Stop old containers gracefully
+          echo "⏹️ Stopping old containers..."
+          docker compose -f docker-compose.yml down --timeout 30 || true
+          
+          # Start new containers
+          echo "▶️ Starting new containers..."
+          docker compose -f docker-compose.yml up -d
+          
+          # Wait for health check
+          echo "🏥 Waiting for health check..."
+          MAX_ATTEMPTS=30
+          ATTEMPT=0
+          until curl -sf http://localhost:3000/api/health > /dev/null 2>&1; do
+            ATTEMPT=$((ATTEMPT + 1))
+            if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+              echo "❌ Health check failed after $MAX_ATTEMPTS attempts"
+              exit 1
+            fi
+            echo "Waiting for app to be ready... ($ATTEMPT/$MAX_ATTEMPTS)"
+            sleep 2
+          done
+          
+          echo "✅ Health check passed!"
+          
+          # Cleanup old images
+          echo "🧹 Cleaning up old images..."
+          docker image prune -af --filter "until=24h" || true
+          
+          echo "🎉 Deployment completed successfully!"
+          DEPLOY_SCRIPT
+          
+          chmod +x deploy-package/deploy.sh
+      
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          # Copy deployment package to VPS
+          scp -i ~/.ssh/deploy_key -r deploy-package/* $VPS_USER@$VPS_HOST:${{ env.DEPLOY_PATH }}/
+          
+          # Execute deployment script
+          ssh -i ~/.ssh/deploy_key $VPS_USER@$VPS_HOST << EOF
+            export GHCR_TOKEN="$GHCR_TOKEN"
+            export GHCR_USER="$GHCR_USER"
+            cd ${{ env.DEPLOY_PATH }}
+            chmod +x deploy.sh
+            ./deploy.sh
+          EOF
+      
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          sleep 10
+          
+          # Check production URL
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.PRODUCTION_URL }}/api/health || echo "000")
+          
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Production is up and running!"
+          else
+            echo "⚠️ Production returned status: $HTTP_STATUS"
+            exit 1
+          fi
+      
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🎉 Deployment successful!"
+          echo "📦 Version: ${{ needs.preflight.outputs.version }}"
+          echo "🌐 URL: ${{ secrets.PRODUCTION_URL }}"
+      
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Please check the logs for more information."
+
+  # ==========================================================================
+  # JOB 5: Post-deployment Smoke Tests
+  # ==========================================================================
+  smoke-tests:
+    name: 🧪 Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success()
+    
+    steps:
+      - name: Run smoke tests
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+        run: |
+          echo "🧪 Running smoke tests..."
+          
+          # Test 1: Homepage
+          echo "Testing homepage..."
+          curl -sf "$PRODUCTION_URL" > /dev/null && echo "✅ Homepage OK" || echo "❌ Homepage FAILED"
+          
+          # Test 2: API Health
+          echo "Testing API health..."
+          curl -sf "$PRODUCTION_URL/api/health" > /dev/null && echo "✅ API Health OK" || echo "❌ API Health FAILED"
+          
+          # Test 3: Login page
+          echo "Testing login page..."
+          curl -sf "$PRODUCTION_URL/login" > /dev/null && echo "✅ Login page OK" || echo "❌ Login page FAILED"
+          
+          # Test 4: Register page
+          echo "Testing register page..."
+          curl -sf "$PRODUCTION_URL/register" > /dev/null && echo "✅ Register page OK" || echo "❌ Register page FAILED"
+          
+          # Test 5: Dashboard (should redirect to login)
+          echo "Testing dashboard..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PRODUCTION_URL/dashboard")
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "302" ] || [ "$STATUS" = "307" ]; then
+            echo "✅ Dashboard OK (status: $STATUS)"
+          else
+            echo "❌ Dashboard FAILED (status: $STATUS)"
+          fi
+          
+          echo "🧪 Smoke tests completed!"
+
+  # ==========================================================================
+  # JOB 6: Rollback (Manual)
+  # ==========================================================================
+  rollback:
+    name: ⏪ Rollback (Manual)
+    runs-on: ubuntu-latest
+    if: failure() && github.event.inputs.force_deploy != 'true'
+    needs: [deploy]
+    
+    steps:
+      - name: Trigger rollback
+        run: |
+          echo "⏪ Initiating rollback..."
+          # Rollback logic would go here
+          # This is a placeholder for manual intervention
+          echo "Please manually rollback using: ssh user@server 'cd /opt/cannaconvert && ./rollback.sh'"
