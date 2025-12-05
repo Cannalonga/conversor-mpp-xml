@@ -131,6 +131,44 @@ jobs:
           scp -o StrictHostKeyChecking=no deploy/staging/prometheus.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/prometheus.yml
           scp -o StrictHostKeyChecking=no deploy/staging/alertmanager.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/alertmanager.yml
 
+      - name: Configure staging secrets
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+          STAGING_ENCRYPTION_KEY: ${{ secrets.STAGING_ENCRYPTION_KEY }}
+          STAGING_STRIPE_KEY: ${{ secrets.STAGING_STRIPE_KEY }}
+        run: |
+          set -euo pipefail
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "
+            set -eux
+            cd ~/deploy/staging
+            
+            # Start from example if .env.staging doesn't exist
+            if [ ! -f .env.staging ]; then
+              cp .env.staging.example .env.staging
+            fi
+            
+            # Inject secrets (idempotent - update or append)
+            update_env() {
+              local key=\$1
+              local value=\$2
+              if grep -q \"^\${key}=\" .env.staging; then
+                sed -i \"s|^\${key}=.*|\${key}=\${value}|\" .env.staging
+              else
+                echo \"\${key}=\${value}\" >> .env.staging
+              fi
+            }
+            
+            # Configure required secrets
+            update_env 'JWT_SECRET_KEY' '${STAGING_JWT_SECRET:-default-staging-jwt-secret-change-me}'
+            update_env 'ENCRYPTION_KEY' '${STAGING_ENCRYPTION_KEY:-default-staging-encryption-key-32chars}'
+            update_env 'NEXTAUTH_SECRET' '${STAGING_JWT_SECRET:-default-staging-jwt-secret-change-me}'
+            update_env 'STRIPE_SECRET_KEY' '${STAGING_STRIPE_KEY:-sk_test_placeholder}'
+            
+            echo '✅ Staging secrets configured'
+          "
+
       - name: Remote deploy (pull + up)
         env:
           SSH_USER: ${{ secrets.STAGING_SSH_USER }}
@@ -138,13 +176,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} '
             set -eux
-            mkdir -p ~/deploy/staging
             cd ~/deploy/staging
-            if [ ! -f .env.staging ]; then
-              echo "WARN: .env.staging not found on remote. Please populate it with production secrets."
-              # Copy example as initial template
-              cp .env.staging.example .env.staging 2>/dev/null || true
-            fi
             docker compose -f docker-compose.staging.yml pull || true
             docker compose -f docker-compose.staging.yml up -d
             docker compose -f docker-compose.staging.yml ps
