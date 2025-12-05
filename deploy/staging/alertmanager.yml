@@ -1,0 +1,9 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'dev-team'
+receivers:
+  - name: 'dev-team'
+    email_configs:
+      - to: 'you@example.com'

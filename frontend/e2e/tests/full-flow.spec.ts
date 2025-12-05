@@ -146,9 +146,15 @@ test.describe('Full Conversion Flow', () => {
     // STEP 3: Add demo credits
     // ================================================================
     await test.step('Add demo credits', async () => {
-      // Navigate to credits page
-      await page.goto('/credits');
-      await page.waitForLoadState('networkidle');
+      // Navigate to credits page - use domcontentloaded instead of networkidle
+      // to avoid timeout issues when backend is unavailable or page has polling
+      await page.goto('/credits', { waitUntil: 'domcontentloaded' });
+      
+      // Wait for credits page to be ready by looking for stable UI elements
+      // The page should have "Seu Saldo" or "créditos" text
+      await expect(
+        page.locator('text=/seu saldo|créditos|credits|balance/i').first()
+      ).toBeVisible({ timeout: 15000 });
       
       // Get initial balance using robust finder
       const initialBalanceResult = await findBalanceElement(page);
@@ -163,8 +169,12 @@ test.describe('Full Conversion Flow', () => {
         
         // Wait for balance update
         await page.waitForTimeout(2000);
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        
+        // Wait for page to be ready again
+        await expect(
+          page.locator('text=/seu saldo|créditos|credits|balance/i').first()
+        ).toBeVisible({ timeout: 10000 });
         
         // Verify balance increased
         const newBalanceResult = await findBalanceElement(page);
@@ -180,8 +190,10 @@ test.describe('Full Conversion Flow', () => {
         });
         
         if (response.ok()) {
-          await page.reload();
-          await page.waitForLoadState('networkidle');
+          await page.reload({ waitUntil: 'domcontentloaded' });
+          await expect(
+            page.locator('text=/seu saldo|créditos|credits|balance/i').first()
+          ).toBeVisible({ timeout: 10000 });
           const newBalanceResult = await findBalanceElement(page);
           initialBalance = newBalanceResult.value || 50;
           console.log(`✓ Demo credits added via API. Balance: ${initialBalance}`);
@@ -201,8 +213,12 @@ test.describe('Full Conversion Flow', () => {
     // STEP 4: Upload MPP file
     // ================================================================
     await test.step('Upload MPP file', async () => {
-      await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+      
+      // Wait for dashboard to be ready by looking for file input or upload area
+      await expect(
+        page.locator('input[type="file"], [class*="upload"], [class*="drop"]').first()
+      ).toBeVisible({ timeout: 15000 });
       
       // Check if sample.mpp exists, if not create a mock
       if (!fs.existsSync(SAMPLE_MPP_PATH)) {
@@ -460,8 +476,12 @@ test.describe('Full Conversion Flow', () => {
         return;
       }
       
-      await page.goto('/credits');
-      await page.waitForLoadState('networkidle');
+      await page.goto('/credits', { waitUntil: 'domcontentloaded' });
+      
+      // Wait for credits page to be ready
+      await expect(
+        page.locator('text=/seu saldo|créditos|credits|balance/i').first()
+      ).toBeVisible({ timeout: 15000 });
       
       const finalBalanceResult = await findBalanceElement(page);
       const finalBalance = finalBalanceResult.value;
@@ -534,11 +554,15 @@ test.describe('Health Checks', () => {
 
   test('login page loads', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: /entrar na sua conta/i })
+    ).toBeVisible();
   });
 
   test('register page loads', async ({ page }) => {
     await page.goto('/register');
-    await expect(page.getByRole('heading')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 2, name: /criar conta/i })
+    ).toBeVisible();
   });
 });

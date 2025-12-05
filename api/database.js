@@ -56,6 +56,23 @@ class PaymentRepository {
   }
 
   /**
+   * Buscar transação por ID do Mercado Pago
+   */
+  async getTransactionByMpId(mpTransactionId) {
+    try {
+      return await prisma.paymentTransaction.findFirst({
+        where: { mpTransactionId: String(mpTransactionId) },
+        include: {
+          premiumSession: true,
+        },
+      });
+    } catch (error) {
+      console.error('[PaymentRepository] Erro ao buscar por MP ID:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Buscar transação por CPF
    */
   async getTransactionByCpf(cpf) {

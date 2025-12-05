@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamentos - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-menu { padding: 1rem 0; }
+        .nav-item { margin: 0.25rem 0; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-link i { width: 20px; margin-right: 0.75rem; }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card .icon.blue { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
+        .stat-card .icon.green { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .stat-card .icon.orange { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .stat-card .icon.purple { background: rgba(139, 92, 246, 0.1); color: var(--purple); }
+        .stat-card .icon.red { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        .stat-value { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .stat-label { color: var(--text-light); font-size: 0.875rem; }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .card-body { padding: 1.5rem; }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        select, input[type="date"], input[type="text"] {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            min-width: 150px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+        }
+
+        tr:hover { background: var(--bg); }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .badge-info { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
+        .badge-purple { background: rgba(139, 92, 246, 0.1); color: var(--purple); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-light);
+        }
+        .btn-outline:hover { background: var(--bg); }
+
+        .provider-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .provider-mp { background: #009ee3; color: white; }
+        .provider-stripe { background: #635bff; color: white; }
+        .provider-pix { background: #32bcad; color: white; }
+
+        .amount { font-weight: 600; font-family: 'Monaco', monospace; }
+        .credits { color: var(--success); font-weight: 600; }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .pagination button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-body { padding: 1.5rem; }
+
+        .detail-row {
+            display: flex;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-label {
+            width: 40%;
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .detail-value {
+            width: 60%;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .filters { flex-direction: column; }
+            table { font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <span class="logo">🔄 CannaConvert</span>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="payments.html" class="nav-link active">
+                    <i class="fas fa-credit-card"></i> Pagamentos
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#users" class="nav-link">
+                    <i class="fas fa-users"></i> Usuários
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#conversions" class="nav-link">
+                    <i class="fas fa-exchange-alt"></i> Conversões
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#settings" class="nav-link">
+                    <i class="fas fa-cog"></i> Configurações
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">💳 Pagamentos</h1>
+                <p class="page-subtitle">Gerencie transações e créditos dos usuários</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="icon green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-value" id="stat-approved">-</div>
+                <div class="stat-label">Aprovados</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon orange">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value" id="stat-pending">-</div>
+                <div class="stat-label">Pendentes</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon blue">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-value" id="stat-revenue">-</div>
+                <div class="stat-label">Receita Total</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon purple">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="stat-value" id="stat-credits">-</div>
+                <div class="stat-label">Créditos Vendidos</div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Transações Recentes</h3>
+                <button class="btn btn-outline btn-sm" onclick="exportCSV()">
+                    <i class="fas fa-download"></i> Exportar CSV
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <span class="filter-label">Status</span>
+                        <select id="filter-status" onchange="applyFilters()">
+                            <option value="">Todos</option>
+                            <option value="APPROVED">Aprovado</option>
+                            <option value="PENDING">Pendente</option>
+                            <option value="FAILED">Falhou</option>
+                            <option value="REFUNDED">Reembolsado</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Provider</span>
+                        <select id="filter-provider" onchange="applyFilters()">
+                            <option value="">Todos</option>
+                            <option value="mercadopago">Mercado Pago</option>
+                            <option value="stripe">Stripe</option>
+                            <option value="pix">PIX Direto</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Data Início</span>
+                        <input type="date" id="filter-start" onchange="applyFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Data Fim</span>
+                        <input type="date" id="filter-end" onchange="applyFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Buscar</span>
+                        <input type="text" id="filter-search" placeholder="Email ou ID..." oninput="applyFilters()">
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div id="transactions-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+
+        <!-- Payment Events -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🛡️ PaymentEvents (Idempotência)</h3>
+            </div>
+            <div class="card-body">
+                <div id="events-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalhes da Transação</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        let allTransactions = [];
+        let currentPage = 1;
+        const perPage = 10;
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshData();
+        });
+
+        async function refreshData() {
+            await Promise.all([
+                loadStats(),
+                loadTransactions(),
+                loadPaymentEvents(),
+            ]);
+        }
+
+        async function loadStats() {
+            try {
+                // Simulated - replace with actual API call
+                const stats = await fetch(`${API_BASE}/admin/payments/stats`).then(r => r.json());
+                
+                document.getElementById('stat-approved').textContent = stats.approved || 0;
+                document.getElementById('stat-pending').textContent = stats.pending || 0;
+                document.getElementById('stat-revenue').textContent = `R$ ${(stats.revenue || 0).toFixed(2)}`;
+                document.getElementById('stat-credits').textContent = (stats.creditsTotal || 0).toLocaleString();
+            } catch (error) {
+                console.error('Erro ao carregar stats:', error);
+                // Show demo data
+                document.getElementById('stat-approved').textContent = '12';
+                document.getElementById('stat-pending').textContent = '3';
+                document.getElementById('stat-revenue').textContent = 'R$ 459,60';
+                document.getElementById('stat-credits').textContent = '2.500';
+            }
+        }
+
+        async function loadTransactions() {
+            const container = document.getElementById('transactions-container');
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/transactions`);
+                const data = await response.json();
+                
+                allTransactions = data.transactions || [];
+                renderTransactions();
+            } catch (error) {
+                console.error('Erro ao carregar transações:', error);
+                // Demo data
+                allTransactions = [
+                    {
+                        id: 'TXN-001',
+                        email: 'user@example.com',
+                        amount: 29.90,
+                        planType: 'pro',
+                        status: 'APPROVED',
+                        provider: 'mercadopago',
+                        mpTransactionId: '12345678',
+                        createdAt: new Date().toISOString(),
+                        credits: 200,
+                    },
+                    {
+                        id: 'TXN-002',
+                        email: 'teste@teste.com',
+                        amount: 9.90,
+                        planType: 'basic',
+                        status: 'PENDING',
+                        provider: 'mercadopago',
+                        createdAt: new Date(Date.now() - 86400000).toISOString(),
+                        credits: 50,
+                    },
+                ];
+                renderTransactions();
+            }
+        }
+
+        async function loadPaymentEvents() {
+            const container = document.getElementById('events-container');
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/payment-events`);
+                const data = await response.json();
+                
+                renderPaymentEvents(data.events || []);
+            } catch (error) {
+                console.error('Erro ao carregar events:', error);
+                // Demo
+                renderPaymentEvents([
+                    {
+                        id: 'evt_001',
+                        provider: 'mercadopago',
+                        externalId: '12345678',
+                        eventType: 'payment.approved',
+                        status: 'processed',
+                        userId: 'user@example.com',
+                        creditsAdded: 200,
+                        amount: 29.90,
+                        createdAt: new Date().toISOString(),
+                    },
+                ]);
+            }
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('transactions-container');
+            const filtered = filterTransactions();
+            const total = filtered.length;
+            const start = (currentPage - 1) * perPage;
+            const paginated = filtered.slice(start, start + perPage);
+
+            if (paginated.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Nenhuma transação encontrada</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuário</th>
+                            <th>Plano</th>
+                            <th>Valor</th>
+                            <th>Créditos</th>
+                            <th>Provider</th>
+                            <th>Status</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${paginated.map(tx => `
+                            <tr>
+                                <td><code>${tx.id.substring(0, 8)}...</code></td>
+                                <td>${tx.email}</td>
+                                <td>${getPlanBadge(tx.planType)}</td>
+                                <td class="amount">R$ ${tx.amount.toFixed(2)}</td>
+                                <td class="credits">+${tx.credits || 0}</td>
+                                <td>${getProviderIcon(tx.provider)}</td>
+                                <td>${getStatusBadge(tx.status)}</td>
+                                <td>${formatDate(tx.createdAt)}</td>
+                                <td>
+                                    <button class="btn btn-outline btn-sm" onclick="showDetails('${tx.id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            renderPagination(total);
+        }
+
+        function renderPaymentEvents(events) {
+            const container = document.getElementById('events-container');
+
+            if (events.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-shield-alt"></i>
+                        <p>Nenhum evento de pagamento registrado</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Provider</th>
+                            <th>External ID</th>
+                            <th>Tipo</th>
+                            <th>Usuário</th>
+                            <th>Créditos</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${events.slice(0, 20).map(evt => `
+                            <tr>
+                                <td><code>${evt.id.substring(0, 8)}...</code></td>
+                                <td>${getProviderIcon(evt.provider)}</td>
+                                <td><code>${evt.externalId}</code></td>
+                                <td><span class="badge badge-info">${evt.eventType}</span></td>
+                                <td>${evt.userId}</td>
+                                <td class="credits">+${evt.creditsAdded || 0}</td>
+                                <td class="amount">R$ ${(evt.amount || 0).toFixed(2)}</td>
+                                <td>${getStatusBadge(evt.status)}</td>
+                                <td>${formatDate(evt.createdAt)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function filterTransactions() {
+            const status = document.getElementById('filter-status').value;
+            const provider = document.getElementById('filter-provider').value;
+            const start = document.getElementById('filter-start').value;
+            const end = document.getElementById('filter-end').value;
+            const search = document.getElementById('filter-search').value.toLowerCase();
+
+            return allTransactions.filter(tx => {
+                if (status && tx.status !== status) return false;
+                if (provider && tx.provider !== provider) return false;
+                if (start && new Date(tx.createdAt) < new Date(start)) return false;
+                if (end && new Date(tx.createdAt) > new Date(end + 'T23:59:59')) return false;
+                if (search && !tx.email.toLowerCase().includes(search) && !tx.id.toLowerCase().includes(search)) return false;
+                return true;
+            });
+        }
+
+        function applyFilters() {
+            currentPage = 1;
+            renderTransactions();
+        }
+
+        function renderPagination(total) {
+            const pages = Math.ceil(total / perPage);
+            const container = document.getElementById('pagination');
+
+            if (pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (let i = 1; i <= pages; i++) {
+                html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTransactions();
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'APPROVED': '<span class="badge badge-success">✓ Aprovado</span>',
+                'PENDING': '<span class="badge badge-warning">⏳ Pendente</span>',
+                'FAILED': '<span class="badge badge-danger">✗ Falhou</span>',
+                'REFUNDED': '<span class="badge badge-purple">↩ Reembolsado</span>',
+                'processed': '<span class="badge badge-success">✓ Processado</span>',
+            };
+            return map[status] || `<span class="badge">${status}</span>`;
+        }
+
+        function getPlanBadge(plan) {
+            const map = {
+                'basic': '<span class="badge badge-info">Basic</span>',
+                'pro': '<span class="badge badge-success">Pro</span>',
+                'business': '<span class="badge badge-warning">Business</span>',
+                'enterprise': '<span class="badge badge-purple">Enterprise</span>',
+            };
+            return map[plan] || `<span class="badge">${plan}</span>`;
+        }
+
+        function getProviderIcon(provider) {
+            const map = {
+                'mercadopago': '<span class="provider-icon provider-mp" title="Mercado Pago">MP</span>',
+                'stripe': '<span class="provider-icon provider-stripe" title="Stripe">S</span>',
+                'pix': '<span class="provider-icon provider-pix" title="PIX">$</span>',
+            };
+            return map[provider] || provider;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        }
+
+        function showDetails(txId) {
+            const tx = allTransactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            document.getElementById('modal-body').innerHTML = `
+                <div class="detail-row">
+                    <span class="detail-label">ID da Transação</span>
+                    <span class="detail-value"><code>${tx.id}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value">${tx.email}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Plano</span>
+                    <span class="detail-value">${getPlanBadge(tx.planType)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Valor</span>
+                    <span class="detail-value amount">R$ ${tx.amount.toFixed(2)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Créditos</span>
+                    <span class="detail-value credits">+${tx.credits || 0}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Provider</span>
+                    <span class="detail-value">${getProviderIcon(tx.provider)} ${tx.provider}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value">${getStatusBadge(tx.status)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">ID MP</span>
+                    <span class="detail-value"><code>${tx.mpTransactionId || '-'}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Criado em</span>
+                    <span class="detail-value">${formatDate(tx.createdAt)}</span>
+                </div>
+                ${tx.confirmedAt ? `
+                <div class="detail-row">
+                    <span class="detail-label">Confirmado em</span>
+                    <span class="detail-value">${formatDate(tx.confirmedAt)}</span>
+                </div>
+                ` : ''}
+            `;
+
+            document.getElementById('detail-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        function exportCSV() {
+            const filtered = filterTransactions();
+            const headers = ['ID', 'Email', 'Plano', 'Valor', 'Créditos', 'Provider', 'Status', 'Data'];
+            const rows = filtered.map(tx => [
+                tx.id,
+                tx.email,
+                tx.planType,
+                tx.amount,
+                tx.credits || 0,
+                tx.provider,
+                tx.status,
+                tx.createdAt,
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pagamentos_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('detail-modal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) closeModal();
+        });
+    </script>
+</body>
+</html>

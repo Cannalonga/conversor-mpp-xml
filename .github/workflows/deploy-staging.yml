@@ -1,0 +1,190 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - 'staging/*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        run: |
+          docker build -t ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }} -f docker/Dockerfile .
+          docker tag ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }} ghcr.io/cannalonga/conversor-mpp-xml:latest
+          docker push ghcr.io/cannalonga/conversor-mpp-xml:${{ github.sha }}
+          docker push ghcr.io/cannalonga/conversor-mpp-xml:latest
+
+      - name: Build and push converter image (if present)
+        run: |
+          if [ -d "microservices/mpp-converter" ]; then
+            docker build -t ghcr.io/cannalonga/mpp-converter:${{ github.sha }} -f microservices/mpp-converter/Dockerfile ./microservices/mpp-converter || true
+            docker tag ghcr.io/cannalonga/mpp-converter:${{ github.sha }} ghcr.io/cannalonga/mpp-converter:latest || true
+            docker push ghcr.io/cannalonga/mpp-converter:${{ github.sha }} || true
+            docker push ghcr.io/cannalonga/mpp-converter:latest || true
+          else
+            echo "No microservices/mpp-converter directory; skipping."
+          fi
+
+  deploy:
+    name: Deploy to Staging
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout infra files
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Normalize and Validate SSH Key
+        id: ssh_key
+        run: |
+          set -euo pipefail
+
+          echo "${{ secrets.STAGING_SSH_KEY }}" > rawkey.txt
+
+          # Remove CRLF
+          sed -i 's/\r$//' rawkey.txt
+
+          # Remove UTF-8 BOM
+          sed -i '1s/^\xEF\xBB\xBF//' rawkey.txt
+
+          # Remove trailing whitespace
+          sed -i 's/[[:space:]]*$//' rawkey.txt
+
+          # Garantir newline no final
+          printf "\n" >> rawkey.txt
+
+          # Validar se contém BEGIN e END
+          if ! grep -q "BEGIN OPENSSH PRIVATE KEY\|BEGIN RSA PRIVATE KEY" rawkey.txt; then
+            echo "FATAL: Missing BEGIN header"
+            exit 1
+          fi
+
+          if ! grep -q "END OPENSSH PRIVATE KEY\|END RSA PRIVATE KEY" rawkey.txt; then
+            echo "FATAL: Missing END footer"
+            exit 1
+          fi
+
+          # Validar tamanho mínimo (proteção contra secrets vazios)
+          if [ $(wc -c < rawkey.txt) -lt 100 ]; then
+            echo "FATAL: SSH key size too small"
+            exit 1
+          fi
+
+          cp rawkey.txt cleankey.txt
+
+          # Read normalized key for output
+          CLEAN_KEY=$(cat cleankey.txt)
+          # Set as output (multiline)
+          echo "key<<EOF" >> $GITHUB_OUTPUT
+          echo "$CLEAN_KEY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          # Cleanup
+          rm -f rawkey.txt cleankey.txt
+        shell: bash
+
+      - name: Setup SSH Agent (Clean Key)
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ steps.ssh_key.outputs.key }}
+
+      - name: Validate SSH Agent Load
+        run: |
+          set -euo pipefail
+          ssh-add -l || { echo "FATAL: SSH agent failed to load key"; exit 1; }
+
+      - name: Copy files to remote
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+        run: |
+          # Create remote directory structure first
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} 'mkdir -p ~/deploy/staging/scripts'
+          # Copy files
+          scp -o StrictHostKeyChecking=no deploy/staging/docker-compose.staging.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/docker-compose.staging.yml
+          scp -o StrictHostKeyChecking=no deploy/staging/.env.staging.example ${SSH_USER}@${SSH_HOST}:~/deploy/staging/.env.staging.example
+          scp -o StrictHostKeyChecking=no -r deploy/staging/scripts ${SSH_USER}@${SSH_HOST}:~/deploy/staging/
+          scp -o StrictHostKeyChecking=no deploy/staging/prometheus.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/prometheus.yml
+          scp -o StrictHostKeyChecking=no deploy/staging/alertmanager.yml ${SSH_USER}@${SSH_HOST}:~/deploy/staging/alertmanager.yml
+
+      - name: Configure staging secrets
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+          STAGING_ENCRYPTION_KEY: ${{ secrets.STAGING_ENCRYPTION_KEY }}
+          STAGING_STRIPE_KEY: ${{ secrets.STAGING_STRIPE_KEY }}
+        run: |
+          set -euo pipefail
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "
+            set -eux
+            cd ~/deploy/staging
+            
+            # Start from example if .env.staging doesn't exist
+            if [ ! -f .env.staging ]; then
+              cp .env.staging.example .env.staging
+            fi
+            
+            # Inject secrets (idempotent - update or append)
+            update_env() {
+              local key=\$1
+              local value=\$2
+              if grep -q \"^\${key}=\" .env.staging; then
+                sed -i \"s|^\${key}=.*|\${key}=\${value}|\" .env.staging
+              else
+                echo \"\${key}=\${value}\" >> .env.staging
+              fi
+            }
+            
+            # Configure required secrets
+            update_env 'JWT_SECRET_KEY' '${STAGING_JWT_SECRET:-default-staging-jwt-secret-change-me}'
+            update_env 'ENCRYPTION_KEY' '${STAGING_ENCRYPTION_KEY:-default-staging-encryption-key-32chars}'
+            update_env 'NEXTAUTH_SECRET' '${STAGING_JWT_SECRET:-default-staging-jwt-secret-change-me}'
+            update_env 'STRIPE_SECRET_KEY' '${STAGING_STRIPE_KEY:-sk_test_placeholder}'
+            
+            echo '✅ Staging secrets configured'
+          "
+
+      - name: Remote deploy (pull + up)
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} '
+            set -eux
+            cd ~/deploy/staging
+            docker compose -f docker-compose.staging.yml pull || true
+            docker compose -f docker-compose.staging.yml up -d
+            docker compose -f docker-compose.staging.yml ps
+          '
+
+      - name: Run smoke tests (remote)
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} 'cd ~/deploy/staging && chmod +x ./scripts/*.sh && ./scripts/smoke-test.sh'
