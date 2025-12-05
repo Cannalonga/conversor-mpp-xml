@@ -6,9 +6,9 @@ import { AuthProvider } from '@/components/AuthProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'CannaConvert - Conversor de Arquivos Profissional',
-  description: 'Converta arquivos MPP, PDF, vídeos e imagens de forma rápida e profissional',
-  keywords: ['conversor', 'mpp', 'xml', 'pdf', 'video', 'imagem'],
+  title: 'CannaConvert - Conversores de Arquivos Online',
+  description: 'Converta arquivos MPP, PDF, vídeos e imagens de forma rápida e profissional. 20+ conversores disponíveis.',
+  keywords: ['conversor', 'mpp', 'xml', 'pdf', 'video', 'imagem', 'cannaconvert'],
 };
 
 export default function RootLayout({

@@ -9,7 +9,7 @@ import ConvertersClient from './converters-client';
 import JobStatusClient from './job-status-client';
 import { Card, CardHeader } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { LogoutButton } from '@/components/LogoutButton';
+import { AppLayout } from '@/components/layout';
 
 type Step = 'upload' | 'select' | 'converting' | 'complete';
 
@@ -140,46 +140,11 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-gray-900">CannaConvert</span>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Credits Display */}
-            <Link 
-              href="/credits"
-              className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
-            >
-              <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="font-semibold text-primary-700">
-                {credits !== null ? credits : '...'} créditos
-              </span>
-            </Link>
-            {session?.user && (
-              <span className="text-sm text-gray-600">
-                {session.user.name || session.user.email}
-              </span>
-            )}
-            <LogoutButton variant="icon" />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+    <AppLayout credits={credits}>
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Progress Steps */}
         <div className="mb-8">
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
             {[
               { key: 'upload', label: 'Upload', icon: '1' },
               { key: 'select', label: 'Selecionar', icon: '2' },
@@ -189,24 +154,24 @@ export default function DashboardPage() {
               <div key={s.key} className="flex items-center">
                 <div
                   className={`
-                    w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                    ${step === s.key ? 'bg-primary-600 text-white' : 
+                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shadow-md
+                    ${step === s.key ? 'bg-[#0B5E73] text-white' : 
                       ['upload', 'select', 'converting', 'complete'].indexOf(step) > index 
                         ? 'bg-green-500 text-white' 
-                        : 'bg-gray-200 text-gray-500'}
+                        : 'bg-white text-gray-400 border-2 border-gray-200'}
                   `}
                 >
                   {['upload', 'select', 'converting', 'complete'].indexOf(step) > index ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : s.icon}
                 </div>
-                <span className={`ml-2 text-sm ${step === s.key ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                <span className={`ml-2 text-sm ${step === s.key ? 'text-[#0B5E73] font-semibold' : 'text-gray-500'}`}>
                   {s.label}
                 </span>
                 {index < 3 && (
-                  <div className={`w-12 h-0.5 mx-4 ${
+                  <div className={`w-8 md:w-12 h-1 mx-2 md:mx-4 rounded ${
                     ['upload', 'select', 'converting', 'complete'].indexOf(step) > index 
                       ? 'bg-green-500' 
                       : 'bg-gray-200'
@@ -360,10 +325,10 @@ export default function DashboardPage() {
                   Nova Conversão
                 </Button>
               </div>
-            </div>
+            )}
           </Card>
         )}
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

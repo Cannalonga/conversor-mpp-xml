@@ -28,6 +28,10 @@ require('dotenv').config();
 const metrics = require('./lib/metrics');
 const health = require('./lib/health');
 
+// Premium/Payment imports
+const PremiumController = require('./premium-controller');
+const premiumController = new PremiumController();
+
 // ============================================================================
 // CONFIGURATION & VALIDATION
 // ============================================================================
@@ -1189,242 +1193,169 @@ app.get('/api/admin/stats', (req, res) => {
 });
 
 // ============================================================================
-// ROUTES - Premium Checkout
+// ROUTES - Admin Payments (Task 13: Painel de Pagamentos)
 // ============================================================================
 
-app.post('/api/premium/checkout', premiumCheckoutLimiter, async (req, res) => {
+// Estatísticas de pagamentos
+app.get('/api/admin/payments/stats', async (req, res) => {
     try {
-        const { plan, payment, customer } = req.body;
-
-        if (!plan || !payment || !customer) {
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required fields'
-            });
-        }
-
-        const validPlans = {
-            monthly: { price: 10.00, duration: 30 },
-            quarterly: { price: 25.00, duration: 90 },
-            annual: { price: 70.00, duration: 365 }
-        };
-
-        if (!validPlans[plan]) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid plan'
-            });
-        }
-
-        if (!customer.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid email'
-            });
-        }
-
-        if (!customer.cpf || customer.cpf.replace(/\D/g, '').length !== 11) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid CPF'
-            });
-        }
-
-        const transactionId = `tx_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-        const planDetails = validPlans[plan];
-
-        let pixKey = null;
-        if (payment === 'pix') {
-            pixKey = `00020126580014br.gov.bcb.pix0136${crypto.randomBytes(16).toString('hex')}`;
-        }
-
-        // CRÍTICO #3: Encriptar dados sensíveis
-        if (!global.transactions) {
-            global.transactions = {};
-        }
-
-        const encryptedCustomer = encryptSensitiveData({
-            email: customer.email,
-            firstName: customer.firstName,
-            lastName: customer.lastName,
-            cpf: customer.cpf.replace(/\D/g, '')
-        });
-
-        if (!encryptedCustomer) {
-            throw new Error('Failed to encrypt customer data');
-        }
-
-        global.transactions[transactionId] = {
-            id: transactionId,
-            status: payment === 'pix' ? 'pending_pix' : 'pending_payment',
-            plan,
-            payment,
-            customerEncrypted: encryptedCustomer,
-            price: planDetails.price,
-            createdAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-            pixKey,
-            ttl: 1800
-        };
-
-        log('info', 'Checkout initiated', {
-            transactionId,
-            plan,
-            payment
-        });
-
-        res.json({
-            success: true,
-            transaction: {
-                id: transactionId,
-                status: payment === 'pix' ? 'pending_pix' : 'pending_payment',
-                expiry: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-                pixKey: payment === 'pix' ? pixKey : undefined,
-                message: payment === 'pix' 
-                    ? 'PIX generated - scan to pay'
-                    : 'Awaiting payment processing'
-            }
-        });
-
-    } catch (error) {
-        log('error', 'Checkout error', { error: error.message });
-        res.status(500).json({
-            success: false,
-            message: 'Checkout failed'
-        });
-    }
-});
-
-// ============================================================================
-// ROUTES - Premium Verify
-// ============================================================================
-
-app.get('/api/premium/verify/:transactionId', async (req, res) => {
-    try {
-        const { transactionId } = req.params;
-
-        if (!global.transactions || !global.transactions[transactionId]) {
-            return res.status(404).json({
-                success: false,
-                status: 'not_found'
-            });
-        }
-
-        const tx = global.transactions[transactionId];
-
-        if (new Date() > new Date(tx.expiresAt)) {
-            tx.status = 'expired';
-            return res.json({
-                success: false,
-                status: 'expired'
-            });
-        }
-
-        log('info', 'Verification check', { transactionId });
-
-        res.json({
-            success: tx.status === 'completed',
-            status: tx.status,
-            transaction: {
-                id: tx.id,
-                plan: tx.plan,
-                price: tx.price,
-                status: tx.status
-            }
-        });
-
-    } catch (error) {
-        log('error', 'Verify error', { error: error.message });
-        res.status(500).json({
-            success: false,
-            message: 'Verification failed'
-        });
-    }
-});
-
-// ============================================================================
-// ROUTES - Premium Webhook
-// ============================================================================
-
-app.post('/api/premium/webhook/pix', webhookLimiter, async (req, res) => {
-    try {
-        const { transactionId } = req.body;
-
-        if (!global.transactions || !global.transactions[transactionId]) {
-            return res.status(404).json({ error: 'Transaction not found' });
-        }
-
-        const tx = global.transactions[transactionId];
-        tx.status = 'completed';
-        tx.completedAt = new Date().toISOString();
-
-        // CRÍTICO #3: Decriptar apenas para logging
-        const decryptedCustomer = decryptSensitiveData(tx.customerEncrypted);
-
-        const accessToken = generateToken({
-            transactionId: tx.id,
-            plan: tx.plan,
-            premium: true,
-            jti: crypto.randomUUID()
-        }, tx.plan === 'monthly' ? '30d' : (tx.plan === 'quarterly' ? '90d' : '365d'));
-
-        log('info', 'PIX payment confirmed', {
-            transactionId: tx.id,
-            plan: tx.plan
-        });
-
-        res.json({
-            success: true,
-            message: 'Payment confirmed',
-            accessToken,
-            transaction: {
-                id: tx.id,
-                status: tx.status,
-                plan: tx.plan
-            }
-        });
-
-    } catch (error) {
-        log('error', 'Webhook error', { error: error.message });
-        res.status(500).json({ error: 'Webhook failed' });
-    }
-});
-
-// ============================================================================
-// ROUTES - Premium Status
-// ============================================================================
-
-app.get('/api/premium/status', (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
         
-        if (!authHeader) {
-            return res.json({
-                premium: false
-            });
-        }
-
-        const token = authHeader.replace('Bearer ', '');
-        const decoded = verifyToken(token);
-
-        if (decoded && decoded.premium) {
-            res.json({
-                premium: true,
-                plan: decoded.plan,
-                expiresAt: decoded.exp ? new Date(decoded.exp * 1000).toISOString() : null
-            });
-        } else {
-            res.json({
-                premium: false
-            });
-        }
-
-    } catch (error) {
-        res.json({
-            premium: false,
-            error: 'Token verification failed'
+        const transactions = await prisma.paymentTransaction.findMany({
+            orderBy: { createdAt: 'desc' },
         });
+        
+        const approved = transactions.filter(t => t.status === 'APPROVED').length;
+        const pending = transactions.filter(t => t.status === 'PENDING' || t.status === 'PENDING_PIX').length;
+        const revenue = transactions
+            .filter(t => t.status === 'APPROVED')
+            .reduce((sum, t) => sum + (t.amount || 0), 0);
+        
+        // Calcular créditos vendidos
+        const creditsMap = { 9.90: 50, 29.90: 200, 59.90: 500, 199.90: 2000 };
+        const creditsTotal = transactions
+            .filter(t => t.status === 'APPROVED')
+            .reduce((sum, t) => sum + (creditsMap[t.amount] || 0), 0);
+
+        res.json({
+            approved,
+            pending,
+            revenue,
+            creditsTotal,
+        });
+    } catch (error) {
+        console.error('[Admin] Payment stats error:', error);
+        res.status(500).json({ error: error.message });
     }
+});
+
+// Listar todas transações
+app.get('/api/admin/transactions', async (req, res) => {
+    try {
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        
+        const transactions = await prisma.paymentTransaction.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 100,
+        });
+        
+        // Adicionar créditos baseado no amount
+        const creditsMap = { 9.90: 50, 29.90: 200, 59.90: 500, 199.90: 2000 };
+        const enriched = transactions.map(t => ({
+            ...t,
+            credits: creditsMap[t.amount] || 0,
+            provider: t.mpTransactionId ? 'mercadopago' : 'pix',
+        }));
+
+        res.json({ transactions: enriched });
+    } catch (error) {
+        console.error('[Admin] Transactions error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Listar PaymentEvents (idempotência)
+app.get('/api/admin/payment-events', async (req, res) => {
+    try {
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        
+        const events = await prisma.paymentEvent.findMany({
+            orderBy: { processedAt: 'desc' },
+            take: 100,
+        });
+
+        // Adicionar createdAt para compatibilidade com frontend
+        const enrichedEvents = events.map(e => ({
+            ...e,
+            createdAt: e.processedAt,
+        }));
+
+        res.json({ events: enrichedEvents });
+    } catch (error) {
+        console.error('[Admin] Payment events error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============================================================================
+// ROUTES - Premium/Payment (Mercado Pago Integration)
+// ============================================================================
+
+// Checkout - Criar preferência de pagamento
+app.post('/api/premium/checkout', premiumCheckoutLimiter, (req, res) => {
+    premiumController.checkout(req, res);
+});
+
+// PIX direto - Gerar QR Code PIX
+app.post('/api/premium/pix', premiumCheckoutLimiter, (req, res) => {
+    premiumController.createPix(req, res);
+});
+
+// Verificar status de transação
+app.get('/api/premium/verify/:transactionId', (req, res) => {
+    premiumController.verify(req, res);
+});
+
+// Webhook do Mercado Pago (IPN)
+app.post('/api/webhooks/mercadopago', webhookLimiter, (req, res) => {
+    premiumController.webhookMercadoPago(req, res);
+});
+
+// Webhook PIX legado
+app.post('/api/premium/webhook/pix', webhookLimiter, (req, res) => {
+    premiumController.webhookPix(req, res);
+});
+
+// Status da sessão premium
+app.get('/api/premium/status', (req, res) => {
+    premiumController.getStatus(req, res);
+});
+
+// Configuração pública (para frontend)
+app.get('/api/premium/config', (req, res) => {
+    premiumController.getConfig(req, res);
+});
+
+// Status de pagamento no Mercado Pago
+app.get('/api/payments/mp/status/:paymentId', (req, res) => {
+    premiumController.getMercadoPagoStatus(req, res);
+});
+
+// Simulação de pagamento (apenas desenvolvimento)
+app.post('/api/premium/simulate/approve/:transactionId', (req, res) => {
+    premiumController.simulateApprove(req, res);
+});
+
+// ============================================================================
+// ROUTES - Credits System (Sistema de Créditos)
+// ============================================================================
+
+// Consultar saldo de créditos
+app.get('/api/credits/balance', (req, res) => {
+    premiumController.getCreditsBalance(req, res);
+});
+
+// Histórico de transações de créditos
+app.get('/api/credits/history', (req, res) => {
+    premiumController.getCreditsHistory(req, res);
+});
+
+// Estatísticas de uso
+app.get('/api/credits/stats', (req, res) => {
+    premiumController.getCreditsStats(req, res);
+});
+
+// Planos disponíveis
+app.get('/api/credits/plans', (req, res) => {
+    premiumController.getCreditPlans(req, res);
+});
+
+// Verificar se tem créditos suficientes
+app.post('/api/credits/check', (req, res) => {
+    premiumController.checkCredits(req, res);
 });
 
 // ============================================================================

@@ -305,6 +305,66 @@ model AuditLog {
   @@index([createdAt])
 }
 
+// ============ CREDITS SYSTEM ============
+
+// User's credit balance
+model UserCredits {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+// Credit transaction history
+model CreditTransaction {
+  id            String   @id @default(cuid())
+  userId        String
+  amount        Int                   // positive = purchase, negative = usage
+  type          String                // "PURCHASE" | "CONVERSION" | "REFUND" | "BONUS"
+  description   String
+  metadata      String?               // JSON string for extra data
+  jobId         String?               // Link to Job if type is CONVERSION
+  
+  // Auditoria de saldo (antes/depois da transação)
+  creditsBefore Int?                  // Saldo antes da transação
+  creditsAfter  Int?                  // Saldo após a transação
+  
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+}
+
+// ============ PAYMENT EVENTS (IDEMPOTENCY) ============
+
+// Ensures payments are processed exactly once
+model PaymentEvent {
+  id              String   @id @default(cuid())
+  
+  // Payment provider info
+  provider        String                // "mercadopago" | "stripe"
+  externalId      String                // Payment ID from provider (mpTransactionId or stripePaymentId)
+  eventType       String                // "payment.approved" | "payment.rejected" etc.
+  
+  // Processing info
+  status          String   @default("processed")  // "processed" | "failed" | "duplicate"
+  userId          String?               // User who received credits
+  creditsAdded    Int      @default(0)  // Credits added (if any)
+  amount          Float    @default(0)  // Payment amount
+  
+  // Raw data
+  rawPayload      String?               // Full webhook payload (JSON)
+  
+  // Timestamps
+  processedAt     DateTime @default(now())
+  
+  // Unique constraint: same payment can only be processed once per provider
+  @@unique([provider, externalId])
+  @@index([userId])
+  @@index([processedAt])
+}
+
 // ============ ENUMS ============
 
 enum PaymentStatus {

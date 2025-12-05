@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/Button';
 
 function LoginForm() {
@@ -98,21 +99,29 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0B5E73] via-[#0AC9D2] to-[#0B5E73] px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">CannaConvert</h1>
-          <p className="text-gray-500 mt-1">Faça login para continuar</p>
+          <Link href="/" className="inline-flex flex-col items-center gap-3">
+            <div className="w-20 h-14 bg-black rounded-xl flex items-center justify-center shadow-2xl">
+              <Image 
+                src="/images/logo.png" 
+                alt="CannaConvert" 
+                width={72} 
+                height={52}
+                className="drop-shadow-lg object-contain"
+              />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-[#DC2626] via-white to-[#2563EB] bg-clip-text text-transparent">
+              CannaConvert
+            </span>
+          </Link>
+          <p className="text-white/80 mt-2">Faça login para continuar</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
           <Suspense fallback={<div className="animate-pulse h-48 bg-gray-100 rounded-lg"></div>}>
             <LoginForm />
           </Suspense>
@@ -120,7 +129,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Não tem uma conta?{' '}
-              <Link href="/register" className="text-primary-600 hover:text-primary-700 font-medium">
+              <Link href="/register" className="text-[#0B5E73] hover:text-[#094a5c] font-medium">
                 Criar conta
               </Link>
             </p>
@@ -129,7 +138,7 @@ export default function LoginPage() {
 
         {/* Back to home */}
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/" className="text-sm text-white/80 hover:text-white transition-colors">
             ← Voltar para a página inicial
           </Link>
         </div>

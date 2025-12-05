@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/Button';
 
 export default function RegisterPage() {
@@ -70,21 +71,31 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0B5E73] via-[#0AC9D2] to-[#0B5E73] px-4 py-8">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
+          <div className="w-20 h-14 bg-black rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Image
+              src="/img/logo.png"
+              alt="CannaConvert Logo"
+              width={72}
+              height={52}
+              className="object-contain"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Criar Conta</h1>
-          <p className="text-gray-500 mt-1">Cadastre-se para começar a converter</p>
+          <h1 className="text-3xl font-bold">
+            <span className="bg-gradient-to-r from-[#DC2626] via-white to-[#2563EB] bg-clip-text text-transparent">
+              CannaConvert
+            </span>
+          </h1>
+          <p className="text-white/80 mt-2">Crie sua conta e comece a converter</p>
         </div>
 
         {/* Register Form */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <h2 className="text-xl font-bold text-gray-900 text-center mb-6">Criar Conta</h2>
+          
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
@@ -105,7 +116,7 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
-                className="input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0AC9D2] focus:border-transparent transition-all"
                 placeholder="Seu nome"
               />
             </div>
@@ -121,7 +132,7 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0AC9D2] focus:border-transparent transition-all"
                 placeholder="seu@email.com"
               />
             </div>
@@ -137,7 +148,7 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0AC9D2] focus:border-transparent transition-all"
                 placeholder="Mínimo 6 caracteres"
               />
             </div>
@@ -153,7 +164,7 @@ export default function RegisterPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0AC9D2] focus:border-transparent transition-all"
                 placeholder="Repita a senha"
               />
             </div>
@@ -161,7 +172,7 @@ export default function RegisterPage() {
             <Button
               type="submit"
               loading={loading}
-              className="w-full"
+              className="w-full bg-gradient-to-r from-[#0B5E73] to-[#0AC9D2] hover:from-[#094a5c] hover:to-[#09b5bd] text-white"
               size="lg"
             >
               Criar Conta
@@ -171,7 +182,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Já tem uma conta?{' '}
-              <Link href="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+              <Link href="/login" className="text-[#0B5E73] hover:text-[#0AC9D2] font-medium transition-colors">
                 Fazer login
               </Link>
             </p>
@@ -180,7 +191,7 @@ export default function RegisterPage() {
 
         {/* Back to home */}
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/" className="text-sm text-white/80 hover:text-white transition-colors">
             ← Voltar para a página inicial
           </Link>
         </div>
