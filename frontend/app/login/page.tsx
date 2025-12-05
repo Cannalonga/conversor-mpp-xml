@@ -123,6 +123,9 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">
+            Entrar na sua conta
+          </h1>
           <Suspense fallback={<div className="animate-pulse h-48 bg-gray-100 rounded-lg"></div>}>
             <LoginForm />
           </Suspense>
