@@ -325,7 +325,7 @@ export default function DashboardPage() {
                   Nova Conversão
                 </Button>
               </div>
-            )}
+            </div>
           </Card>
         )}
       </div>
