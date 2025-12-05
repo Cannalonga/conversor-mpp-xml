@@ -1,0 +1,239 @@
+# ============================================================================
+# CANNACONVERT - DOCKER COMPOSE PRODUCTION
+# ============================================================================
+# Ubuntu 24.04 LTS Production Environment
+# 
+# Usage:
+#   docker compose -f docker-compose.production.yml pull
+#   docker compose -f docker-compose.production.yml up -d
+#   docker compose -f docker-compose.production.yml logs -f
+# ============================================================================
+
+name: cannaconvert-prod
+
+services:
+  # ==========================================================================
+  # FRONTEND (Next.js)
+  # ==========================================================================
+  frontend:
+    image: ghcr.io/cannalonga/conversor-mpp-xml:latest
+    # build:
+    #   context: ./frontend
+    #   dockerfile: ../docker/Dockerfile.production
+    container_name: cannaconvert-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./temp:/app/temp
+      - ./logs/frontend:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - cannaconvert-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ==========================================================================
+  # BACKEND (Node.js API)
+  # ==========================================================================
+  backend:
+    image: ghcr.io/cannalonga/conversor-mpp-xml-api:latest
+    # build:
+    #   context: ./api
+    #   dockerfile: ../docker/Dockerfile.api
+    container_name: cannaconvert-backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./temp:/app/temp
+      - ./logs/backend:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - cannaconvert-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ==========================================================================
+  # MPP CONVERTER (Java Service)
+  # ==========================================================================
+  mpp-converter:
+    image: ghcr.io/cannalonga/conversor-mpp-xml-mpp:latest
+    # build:
+    #   context: ./microservices/mpp-converter
+    container_name: cannaconvert-mpp
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    volumes:
+      - ./uploads:/app/uploads
+      - ./temp:/app/temp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - cannaconvert-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ==========================================================================
+  # POSTGRESQL DATABASE
+  # ==========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: cannaconvert-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cannaconvert}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password required}
+      POSTGRES_DB: ${POSTGRES_DB:-cannaconvert_prod}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups/postgres:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cannaconvert} -d ${POSTGRES_DB:-cannaconvert_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - cannaconvert-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ==========================================================================
+  # REDIS (Cache & Rate Limiting)
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: cannaconvert-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-changeme}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - cannaconvert-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+  # ==========================================================================
+  # WORKER (Background Jobs - Optional)
+  # ==========================================================================
+  # worker:
+  #   image: ghcr.io/cannalonga/conversor-mpp-xml-worker:latest
+  #   container_name: cannaconvert-worker
+  #   restart: unless-stopped
+  #   environment:
+  #     - NODE_ENV=production
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./uploads:/app/uploads
+  #     - ./temp:/app/temp
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   networks:
+  #     - cannaconvert-network
+
+# ==========================================================================
+# NETWORKS
+# ==========================================================================
+networks:
+  cannaconvert-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ==========================================================================
+# VOLUMES
+# ==========================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
