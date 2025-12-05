@@ -1,15 +1,17 @@
 #!/bin/bash
+set -euo pipefail
 
-set -e
+input="$1"
+output="$2"
 
-input_key="$1"
-output_key="$2"
+# Remove CRLF
+tr -d '\r' < "$input" > "$output"
 
-# remove CRLF
-tr -d '\r' < "$input_key" > "$output_key"
+# Remove UTF-8 BOM
+sed -i '1s/^\xEF\xBB\xBF//' "$output"
 
-# remove UTF-8 BOM
-sed -i '1s/^\xEF\xBB\xBF//' "$output_key"
+# Remove trailing whitespace from all lines
+sed -i 's/[[:space:]]*$//' "$output"
 
-# ensure newline at EOF
-printf "\n" >> "$output_key"
+# Ensure newline at EOF
+printf "\n" >> "$output"

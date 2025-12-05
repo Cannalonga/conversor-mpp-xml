@@ -59,14 +59,45 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Normalize SSH key
+      - name: Normalize and Validate SSH Key
         id: ssh_key
         run: |
-          # Write key to file
+          set -euo pipefail
+
           echo "${{ secrets.STAGING_SSH_KEY }}" > rawkey.txt
-          # Normalize: remove CRLF, BOM, ensure newline
-          bash deploy/staging/scripts/normalize-key.sh rawkey.txt cleankey.txt
-          # Read normalized key
+
+          # Remove CRLF
+          sed -i 's/\r$//' rawkey.txt
+
+          # Remove UTF-8 BOM
+          sed -i '1s/^\xEF\xBB\xBF//' rawkey.txt
+
+          # Remove trailing whitespace
+          sed -i 's/[[:space:]]*$//' rawkey.txt
+
+          # Garantir newline no final
+          printf "\n" >> rawkey.txt
+
+          # Validar se contém BEGIN e END
+          if ! grep -q "BEGIN OPENSSH PRIVATE KEY\|BEGIN RSA PRIVATE KEY" rawkey.txt; then
+            echo "FATAL: Missing BEGIN header"
+            exit 1
+          fi
+
+          if ! grep -q "END OPENSSH PRIVATE KEY\|END RSA PRIVATE KEY" rawkey.txt; then
+            echo "FATAL: Missing END footer"
+            exit 1
+          fi
+
+          # Validar tamanho mínimo (proteção contra secrets vazios)
+          if [ $(wc -c < rawkey.txt) -lt 100 ]; then
+            echo "FATAL: SSH key size too small"
+            exit 1
+          fi
+
+          cp rawkey.txt cleankey.txt
+
+          # Read normalized key for output
           CLEAN_KEY=$(cat cleankey.txt)
           # Set as output (multiline)
           echo "key<<EOF" >> $GITHUB_OUTPUT
@@ -76,10 +107,15 @@ jobs:
           rm -f rawkey.txt cleankey.txt
         shell: bash
 
-      - name: Setup SSH
+      - name: Setup SSH Agent (Clean Key)
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ steps.ssh_key.outputs.key }}
+
+      - name: Validate SSH Agent Load
+        run: |
+          set -euo pipefail
+          ssh-add -l || { echo "FATAL: SSH agent failed to load key"; exit 1; }
 
       - name: Copy files to remote
         env:
