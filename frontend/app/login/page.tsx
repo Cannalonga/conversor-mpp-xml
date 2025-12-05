@@ -111,6 +111,7 @@ export default function LoginPage() {
                 width={72} 
                 height={52}
                 className="drop-shadow-lg object-contain"
+                style={{ width: 'auto', height: 'auto', maxWidth: '72px', maxHeight: '52px' }}
               />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-[#DC2626] via-white to-[#2563EB] bg-clip-text text-transparent">

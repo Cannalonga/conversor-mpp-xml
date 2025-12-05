@@ -90,6 +90,7 @@ export default function Footer() {
                   width={60} 
                   height={44}
                   className="drop-shadow-lg object-contain"
+                  style={{ width: 'auto', height: 'auto', maxWidth: '60px', maxHeight: '44px' }}
                 />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-[#DC2626] via-white to-[#2563EB] bg-clip-text text-transparent">

@@ -23,6 +23,7 @@ export default function Hero() {
                   width={96} 
                   height={68}
                   className="drop-shadow-lg object-contain"
+                  style={{ width: 'auto', height: 'auto', maxWidth: '96px', maxHeight: '68px' }}
                 />
               </div>
             </div>

@@ -54,11 +54,12 @@ function PendingContent() {
         <div className="flex justify-center mb-6">
           <div className="w-20 h-14 bg-black rounded-lg flex items-center justify-center shadow-lg">
             <Image
-              src="/img/logo.png"
+              src="/images/logo.png"
               alt="CannaConvert Logo"
               width={72}
               height={52}
               className="object-contain"
+              style={{ width: 'auto', height: 'auto', maxWidth: '72px', maxHeight: '52px' }}
             />
           </div>
         </div>
