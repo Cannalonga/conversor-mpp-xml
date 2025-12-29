@@ -425,15 +425,46 @@
             padding: 60px 0;
         }
 
+        .pricing-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
         .pricing-box {
             background: white;
             border: 3px solid #0AC9D2;
-            padding: 40px;
+            padding: 40px 30px;
             border-radius: 16px;
             text-align: center;
-            max-width: 500px;
-            margin: 0 auto;
             box-shadow: 0 4px 20px rgba(10, 201, 210, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .pricing-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(10, 201, 210, 0.25);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FF6B6B;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .pricing-box h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin: 0.5rem 0;
         }
 
         .price {
@@ -460,28 +491,38 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.5rem;
             margin-top: 3rem;
-            max-width: 600px;
+            max-width: 900px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .stat {
             text-align: center;
-            padding: 1rem;
+            padding: 1.2rem 0.8rem;
+            background: rgba(10, 201, 210, 0.05);
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(10, 201, 210, 0.1);
         }
 
         .stat-number {
-            font-size: 2rem;
+            font-size: 2.2rem;
             color: #0AC9D2;
             font-weight: 700;
+            margin-bottom: 0.5rem;
         }
 
         .stat-label {
             color: #666;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
         }
 
         .footer {
@@ -501,6 +542,28 @@
                 font-size: 2rem;
             }
 
+            .hero-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.9rem;
+                margin-top: 2rem;
+            }
+
+            .stat {
+                padding: 0.9rem 0.5rem;
+            }
+
+            .stat-number {
+                font-size: 1.6rem;
+            }
+
+            .stat-label {
+                font-size: 0.7rem;
+            }
+
             .nav {
                 gap: 1rem;
             }
@@ -512,6 +575,44 @@
 
             .converters-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+                margin-top: 1.5rem;
+            }
+
+            .stat {
+                padding: 0.8rem 0.5rem;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+                margin-bottom: 0.3rem;
+            }
+
+            .stat-label {
+                font-size: 0.65rem;
+            }
+
+            .button {
+                padding: 0.8rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .header-content {
+                padding: 0.5rem 0;
             }
         }
     </style>
@@ -567,6 +668,30 @@
                     <div class="stat">
                         <div class="stat-number">100%</div>
                         <div class="stat-label">Online</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🔐</div>
+                        <div class="stat-label">AES-256 Criptografado</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">💰</div>
+                        <div class="stat-label">100% Gratuito</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🌍</div>
+                        <div class="stat-label">Qualquer Dispositivo</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🚀</div>
+                        <div class="stat-label">Atualizações Frequentes</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">📦</div>
+                        <div class="stat-label">Conversão em Lote</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🔗</div>
+                        <div class="stat-label">API Pública</div>
                     </div>
                 </div>
             </div>
@@ -810,20 +935,56 @@
         <section id="precos" class="pricing-section">
             <div class="container">
                 <h2 class="section-title">Simples e Acessível</h2>
-                <p class="section-subtitle">Pague apenas pelo que usar</p>
+                <p class="section-subtitle">Escolha o plano que melhor se adequa às suas necessidades</p>
                 
-                <div class="pricing-box">
-                    <h3>Conversão Única</h3>
-                    <div class="price">R$ 10,00</div>
-                    <p class="price-note">Por conversão • Qualquer formato</p>
-                    <p class="price-note" style="margin-top: 1rem;">
-                        ✓ Processamento instantâneo<br>
-                        ✓ Download imediato<br>
-                        ✓ Arquivos até 50MB<br>
-                        ✓ Suporte a todos os conversores
-                    </p>
-                    <div class="free-badge">🎁 Teste Grátis Disponível</div>
+                <div class="pricing-container">
+                    <!-- Plano 1: Conversão Única -->
+                    <div class="pricing-box">
+                        <h3>Conversão Única</h3>
+                        <div class="price">R$ 10,00</div>
+                        <p class="price-note">Por conversão</p>
+                        <p class="price-note" style="margin-top: 1rem; font-size: 0.9rem;">
+                            ✓ Processamento instantâneo<br>
+                            ✓ Download imediato<br>
+                            ✓ Arquivos até 50MB<br>
+                            ✓ Qualquer formato
+                        </p>
+                        <div class="free-badge">🎁 Teste Grátis</div>
+                    </div>
+
+                    <!-- Plano 2: Pacote Popular -->
+                    <div class="pricing-box" style="border-color: #FF6B6B; border-width: 3px;">
+                        <div class="pricing-badge">MAIS POPULAR</div>
+                        <h3>Pacote Completo</h3>
+                        <div class="price" style="color: #FF6B6B;">R$ 30,00</div>
+                        <p class="price-note">200 créditos • Economize 25%</p>
+                        <p class="price-note" style="margin-top: 1rem; font-size: 0.9rem;">
+                            ✓ Tudo do plano básico +<br>
+                            ✓ 200 conversões*<br>
+                            ✓ Conversão em lote<br>
+                            ✓ Histórico de conversões
+                        </p>
+                        <button class="free-badge" style="background: #FF6B6B; border: none; cursor: pointer; font-size: 0.95rem;">💳 Comprar Agora</button>
+                    </div>
+
+                    <!-- Plano 3: Enterprise -->
+                    <div class="pricing-box">
+                        <h3>Enterprise</h3>
+                        <div class="price">Customizado</div>
+                        <p class="price-note">Para empresas</p>
+                        <p class="price-note" style="margin-top: 1rem; font-size: 0.9rem;">
+                            ✓ Conversões ilimitadas<br>
+                            ✓ Acesso API completa<br>
+                            ✓ Suporte dedicado 24/7<br>
+                            ✓ Integração personalizada
+                        </p>
+                        <button class="free-badge" style="background: #0AC9D2; border: none; cursor: pointer; font-size: 0.95rem;">📧 Falar com Vendas</button>
+                    </div>
                 </div>
+
+                <p style="text-align: center; color: #666; margin-top: 2rem; font-size: 0.9rem;">
+                    * Custo médio: 1 crédito ≈ R$ 0,15 • Diferentes conversores custam de 1 a 5 créditos
+                </p>
             </div>
         </section>
     </main>
