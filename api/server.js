@@ -52,21 +52,110 @@ const metricsCollector = new MetricsCollector();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 🛡️ SECURITY HARDENING - Configuração direta
-app.use(helmet({
+// ✅ SECURITY: Parse ALLOWED_ORIGINS from environment
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
+console.log('🔒 ALLOWED_ORIGINS:', allowedOrigins);
+
+// 🛡️ SECURITY HARDENING - Helmet com configuração rigorosa
+const helmetConfig = {
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-hashes'"],
-            scriptSrcAttr: ["'self'", "'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            scriptSrc: ["'self'"],  // ✅ SEM unsafe-inline!
+            scriptSrcAttr: ["'self'"],
+            styleSrc: ["'self'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", ...allowedOrigins],
+            frameSrc: ["'none'"],  // ✅ Previne clickjacking
+            objectSrc: ["'none'"],
+            mediaSrc: ["'none'"],
+            manifestSrc: ["'self'"],
+            upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : undefined
         },
+        reportUri: '/api/security/csp-report',  // ✅ CSP violation reporting
+        reportOnly: false
     },
-}));
-app.use(cors());
+    
+    // ✅ HSTS - Força HTTPS
+    hsts: {
+        maxAge: 31536000,           // 1 ano
+        includeSubDomains: true,
+        preload: true
+    },
+    
+    // ✅ Outros headers de segurança
+    noSniff: true,                  // X-Content-Type-Options: nosniff
+    xssFilter: true,                // X-XSS-Protection
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    frameguard: { action: 'deny' }, // X-Frame-Options: DENY
+    permittedCrossDomainPolicies: false,
+    
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'same-origin' }
+};
+
+app.use(helmet(helmetConfig));
+
+// ✅ SECURITY: CORS com whitelist rigoroso
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Permitir requests sem origin (mobile apps, curl)
+        if (!origin) {
+            return callback(null, true);
+        }
+        
+        // Verificar whitelist
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            const msg = `CORS origin not allowed: ${origin}`;
+            console.warn('🚫', msg);
+            callback(new Error(msg));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+    maxAge: 3600,
+    optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
+// ✅ SECURITY: Log CORS rejections
+app.use((err, req, res, next) => {
+    if (err.message && err.message.includes('CORS')) {
+        logger.warn('CORS_REJECTED', {
+            origin: req.get('origin'),
+            path: req.path,
+            method: req.method,
+            ip: req.ip
+        });
+        return res.status(403).json({ error: err.message });
+    }
+    next(err);
+});
+
+// ✅ SECURITY: CSP Report endpoint
+app.post('/api/security/csp-report', express.json({ limit: '1kb' }), (req, res) => {
+    const report = req.body['csp-report'] || req.body;
+    logger.warn('CSP_VIOLATION', {
+        violated_directive: report['violated-directive'],
+        blocked_uri: report['blocked-uri'],
+        source_file: report['source-file'],
+        line_number: report['line-number'],
+        ip: req.ip,
+        user_agent: req.get('user-agent')
+    });
+    res.sendStatus(204);
+});
 
 // Enable compression
 app.use(require('compression')());
@@ -213,6 +302,7 @@ app.use(compression());
 // - POST /api/converters/xml-to-mpp
 // - GET /api/converters/health
 app.use('/api/converters', converterRoutes);
+app.use('/api/convert', converterRoutes);
 
 // 🔌 API V1 - LISTA DE CONVERSORES
 // - GET /api/v1/converters (lista todos)

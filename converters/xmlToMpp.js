@@ -3,6 +3,50 @@ const path = require('path');
 const xml2js = require('xml2js');
 
 /**
+ * ✅ SECURE: Retorna parser XML com proteção contra XXE
+ */
+function getSecureXMLParser() {
+    return new xml2js.Parser({
+        explicitArray: false,
+        
+        // 🔒 XXE Protection
+        strict: true,              // Modo restrito
+        normalize: true,
+        normalizeTags: true,
+        
+        // 🔒 Sem external entities
+        // Nota: xml2js não suporta desabilitar completamente DOCTYPE
+        // Adicionamos validação manual abaixo
+        
+        // Limites de tamanho
+        limit: 50000000           // 50MB max
+    });
+}
+
+/**
+ * ✅ Valida se XML contém padrões XXE suspeitos
+ */
+function validateXMLForXXE(xmlContent) {
+    const xxePatterns = [
+        /<!DOCTYPE\s+\w+\s*\[/gi,        // DOCTYPE declaration
+        /SYSTEM\s+["']file:\/\//gi,      // File system access
+        /SYSTEM\s+["'].*:\/\//gi,        // Any protocol access
+        /<!ENTITY\s+\w+/gi,              // Entity definition
+        /&\w+;/                          // Entity reference (pode ser legítima, alertar)
+    ];
+    
+    const findings = [];
+    
+    xxePatterns.forEach((pattern, idx) => {
+        if (pattern.test(xmlContent)) {
+            findings.push(`Padrão XXE detectado: ${pattern}`);
+        }
+    });
+    
+    return findings;
+}
+
+/**
  * Conversor de XML para MPP (Reverso)
  * Cria um arquivo simulado de Microsoft Project baseado em XML
  * NOTA: Não é uma conversão real de XML para binary .mpp (requer bibliotecas proprietárias)
@@ -39,8 +83,16 @@ class XMLToMppConverter {
       // Ler arquivo XML
       const xmlContent = await fs.readFile(inputPath, 'utf8');
 
-      // Parsear XML
-      const parser = new xml2js.Parser({ explicitArray: false });
+      // ✅ XXE PROTECTION: Validar XML antes de parsear
+      console.log('🔍 Validando XML contra XXE...');
+      const xxeFindings = validateXMLForXXE(xmlContent);
+      if (xxeFindings.length > 0) {
+        throw new Error(`❌ XML contém padrões suspeitos:\n${xxeFindings.join('\n')}`);
+      }
+      console.log('✅ XML validado - sem padrões XXE detectados');
+
+      // ✅ Parsear com proteção XXE
+      const parser = getSecureXMLParser();
       let xmlData;
 
       try {
@@ -146,6 +198,63 @@ class XMLToMppConverter {
       priority: task.Priority || 500
     }));
   }
+
+  /**
+   * Extrai recursos do XML
+   * @private
+   */
+  _extractResources(resourceSection) {
+    if (!resourceSection || !resourceSection.Resource) {
+      return [];
+    }
+
+    const resources = Array.isArray(resourceSection.Resource) 
+      ? resourceSection.Resource 
+      : [resourceSection.Resource];
+
+    return resources.map(resource => ({
+      id: resource.ID || resource.UID,
+      name: resource.Name || 'Recurso sem nome',
+      type: resource.Type || 'Resource',
+      initials: resource.Initials || ''
+    }));
+  }
+
+  /**
+   * Extrai alocações de recursos do XML
+   * @private
+   */
+  _extractAssignments(assignmentSection) {
+    if (!assignmentSection || !assignmentSection.Assignment) {
+      return [];
+    }
+
+    const assignments = Array.isArray(assignmentSection.Assignment) 
+      ? assignmentSection.Assignment 
+      : [assignmentSection.Assignment];
+
+    return assignments.map(assignment => ({
+      taskId: assignment.TaskID || assignment.TaskUID,
+      resourceId: assignment.ResourceID || assignment.ResourceUID,
+      units: assignment.Units || 100
+    }));
+  }
+
+  /**
+   * Verifica se arquivo existe
+   * @private
+   */
+  async fileExists(filePath) {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+module.exports = XMLToMppConverter;
 
   /**
    * Extrai recursos do XML
