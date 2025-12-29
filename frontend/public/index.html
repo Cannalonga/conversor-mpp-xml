@@ -55,23 +55,16 @@
             gap: 15px;
             font-size: 1.5rem;
             font-weight: 700;
+            max-height: 80px;
+            overflow: hidden;
         }
 
-        .logo-circle {
-            width: 60px;
-            height: 60px;
-            background-color: #000000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-
-        .logo-circle img {
-            width: 45px;
-            height: 45px;
-            filter: drop-shadow(0 0 8px rgba(0,201,210,0.5));
+        .logo img {
+            max-width: 80px;
+            max-height: 80px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
         }
 
         .nav {
@@ -150,28 +143,33 @@
 
         .converters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.5rem;
-            max-width: 1100px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.2rem;
+            max-width: 1400px;
             margin: 0 auto;
+            padding: 0 1rem;
         }
 
         .converter-card {
             background: #fff;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
             border: 2px solid #e0e0e0;
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 280px;
         }
 
         .converter-card:hover {
             transform: translateY(-5px);
             border-color: #0AC9D2;
-            box-shadow: 0 8px 30px rgba(10, 201, 210, 0.2);
+            box-shadow: 0 8px 25px rgba(10, 201, 210, 0.2);
         }
 
         .converter-card.featured {
@@ -522,10 +520,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-circle">
-                        <img src="/images/logo.png" alt="CannaConverter Logo" onerror="this.style.display='none'" />
-                    </div>
-                    <span style="font-weight: 700; color: white; font-size: 1.8rem;">CannaConverter</span>
+                    <img src="/images/logo.png" alt="CannaConverter Logo" style="height: 60px; width: auto; object-fit: contain;" />
                 </div>
                 <nav class="nav">
                     <a href="#home" class="nav-link">Início</a>
@@ -540,7 +535,7 @@
     <main>
         <section id="home" class="hero">
             <div class="container">
-                <div class="status-badge">✅ 16+ Conversores Disponíveis</div>
+                <div class="status-badge">✅ <span id="converter-count">20+</span> Conversores Disponíveis</div>
                 
                 <h1 class="hero-title">
                     <span class="highlight">Converta</span> seus arquivos <span class="highlight">online</span>
@@ -659,149 +654,6 @@
                         </div>
                         <button class="converter-btn">Converter Agora</button>
                     </div>
-
-                    <!-- 6. DOCX → PDF -->
-                    <div class="converter-card" onclick="openConverter('docx-pdf')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">📄</div>
-                        <h3 class="converter-title">DOCX <span class="converter-arrow">→</span> PDF</h3>
-                        <p class="converter-description">Converta documentos Word para PDF com formatação preservada.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.docx</span>
-                            <span class="format-badge output">.pdf</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 7. Imagem → PDF -->
-                    <div class="converter-card" onclick="openConverter('image-pdf')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">🖼️</div>
-                        <h3 class="converter-title">Imagem <span class="converter-arrow">→</span> PDF</h3>
-                        <p class="converter-description">Transforme imagens em PDF com layout profissional.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.jpg, .png, .gif</span>
-                            <span class="format-badge output">.pdf</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 8. Comprimir PDF -->
-                    <div class="converter-card" onclick="openConverter('pdf-compress')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">📉</div>
-                        <h3 class="converter-title">Comprimir <span class="converter-arrow">→</span> PDF</h3>
-                        <p class="converter-description">Reduza o tamanho de PDFs sem perder qualidade.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.pdf</span>
-                            <span class="format-badge output">.pdf</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 9. PDF → Imagem -->
-                    <div class="converter-card" onclick="openConverter('pdf-image')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">📸</div>
-                        <h3 class="converter-title">PDF <span class="converter-arrow">→</span> Imagem</h3>
-                        <p class="converter-description">Extraia páginas de PDF como imagens JPG ou PNG.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.pdf</span>
-                            <span class="format-badge output">.jpg, .png</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 10. PNG → JPG -->
-                    <div class="converter-card" onclick="openConverter('png-jpg')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">🎨</div>
-                        <h3 class="converter-title">PNG <span class="converter-arrow">→</span> JPG</h3>
-                        <p class="converter-description">Converta imagens PNG para JPG com compressão otimizada.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.png</span>
-                            <span class="format-badge output">.jpg</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 11. JPG → WebP -->
-                    <div class="converter-card" onclick="openConverter('jpg-webp')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">⚡</div>
-                        <h3 class="converter-title">JPG <span class="converter-arrow">→</span> WebP</h3>
-                        <p class="converter-description">Converta para WebP - formato moderno com melhor compressão.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.jpg</span>
-                            <span class="format-badge output">.webp</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 12. Imagem para WhatsApp -->
-                    <div class="converter-card" onclick="openConverter('image-whatsapp')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">💬</div>
-                        <h3 class="converter-title">Imagem <span class="converter-arrow">→</span> WhatsApp</h3>
-                        <p class="converter-description">Otimize imagens para envio rápido no WhatsApp.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.jpg, .png</span>
-                            <span class="format-badge output">Otimizado</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 13. Vídeo → MP4 -->
-                    <div class="converter-card" onclick="openConverter('video-mp4')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">🎬</div>
-                        <h3 class="converter-title">Vídeo <span class="converter-arrow">→</span> MP4</h3>
-                        <p class="converter-description">Converta qualquer vídeo para MP4, o formato universal.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.mov, .avi, .mkv</span>
-                            <span class="format-badge output">.mp4</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 14. Vídeo para WhatsApp -->
-                    <div class="converter-card" onclick="openConverter('video-whatsapp')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">📹</div>
-                        <h3 class="converter-title">Vídeo <span class="converter-arrow">→</span> WhatsApp</h3>
-                        <p class="converter-description">Comprima e otimize vídeos para WhatsApp.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.mp4, .avi, .mov</span>
-                            <span class="format-badge output">Otimizado</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 15. Vídeo para Redes Sociais -->
-                    <div class="converter-card" onclick="openConverter('video-social')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">📱</div>
-                        <h3 class="converter-title">Vídeo <span class="converter-arrow">→</span> Redes</h3>
-                        <p class="converter-description">Formate vídeos para Instagram, TikTok e YouTube.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">.mp4, .mov, .avi</span>
-                            <span class="format-badge output">Otimizado</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
-
-                    <!-- 16. FFmpeg Avançado -->
-                    <div class="converter-card" onclick="openConverter('ffmpeg')">
-                        <span class="converter-status">Online</span>
-                        <div class="converter-icon">⚙️</div>
-                        <h3 class="converter-title">FFmpeg <span class="converter-arrow">→</span> Avançado</h3>
-                        <p class="converter-description">Conversão profissional de mídia com FFmpeg.</p>
-                        <div class="converter-formats">
-                            <span class="format-badge input">Múltiplos</span>
-                            <span class="format-badge output">Múltiplos</span>
-                        </div>
-                        <button class="converter-btn">Converter Agora</button>
-                    </div>
                 </div>
             </div>
         </section>
@@ -828,9 +680,19 @@
         </section>
     </main>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CannaConverter. Todos os direitos reservados.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #aaa;">
+                <a href="javascript:void(0);" onclick="openModal('privacidade-modal'); return false;">Privacidade</a> | <a href="javascript:void(0);" onclick="openModal('termos-modal'); return false;">Termos</a>
+            </p>
+        </div>
+    </footer>
+
     <!-- Modal Termos de Uso -->
-    <div id="termos-modal" class="modal">
-        <div class="modal-content">
+    <div id="termos-modal" class="modal-policy">
+        <div class="modal-content-policy">
             <span class="close" onclick="closeModal('termos-modal')">&times;</span>
             <h2>Termos de Uso</h2>
             <div class="modal-body">
@@ -868,8 +730,8 @@
     </div>
 
     <!-- Modal Privacidade -->
-    <div id="privacidade-modal" class="modal">
-        <div class="modal-content">
+    <div id="privacidade-modal" class="modal-policy">
+        <div class="modal-content-policy">
             <span class="close" onclick="closeModal('privacidade-modal')">&times;</span>
             <h2>Política de Privacidade</h2>
             <div class="modal-body">
@@ -915,9 +777,9 @@
         </div>
     </div>
 
-    <!-- Estilos do Modal -->
+    <!-- Estilos dos Modais de Política -->
     <style>
-        .modal {
+        .modal-policy {
             display: none;
             position: fixed;
             z-index: 1000;
@@ -934,7 +796,7 @@
             to { opacity: 1; }
         }
 
-        .modal-content {
+        .modal-content-policy {
             background-color: white;
             margin: 5% auto;
             padding: 30px;
@@ -958,31 +820,31 @@
             }
         }
 
-        .modal-content h2 {
+        .modal-content-policy h2 {
             color: #0AC9D2;
             margin-bottom: 20px;
             border-bottom: 2px solid #0AC9D2;
             padding-bottom: 10px;
         }
 
-        .modal-content h3 {
+        .modal-content-policy h3 {
             color: #333;
             margin-top: 20px;
             margin-bottom: 10px;
         }
 
-        .modal-content p {
+        .modal-content-policy p {
             color: #666;
             line-height: 1.6;
             margin-bottom: 15px;
         }
 
-        .modal-content ul {
+        .modal-content-policy ul {
             margin-left: 20px;
             color: #666;
         }
 
-        .modal-content ul li {
+        .modal-content-policy ul li {
             margin-bottom: 8px;
         }
 
@@ -1004,17 +866,17 @@
         }
 
         @media (max-width: 768px) {
-            .modal-content {
+            .modal-content-policy {
                 width: 95%;
                 margin: 20% auto;
                 padding: 20px;
             }
 
-            .modal-content h2 {
+            .modal-content-policy h2 {
                 font-size: 20px;
             }
 
-            .modal-content h3 {
+            .modal-content-policy h3 {
                 font-size: 16px;
             }
 
@@ -1038,7 +900,7 @@
 
         // Fechar modal ao clicar fora
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
+            if (event.target.classList.contains('modal-policy')) {
                 event.target.style.display = 'none';
                 document.body.style.overflow = 'auto';
             }
@@ -1047,7 +909,7 @@
         // Fechar com ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.modal').forEach(modal => {
+                document.querySelectorAll('.modal-policy').forEach(modal => {
                     if (modal.style.display === 'block') {
                         modal.style.display = 'none';
                         document.body.style.overflow = 'auto';
@@ -1055,15 +917,7 @@
                 });
             }
         });
-    </script><!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 CannaConverter. Todos os direitos reservados.</p>
-            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #aaa;">
-                <a href="javascript:void(0);" onclick="openModal('privacidade-modal'); return false;">Privacidade</a> | <a href="javascript:void(0);" onclick="openModal('termos-modal'); return false;">Termos</a>
-            </p>
-        </div>
-    </footer>
+    </script>
 
     <!-- Modal de Upload -->
     <div class="modal" id="uploadModal">
@@ -1086,30 +940,71 @@
     </div>
 
     <script>
-        // Configuração de TODOS os conversores (23 disponíveis)
-        const converters = {
-            'mpp-xml': { title: 'MPP → XML', formats: '.mpp', accept: '.mpp', endpoint: '/api/upload-test', description: 'Microsoft Project para XML' },
-            'xml-mpp': { title: 'XML → MPP', formats: '.xml', accept: '.xml', endpoint: '/api/converters/xml-to-mpp', description: 'XML para MPP' },
-            'excel-csv': { title: 'Excel → CSV', formats: '.xlsx, .xls', accept: '.xlsx,.xls', endpoint: '/api/converters/excel-to-csv', description: 'Excel para CSV' },
-            'json-csv': { title: 'JSON → CSV', formats: '.json', accept: '.json', endpoint: '/api/converters/json-to-csv', description: 'JSON para CSV' },
-            'zip-xml': { title: 'ZIP → XML', formats: '.zip', accept: '.zip', endpoint: '/api/converters/zip-to-xml', description: 'Extrair XMLs de ZIP' },
-            'docx-pdf': { title: 'DOCX → PDF', formats: '.docx', accept: '.docx', endpoint: '/api/converters/docx-to-pdf', description: 'Word para PDF' },
-            'image-pdf': { title: 'Imagem → PDF', formats: '.jpg, .png, .gif', accept: '.jpg,.png,.gif,.jpeg', endpoint: '/api/converters/image-to-pdf', description: 'Imagem para PDF' },
-            'pdf-compress': { title: 'Comprimir PDF', formats: '.pdf', accept: '.pdf', endpoint: '/api/converters/pdf-compress', description: 'Reduzir tamanho PDF' },
-            'pdf-image': { title: 'PDF → Imagem', formats: '.pdf', accept: '.pdf', endpoint: '/api/converters/pdf-to-image', description: 'PDF para Imagem' },
-            'png-jpg': { title: 'PNG → JPG', formats: '.png', accept: '.png', endpoint: '/api/converters/png-to-jpg', description: 'PNG para JPG' },
-            'jpg-webp': { title: 'JPG → WebP', formats: '.jpg, .jpeg', accept: '.jpg,.jpeg', endpoint: '/api/converters/jpg-to-webp', description: 'JPG para WebP (moderno)' },
-            'image-whatsapp': { title: 'Imagem Para WhatsApp', formats: '.jpg, .png', accept: '.jpg,.png,.jpeg', endpoint: '/api/converters/image-optimize-whatsapp', description: 'Otimizar para WhatsApp' },
-            'video-mp4': { title: 'Vídeo → MP4', formats: '.mov, .avi, .mkv', accept: '.mov,.avi,.mkv,.flv,.wmv', endpoint: '/api/converters/video-to-mp4', description: 'Converter para MP4' },
-            'video-whatsapp': { title: 'Vídeo Para WhatsApp', formats: '.mp4, .avi, .mov', accept: '.mp4,.avi,.mov,.mkv', endpoint: '/api/converters/video-compress-whatsapp', description: 'Otimizar vídeo para WhatsApp' },
-            'video-social': { title: 'Vídeo Para Redes Sociais', formats: '.mp4, .mov, .avi', accept: '.mp4,.mov,.avi,.mkv', endpoint: '/api/converters/video-to-social', description: 'Formatos ideais: Instagram, TikTok, YouTube' },
-            'ffmpeg': { title: 'Conversor FFmpeg', formats: 'Múltiplos', accept: '.mp4,.avi,.mov,.mkv,.webm,.flv', endpoint: '/api/converters/ffmpeg', description: 'Conversão avançada de mídia' }
+        // Configuração dos 5 conversores principais (já em HTML)
+        const mainConverters = {
+            'mpp-xml': { title: 'Converter MPP → XML', formats: '.mpp', accept: '.mpp', endpoint: '/api/converters/mpp-to-xml' },
+            'excel-csv': { title: 'Converter Excel → CSV', formats: '.xlsx, .xls', accept: '.xlsx,.xls', endpoint: '/api/converters/excel-to-csv' },
+            'json-csv': { title: 'Converter JSON → CSV', formats: '.json', accept: '.json', endpoint: '/api/converters/json-to-csv' },
+            'zip-xml': { title: 'Extrair ZIP → XML', formats: '.zip', accept: '.zip', endpoint: '/api/converters/zip-to-xml' },
+            'xml-mpp': { title: 'Converter XML → MPP', formats: '.xml', accept: '.xml', endpoint: '/api/converters/xml-to-mpp' }
         };
 
         let currentConverter = null;
 
+        // 🚀 CARREGAR E RENDERIZAR CONVERSORES ADICIONAIS
+        async function loadAdditionalConverters() {
+            try {
+                const response = await fetch('/api/converters/info/all');
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                if (!data.converters || !Array.isArray(data.converters)) return;
+
+                const grid = document.querySelector('.converters-grid');
+                const iconMap = {
+                    'mpp': '📊', 'pdf': '📄', 'image': '🖼️', 'video': '🎥', 'audio': '🎵',
+                    'excel': '📗', 'csv': '📈', 'json': '📋', 'xml': '🔄', 'zip': '📦',
+                    'docx': '📃', 'html': '🌐', 'ffmpeg': '🎬', 'compress': '🗜️', 'optimize': '✨'
+                };
+
+                function getIcon(id, name) {
+                    const lower = (id + name).toLowerCase();
+                    for (const [key, icon] of Object.entries(iconMap)) {
+                        if (lower.includes(key)) return icon;
+                    }
+                    return '⚙️';
+                }
+
+                // Adicionar apenas conversores que NÃO estão nos 5 principais
+                data.converters.forEach(converter => {
+                    const id = converter.id.replace(/[\s-]/g, '-').toLowerCase();
+                    
+                    // Pular se já existe nos 5 principais
+                    if (id in mainConverters) return;
+
+                    const card = document.createElement('div');
+                    card.className = 'converter-card';
+                    card.innerHTML = `
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">${getIcon(id, converter.name)}</div>
+                        <h3 class="converter-title">${converter.name}</h3>
+                        <p class="converter-description">${converter.description || 'Conversor de arquivo'}</p>
+                        <div class="converter-formats">
+                            ${converter.inputTypes?.map(t => `<span class="format-badge input">${t}</span>`).join('') || ''}
+                        </div>
+                        <button class="converter-btn" onclick="openConverter('${id}')">Converter Agora</button>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                console.log(`✅ Conversores adicionais carregados`);
+            } catch (error) {
+                console.warn('[loadAdditionalConverters]', error.message);
+            }
+        }
+
         function openConverter(type) {
-            currentConverter = converters[type];
+            currentConverter = mainConverters[type] || { title: type };
             if (!currentConverter) return;
 
             document.getElementById('modalTitle').textContent = currentConverter.title;
@@ -1225,6 +1120,13 @@
                 closeModal();
             }
         });
+
+        // 🚀 CARREGAR CONVERSORES ADICIONAIS AO INICIAR
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadAdditionalConverters);
+        } else {
+            loadAdditionalConverters();
+        }
     </script>
 </body>
 </html>

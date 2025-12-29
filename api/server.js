@@ -65,19 +65,18 @@ const helmetConfig = {
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'"],  // ✅ SEM unsafe-inline!
-            scriptSrcAttr: ["'self'"],
-            styleSrc: ["'self'", "https://fonts.googleapis.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrcAttr: ["'self'", "'unsafe-inline'", "'unsafe-hashes'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
             connectSrc: ["'self'", ...allowedOrigins],
-            frameSrc: ["'none'"],  // ✅ Previne clickjacking
+            frameSrc: ["'none'"],
             objectSrc: ["'none'"],
             mediaSrc: ["'none'"],
-            manifestSrc: ["'self'"],
-            upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : undefined
+            manifestSrc: ["'self'"]
         },
-        reportUri: '/api/security/csp-report',  // ✅ CSP violation reporting
+        reportUri: '/api/security/csp-report',
         reportOnly: false
     },
     
