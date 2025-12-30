@@ -1,7 +1,8 @@
 /**
- * 🔌 ROTAS API - 4 NOVOS CONVERSORES
+ * 🔌 ROTAS API - 5 NOVOS CONVERSORES
  * 
  * Endpoints para:
+ * - POST /api/convert/mpp-to-xml
  * - POST /api/convert/excel-to-csv
  * - POST /api/convert/json-to-csv
  * - POST /api/convert/zip-to-xml
@@ -15,6 +16,7 @@ const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 
 // Importar conversores
+const mppConverter = require('../converters/mppToXml');
 const excelConverter = require('../converters/excelToCsv');
 const jsonConverter = require('../converters/jsonToCsv');
 const zipConverter = require('../converters/zipToXml');
@@ -300,11 +302,81 @@ router.post('/xml-to-mpp', upload.single('file'), async (req, res) => {
  * GET /api/converters/health
  * Status dos conversores
  */
+router.post('/mpp-to-xml', upload.single('file'), async (req, res) => {
+  let inputPath = null;
+  let outputPath = null;
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'Nenhum arquivo enviado'
+      });
+    }
+
+    // Validar tipo de arquivo
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    if (!['.mpp'].includes(ext)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Arquivo deve ser MPP (.mpp)',
+        receivedType: ext
+      });
+    }
+
+    inputPath = req.file.path;
+    const filename = path.basename(req.file.originalname, ext);
+    outputPath = path.join(uploadDir, `${filename}_${Date.now()}.xml`);
+
+    // Converter
+    const result = await mppConverter.convertMPPtoXML(inputPath, outputPath);
+
+    // Ler arquivo gerado
+    const xmlContent = await fs.readFile(outputPath, 'utf8');
+
+    return res.json({
+      success: true,
+      conversion: result,
+      xmlPreview: xmlContent.substring(0, 500) + '...',
+      downloadUrl: `/api/download/converter/${path.basename(outputPath)}`,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Erro na conversão MPP→XML:', error);
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+      stage: 'conversion'
+    });
+  } finally {
+    // Limpar arquivo de entrada
+    if (inputPath) {
+      try {
+        await fs.unlink(inputPath);
+      } catch (e) {
+        // Ignorar erros de limpeza
+      }
+    }
+  }
+});
+
+/**
+ * GET /api/converters/health
+ * Status dos conversores
+ */
 router.get('/health', (req, res) => {
   res.json({
     success: true,
-    message: '✅ Todos os 4 conversores estão operacionais',
+    message: '✅ Todos os 5 conversores estão operacionais',
     converters: [
+      {
+        name: 'MPP → XML',
+        endpoint: 'POST /api/converters/mpp-to-xml',
+        formats: ['.mpp'],
+        status: '✅ Online'
+      },
       {
         name: 'Excel → CSV',
         endpoint: 'POST /api/converters/excel-to-csv',
