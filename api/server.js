@@ -80,12 +80,13 @@ const helmetConfig = {
         reportOnly: false
     },
     
-    // ✅ HSTS - Força HTTPS
-    hsts: {
-        maxAge: 31536000,           // 1 ano
-        includeSubDomains: true,
-        preload: true
-    },
+    // ✅ HSTS - Força HTTPS (desabilitar para desenvolvimento HTTP)
+    hsts: false,
+    // hsts: {
+    //     maxAge: 31536000,           // 1 ano
+    //     includeSubDomains: true,
+    //     preload: true
+    // },
     
     // ✅ Outros headers de segurança
     noSniff: true,                  // X-Content-Type-Options: nosniff
