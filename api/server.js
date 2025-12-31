@@ -75,11 +75,11 @@ const helmetConfig = {
             objectSrc: ["'none'"],
             mediaSrc: ["'none'"],
             manifestSrc: ["'self'"]
+            // ❌ NÃO incluir upgrade-insecure-requests (causa redirect HTTP→HTTPS)
         },
         reportUri: '/api/security/csp-report',
         reportOnly: false
     },
-    // ❌ REMOVIDO: upgrade-insecure-requests estava causando redirecionamento HTTP→HTTPS
     
     // ✅ HSTS - Força HTTPS (desabilitar para desenvolvimento HTTP)
     hsts: false,
@@ -101,7 +101,19 @@ const helmetConfig = {
     crossOriginOpenerPolicy: { policy: 'same-origin' }
 };
 
+// ✅ Usar helmet e remover upgrade-insecure-requests se for adicionado automaticamente
 app.use(helmet(helmetConfig));
+
+// ✅ Middleware para remover upgrade-insecure-requests da CSP se Helmet adicionar
+app.use((req, res, next) => {
+    const cspHeader = res.getHeader('Content-Security-Policy');
+    if (cspHeader && typeof cspHeader === 'string') {
+        const cleanedCSP = cspHeader.replace(/;\s*upgrade-insecure-requests/gi, '')
+                                    .replace(/upgrade-insecure-requests;\s*/gi, '');
+        res.setHeader('Content-Security-Policy', cleanedCSP);
+    }
+    next();
+});
 
 // ✅ SECURITY: CORS com whitelist rigoroso
 const corsOptions = {
