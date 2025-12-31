@@ -409,6 +409,28 @@
             100% { transform: rotate(360deg); }
         }
 
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
         .download-btn {
             display: inline-block;
             background: #28a745;
@@ -425,15 +447,46 @@
             padding: 60px 0;
         }
 
+        .pricing-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
         .pricing-box {
             background: white;
             border: 3px solid #0AC9D2;
-            padding: 40px;
+            padding: 40px 30px;
             border-radius: 16px;
             text-align: center;
-            max-width: 500px;
-            margin: 0 auto;
             box-shadow: 0 4px 20px rgba(10, 201, 210, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .pricing-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(10, 201, 210, 0.25);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FF6B6B;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .pricing-box h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin: 0.5rem 0;
         }
 
         .price {
@@ -460,28 +513,38 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.5rem;
             margin-top: 3rem;
-            max-width: 600px;
+            max-width: 900px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .stat {
             text-align: center;
-            padding: 1rem;
+            padding: 1.2rem 0.8rem;
+            background: rgba(10, 201, 210, 0.05);
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(10, 201, 210, 0.1);
         }
 
         .stat-number {
-            font-size: 2rem;
+            font-size: 2.2rem;
             color: #0AC9D2;
             font-weight: 700;
+            margin-bottom: 0.5rem;
         }
 
         .stat-label {
             color: #666;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
         }
 
         .footer {
@@ -501,6 +564,28 @@
                 font-size: 2rem;
             }
 
+            .hero-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.9rem;
+                margin-top: 2rem;
+            }
+
+            .stat {
+                padding: 0.9rem 0.5rem;
+            }
+
+            .stat-number {
+                font-size: 1.6rem;
+            }
+
+            .stat-label {
+                font-size: 0.7rem;
+            }
+
             .nav {
                 gap: 1rem;
             }
@@ -514,6 +599,44 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+                margin-top: 1.5rem;
+            }
+
+            .stat {
+                padding: 0.8rem 0.5rem;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+                margin-bottom: 0.3rem;
+            }
+
+            .stat-label {
+                font-size: 0.65rem;
+            }
+
+            .button {
+                padding: 0.8rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .header-content {
+                padding: 0.5rem 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -523,7 +646,7 @@
             <div class="header-content">
                 <div class="logo">
                     <div class="logo-circle">
-                        <img src="/images/logo.png" alt="CannaConverter Logo" onerror="this.style.display='none'" />
+                        <img src="/images/logo.png" alt="CannaConverter Logo" />
                     </div>
                     <span style="font-weight: 700; color: white; font-size: 1.8rem;">CannaConverter</span>
                 </div>
@@ -540,7 +663,7 @@
     <main>
         <section id="home" class="hero">
             <div class="container">
-                <div class="status-badge">✅ 5 Conversores Disponíveis</div>
+                <div class="status-badge">✅ 16+ Conversores Disponíveis</div>
                 
                 <h1 class="hero-title">
                     <span class="highlight">Converta</span> seus arquivos <span class="highlight">online</span>
@@ -553,11 +676,11 @@
 
                 <div class="stats">
                     <div class="stat">
-                        <div class="stat-number">5</div>
+                        <div class="stat-number">16</div>
                         <div class="stat-label">Conversores</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-number">8+</div>
+                        <div class="stat-number">16+</div>
                         <div class="stat-label">Formatos</div>
                     </div>
                     <div class="stat">
@@ -567,6 +690,30 @@
                     <div class="stat">
                         <div class="stat-number">100%</div>
                         <div class="stat-label">Online</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🔐</div>
+                        <div class="stat-label">AES-256 Criptografado</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">💰</div>
+                        <div class="stat-label">100% Gratuito</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🌍</div>
+                        <div class="stat-label">Qualquer Dispositivo</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🚀</div>
+                        <div class="stat-label">Atualizações Frequentes</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">📦</div>
+                        <div class="stat-label">Conversão em Lote</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">🔗</div>
+                        <div class="stat-label">API Pública</div>
                     </div>
                 </div>
             </div>
@@ -659,6 +806,149 @@
                         </div>
                         <button class="converter-btn">Converter Agora</button>
                     </div>
+
+                    <!-- 6. DOCX → PDF -->
+                    <div class="converter-card" onclick="openConverter('docx-pdf')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📄</div>
+                        <h3 class="converter-title">DOCX <span class="converter-arrow">→</span> PDF</h3>
+                        <p class="converter-description">Converta documentos Word para PDF com formatação preservada.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.docx</span>
+                            <span class="format-badge output">.pdf</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 7. Imagem → PDF -->
+                    <div class="converter-card" onclick="openConverter('image-pdf')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">🖼️</div>
+                        <h3 class="converter-title">Imagem <span class="converter-arrow">→</span> PDF</h3>
+                        <p class="converter-description">Transforme imagens em PDF com layout profissional.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.jpg, .png, .gif</span>
+                            <span class="format-badge output">.pdf</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 8. Comprimir PDF -->
+                    <div class="converter-card" onclick="openConverter('pdf-compress')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📉</div>
+                        <h3 class="converter-title">Comprimir <span class="converter-arrow">→</span> PDF</h3>
+                        <p class="converter-description">Reduza o tamanho de PDFs sem perder qualidade.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.pdf</span>
+                            <span class="format-badge output">.pdf</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 9. PDF → Imagem -->
+                    <div class="converter-card" onclick="openConverter('pdf-image')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📸</div>
+                        <h3 class="converter-title">PDF <span class="converter-arrow">→</span> Imagem</h3>
+                        <p class="converter-description">Extraia páginas de PDF como imagens JPG ou PNG.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.pdf</span>
+                            <span class="format-badge output">.jpg, .png</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 10. PNG → JPG -->
+                    <div class="converter-card" onclick="openConverter('png-jpg')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">🎨</div>
+                        <h3 class="converter-title">PNG <span class="converter-arrow">→</span> JPG</h3>
+                        <p class="converter-description">Converta imagens PNG para JPG com compressão otimizada.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.png</span>
+                            <span class="format-badge output">.jpg</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 11. JPG → WebP -->
+                    <div class="converter-card" onclick="openConverter('jpg-webp')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">⚡</div>
+                        <h3 class="converter-title">JPG <span class="converter-arrow">→</span> WebP</h3>
+                        <p class="converter-description">Converta para WebP - formato moderno com melhor compressão.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.jpg</span>
+                            <span class="format-badge output">.webp</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 12. Imagem para WhatsApp -->
+                    <div class="converter-card" onclick="openConverter('image-whatsapp')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">💬</div>
+                        <h3 class="converter-title">Imagem <span class="converter-arrow">→</span> WhatsApp</h3>
+                        <p class="converter-description">Otimize imagens para envio rápido no WhatsApp.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.jpg, .png</span>
+                            <span class="format-badge output">Otimizado</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 13. Vídeo → MP4 -->
+                    <div class="converter-card" onclick="openConverter('video-mp4')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">🎬</div>
+                        <h3 class="converter-title">Vídeo <span class="converter-arrow">→</span> MP4</h3>
+                        <p class="converter-description">Converta qualquer vídeo para MP4, o formato universal.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.mov, .avi, .mkv</span>
+                            <span class="format-badge output">.mp4</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 14. Vídeo para WhatsApp -->
+                    <div class="converter-card" onclick="openConverter('video-whatsapp')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📹</div>
+                        <h3 class="converter-title">Vídeo <span class="converter-arrow">→</span> WhatsApp</h3>
+                        <p class="converter-description">Comprima e otimize vídeos para WhatsApp.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.mp4, .avi, .mov</span>
+                            <span class="format-badge output">Otimizado</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 15. Vídeo para Redes Sociais -->
+                    <div class="converter-card" onclick="openConverter('video-social')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">📱</div>
+                        <h3 class="converter-title">Vídeo <span class="converter-arrow">→</span> Redes</h3>
+                        <p class="converter-description">Formate vídeos para Instagram, TikTok e YouTube.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">.mp4, .mov, .avi</span>
+                            <span class="format-badge output">Otimizado</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
+
+                    <!-- 16. FFmpeg Avançado -->
+                    <div class="converter-card" onclick="openConverter('ffmpeg')">
+                        <span class="converter-status">Online</span>
+                        <div class="converter-icon">⚙️</div>
+                        <h3 class="converter-title">FFmpeg <span class="converter-arrow">→</span> Avançado</h3>
+                        <p class="converter-description">Conversão profissional de mídia com FFmpeg.</p>
+                        <div class="converter-formats">
+                            <span class="format-badge input">Múltiplos</span>
+                            <span class="format-badge output">Múltiplos</span>
+                        </div>
+                        <button class="converter-btn">Converter Agora</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -667,30 +957,345 @@
         <section id="precos" class="pricing-section">
             <div class="container">
                 <h2 class="section-title">Simples e Acessível</h2>
-                <p class="section-subtitle">Pague apenas pelo que usar</p>
+                <p class="section-subtitle">Escolha o plano que melhor se adequa às suas necessidades</p>
                 
-                <div class="pricing-box">
-                    <h3>Conversão Única</h3>
-                    <div class="price">R$ 10,00</div>
-                    <p class="price-note">Por conversão • Qualquer formato</p>
-                    <p class="price-note" style="margin-top: 1rem;">
-                        ✓ Processamento instantâneo<br>
-                        ✓ Download imediato<br>
-                        ✓ Arquivos até 50MB<br>
-                        ✓ Suporte a todos os conversores
-                    </p>
-                    <div class="free-badge">🎁 Teste Grátis Disponível</div>
+                <div class="pricing-container">
+                    <!-- Plano 1: Conversão Única -->
+                    <div class="pricing-box">
+                        <h3>Conversão Única</h3>
+                        <div class="price">R$ 10,00</div>
+                        <p class="price-note">Por conversão</p>
+                        <p class="price-note" style="margin-top: 1rem; font-size: 0.9rem;">
+                            ✓ Processamento instantâneo<br>
+                            ✓ Download imediato<br>
+                            ✓ Arquivos até 50MB<br>
+                            ✓ Qualquer formato
+                        </p>
+                        <div class="free-badge">🎁 Teste Grátis</div>
+                    </div>
+
+                    <!-- Plano 2: Pacote Popular -->
+                    <div class="pricing-box" style="border-color: #FF6B6B; border-width: 3px;">
+                        <div class="pricing-badge">MAIS POPULAR</div>
+                        <h3>Pacote Completo</h3>
+                        <div class="price" style="color: #FF6B6B;">R$ 30,00</div>
+                        <p class="price-note">200 créditos • Economize 25%</p>
+                        <p class="price-note" style="margin-top: 1rem; font-size: 0.9rem;">
+                            ✓ Tudo do plano básico +<br>
+                            ✓ 200 conversões*<br>
+                            ✓ Conversão em lote<br>
+                            ✓ Histórico de conversões
+                        </p>
+                        <button class="free-badge" style="background: #FF6B6B; border: none; cursor: pointer; font-size: 0.95rem;" onclick="openPaymentModal(30, 'complete')">💳 Comprar Agora</button>
+                    </div>
+
+                    <!-- Plano 3: Enterprise -->
+                    <div class="pricing-box">
+                        <h3>Enterprise</h3>
+                        <div class="price">Customizado</div>
+                        <p class="price-note">Para empresas</p>
+                        <p class="price-note" style="margin-top: 1rem; font-size: 0.9rem;">
+                            ✓ Conversões ilimitadas<br>
+                            ✓ Acesso API completa<br>
+                            ✓ Suporte dedicado 24/7<br>
+                            ✓ Integração personalizada
+                        </p>
+                        <button class="free-badge" style="background: #0AC9D2; border: none; cursor: pointer; font-size: 0.95rem;">📧 Falar com Vendas</button>
+                    </div>
                 </div>
+
+                <p style="text-align: center; color: #666; margin-top: 2rem; font-size: 0.9rem;">
+                    * Custo médio: 1 crédito ≈ R$ 0,15 • Diferentes conversores custam de 1 a 5 créditos
+                </p>
             </div>
         </section>
+        
+        <!-- Modal de Pagamento PIX -->
+        <div id="paymentModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <span class="close" onclick="closePaymentModal()">&times;</span>
+                <h2>Comprar Créditos</h2>
+                
+                <div style="margin: 2rem 0;">
+                    <div id="paymentLoading" style="text-align: center; display: none;">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                        <p>Gerando código PIX...</p>
+                    </div>
+                    
+                    <div id="paymentQRCode" style="text-align: center; display: none;">
+                        <div id="qrcodeContainer"></div>
+                        <p style="margin-top: 1rem; color: #666;">
+                            <strong>Valor:</strong> <span id="paymentAmount">R$ 30,00</span>
+                        </p>
+                        <p style="color: #666; font-size: 0.9rem;">
+                            Escaneie o código QR com seu celular ou copie a chave PIX abaixo
+                        </p>
+                        
+                        <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Chave PIX:</p>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" id="pixKey" readonly style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem;" />
+                                <button onclick="copyPixKey()" style="padding: 0.5rem 1rem; background: #0AC9D2; color: white; border: none; border-radius: 4px; cursor: pointer;">📋 Copiar</button>
+                            </div>
+                        </div>
+                        
+                        <p style="margin-top: 1.5rem; color: #666; font-size: 0.9rem;">
+                            Após transferir, clique em "Verificar Pagamento"
+                        </p>
+                        <button onclick="checkPaymentStatus()" style="margin-top: 1rem; padding: 0.8rem 1.5rem; background: #388e3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">✓ Verificar Pagamento</button>
+                    </div>
+                    
+                    <div id="paymentSuccess" style="text-align: center; display: none;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                        <h3 style="color: #388e3c;">Pagamento Confirmado!</h3>
+                        <p style="margin-top: 1rem;">Seus créditos foram adicionados com sucesso.</p>
+                        <button onclick="closePaymentModal()" style="margin-top: 1.5rem; padding: 0.8rem 1.5rem; background: #0AC9D2; color: white; border: none; border-radius: 4px; cursor: pointer;">Fechar</button>
+                    </div>
+                    
+                    <div id="paymentError" style="text-align: center; display: none;">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
+                        <h3 style="color: #d32f2f;">Erro no Pagamento</h3>
+                        <p id="errorMessage" style="margin-top: 1rem; color: #666;"></p>
+                        <button onclick="closePaymentModal()" style="margin-top: 1.5rem; padding: 0.8rem 1.5rem; background: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer;">Tentar Novamente</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- Footer -->
+    <!-- Modal Termos de Uso -->
+    <div id="termos-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('termos-modal')">&times;</span>
+            <h2>Termos de Uso</h2>
+            <div class="modal-body">
+                <h3>1. Aceitação dos Termos</h3>
+                <p>Ao acessar e usar o CannaConverter, você concorda com estes termos e condições. Se não concordar com qualquer parte, não continue usando o serviço.</p>
+
+                <h3>2. Uso Permitido</h3>
+                <p>Você concorda em usar este serviço apenas para fins legais e legítimos. Você não pode:</p>
+                <ul>
+                    <li>Usar o serviço para atividades ilegais ou prejudiciais</li>
+                    <li>Violar direitos de propriedade intelectual</li>
+                    <li>Enviar conteúdo malicioso ou vírus</li>
+                    <li>Tentar acessar sistemas não autorizados</li>
+                </ul>
+
+                <h3>3. Propriedade Intelectual</h3>
+                <p>Todo o conteúdo do CannaConverter, incluindo design, logotipo e funcionalidade, é protegido por direitos autorais © 2025. Você não pode copiar, modificar ou distribuir sem permissão.</p>
+
+                <h3>4. Responsabilidade do Usuário</h3>
+                <p>Você é responsável por manter a confidencialidade de seus dados e senhas. O CannaConverter não é responsável por perda ou uso indevido de suas credenciais.</p>
+
+                <h3>5. Limitação de Responsabilidade</h3>
+                <p>O serviço é fornecido "como está". O CannaConverter não garante resultados específicos e não é responsável por danos diretos ou indiretos resultantes do uso do serviço.</p>
+
+                <h3>6. Modificações</h3>
+                <p>Reservamos o direito de modificar estes termos a qualquer momento. As modificações entram em vigor imediatamente após a publicação.</p>
+
+                <h3>7. Rescisão</h3>
+                <p>Podemos rescindir sua conta a qualquer momento se violar estes termos.</p>
+
+                <h3>8. Contato</h3>
+                <p>Para dúvidas sobre estes termos, entre em contato conosco através de nossos canais de suporte.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Privacidade -->
+    <div id="privacidade-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('privacidade-modal')">&times;</span>
+            <h2>Política de Privacidade</h2>
+            <div class="modal-body">
+                <h3>1. Informações que Coletamos</h3>
+                <p>Coletamos informações que você nos fornece voluntariamente, incluindo:</p>
+                <ul>
+                    <li>Endereço de email</li>
+                    <li>Informações de pagamento</li>
+                    <li>Dados do arquivo convertido</li>
+                    <li>Preferências de uso</li>
+                </ul>
+
+                <h3>2. Como Usamos Suas Informações</h3>
+                <p>Usamos suas informações para:</p>
+                <ul>
+                    <li>Fornecer, melhorar e personalizar nossos serviços</li>
+                    <li>Processar transações e pagamentos</li>
+                    <li>Comunicar sobre atualizações e promoções</li>
+                    <li>Cumprir obrigações legais</li>
+                </ul>
+
+                <h3>3. Proteção de Dados</h3>
+                <p>Implementamos medidas de segurança técnicas e administrativas para proteger seus dados pessoais contra acesso, alteração ou destruição não autorizada.</p>
+
+                <h3>4. Cookies e Rastreamento</h3>
+                <p>Usamos cookies para melhorar sua experiência. Você pode controlar as preferências de cookies em seu navegador.</p>
+
+                <h3>5. Compartilhamento de Dados</h3>
+                <p>Não vendemos seus dados. Compartilhamos apenas com terceiros de confiança necessários para operar nosso serviço, como processadores de pagamento.</p>
+
+                <h3>6. Retenção de Dados</h3>
+                <p>Mantemos seus dados apenas pelo tempo necessário para fornecer o serviço, conforme exigido por lei. Você pode solicitar exclusão de dados a qualquer momento.</p>
+
+                <h3>7. Seus Direitos</h3>
+                <p>Você tem o direito de acessar, corrigir ou deletar seus dados pessoais. Entre em contato para exercer esses direitos.</p>
+
+                <h3>8. Alterações nesta Política</h3>
+                <p>Podemos atualizar esta política periodicamente. Notificaremos sobre mudanças materiais.</p>
+
+                <h3>9. Contato</h3>
+                <p>Para dúvidas sobre privacidade, entre em contato através de nossos canais de suporte.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estilos do Modal -->
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease-in-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h2 {
+            color: #0AC9D2;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0AC9D2;
+            padding-bottom: 10px;
+        }
+
+        .modal-content h3 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .modal-content p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .modal-content ul {
+            margin-left: 20px;
+            color: #666;
+        }
+
+        .modal-content ul li {
+            margin-bottom: 8px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 20% auto;
+                padding: 20px;
+            }
+
+            .modal-content h2 {
+                font-size: 20px;
+            }
+
+            .modal-content h3 {
+                font-size: 16px;
+            }
+
+            .modal-body {
+                font-size: 13px;
+            }
+        }
+    </style>
+
+    <!-- Script dos Modais -->
+    <script>
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Impede scroll
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restaura scroll
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Fechar com ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    if (modal.style.display === 'block') {
+                        modal.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            }
+        });
+    </script><!-- Footer -->
     <footer class="footer">
         <div class="container">
             <p>&copy; 2025 CannaConverter. Todos os direitos reservados.</p>
             <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #aaa;">
-                <a href="#">Privacidade</a> | <a href="#">Termos</a> | <a href="/api/converters/health">Status API</a>
+                <a href="javascript:void(0);" onclick="openModal('privacidade-modal'); return false;">Privacidade</a> | <a href="javascript:void(0);" onclick="openModal('termos-modal'); return false;">Termos</a>
             </p>
         </div>
     </footer>
@@ -716,43 +1321,24 @@
     </div>
 
     <script>
-        // Configuração dos conversores
+        // Configuração de TODOS os conversores (23 disponíveis)
         const converters = {
-            'mpp-xml': {
-                title: 'Converter MPP → XML',
-                formats: '.mpp',
-                accept: '.mpp',
-                endpoint: '/api/upload-test',
-                description: 'Microsoft Project para XML'
-            },
-            'excel-csv': {
-                title: 'Converter Excel → CSV',
-                formats: '.xlsx, .xls',
-                accept: '.xlsx,.xls',
-                endpoint: '/api/converters/excel-to-csv',
-                description: 'Excel para CSV'
-            },
-            'json-csv': {
-                title: 'Converter JSON → CSV',
-                formats: '.json',
-                accept: '.json',
-                endpoint: '/api/converters/json-to-csv',
-                description: 'JSON para CSV'
-            },
-            'zip-xml': {
-                title: 'Extrair ZIP → XML',
-                formats: '.zip',
-                accept: '.zip',
-                endpoint: '/api/converters/zip-to-xml',
-                description: 'Extrair XMLs de ZIP'
-            },
-            'xml-mpp': {
-                title: 'Converter XML → MPP',
-                formats: '.xml',
-                accept: '.xml',
-                endpoint: '/api/converters/xml-to-mpp',
-                description: 'XML para MPP'
-            }
+            'mpp-xml': { title: 'MPP → XML', formats: '.mpp', accept: '.mpp', endpoint: '/api/converters/mpp-to-xml', description: 'Microsoft Project para XML' },
+            'xml-mpp': { title: 'XML → MPP', formats: '.xml', accept: '.xml', endpoint: '/api/converters/xml-to-mpp', description: 'XML para MPP' },
+            'excel-csv': { title: 'Excel → CSV', formats: '.xlsx, .xls', accept: '.xlsx,.xls', endpoint: '/api/converters/excel-to-csv', description: 'Excel para CSV' },
+            'json-csv': { title: 'JSON → CSV', formats: '.json', accept: '.json', endpoint: '/api/converters/json-to-csv', description: 'JSON para CSV' },
+            'zip-xml': { title: 'ZIP → XML', formats: '.zip', accept: '.zip', endpoint: '/api/converters/zip-to-xml', description: 'Extrair XMLs de ZIP' },
+            'docx-pdf': { title: 'DOCX → PDF', formats: '.docx', accept: '.docx', endpoint: '/api/converters/docx-to-pdf', description: 'Word para PDF' },
+            'image-pdf': { title: 'Imagem → PDF', formats: '.jpg, .png, .gif', accept: '.jpg,.png,.gif,.jpeg', endpoint: '/api/converters/image-to-pdf', description: 'Imagem para PDF' },
+            'pdf-compress': { title: 'Comprimir PDF', formats: '.pdf', accept: '.pdf', endpoint: '/api/converters/pdf-compress', description: 'Reduzir tamanho PDF' },
+            'pdf-image': { title: 'PDF → Imagem', formats: '.pdf', accept: '.pdf', endpoint: '/api/converters/pdf-to-image', description: 'PDF para Imagem' },
+            'png-jpg': { title: 'PNG → JPG', formats: '.png', accept: '.png', endpoint: '/api/converters/png-to-jpg', description: 'PNG para JPG' },
+            'jpg-webp': { title: 'JPG → WebP', formats: '.jpg, .jpeg', accept: '.jpg,.jpeg', endpoint: '/api/converters/jpg-to-webp', description: 'JPG para WebP (moderno)' },
+            'image-whatsapp': { title: 'Imagem Para WhatsApp', formats: '.jpg, .png', accept: '.jpg,.png,.jpeg', endpoint: '/api/converters/image-optimize-whatsapp', description: 'Otimizar para WhatsApp' },
+            'video-mp4': { title: 'Vídeo → MP4', formats: '.mov, .avi, .mkv', accept: '.mov,.avi,.mkv,.flv,.wmv', endpoint: '/api/converters/video-to-mp4', description: 'Converter para MP4' },
+            'video-whatsapp': { title: 'Vídeo Para WhatsApp', formats: '.mp4, .avi, .mov', accept: '.mp4,.avi,.mov,.mkv', endpoint: '/api/converters/video-compress-whatsapp', description: 'Otimizar vídeo para WhatsApp' },
+            'video-social': { title: 'Vídeo Para Redes Sociais', formats: '.mp4, .mov, .avi', accept: '.mp4,.mov,.avi,.mkv', endpoint: '/api/converters/video-to-social', description: 'Formatos ideais: Instagram, TikTok, YouTube' },
+            'ffmpeg': { title: 'Conversor FFmpeg', formats: 'Múltiplos', accept: '.mp4,.avi,.mov,.mkv,.webm,.flv', endpoint: '/api/converters/ffmpeg', description: 'Conversão avançada de mídia' }
         };
 
         let currentConverter = null;
@@ -807,6 +1393,25 @@
         async function handleFile(file) {
             if (!currentConverter) return;
 
+            // ✅ VERIFICAR CRÉDITOS ANTES DE CONVERTER
+            const creditsRequired = 1; // Padrão: 1 crédito por conversão
+            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
+            
+            if (currentCredits < creditsRequired) {
+                const resultArea = document.getElementById('resultArea');
+                const resultText = document.getElementById('resultText');
+                
+                resultArea.className = 'result-area error';
+                resultArea.style.display = 'block';
+                resultText.innerHTML = `
+                    <h3 style="color: #d32f2f; margin-bottom: 1rem;">❌ Créditos Insuficientes</h3>
+                    <p>Você tem <strong>${currentCredits} créditos</strong>, mas precisa de <strong>${creditsRequired}</strong>.</p>
+                    <p style="margin-top: 1rem;">Compre créditos para continuar!</p>
+                    <button onclick="closeModal(); openPaymentModal(30, 'complete')" style="margin-top: 1rem; padding: 0.8rem 1.5rem; background: #FF6B6B; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💳 Comprar Créditos</button>
+                `;
+                return;
+            }
+
             const resultArea = document.getElementById('resultArea');
             const resultText = document.getElementById('resultText');
 
@@ -827,9 +1432,13 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
+                    // ✅ Deduzir crédito após conversão bem-sucedida
+                    const remainingCredits = deductCredits(1);
+                    
                     resultArea.className = 'result-area success';
                     
                     let html = `<h3 style="color: #388e3c; margin-bottom: 1rem;">✅ Conversão concluída!</h3>`;
+                    html += `<p style="font-size: 0.9rem; color: #666;">💰 Créditos restantes: <strong>${remainingCredits}</strong></p>`;
                     
                     if (data.conversion) {
                         html += `<p><strong>Arquivo:</strong> ${file.name}</p>`;
@@ -874,6 +1483,231 @@
                 closeModal();
             }
         });
+
+        // ============================================
+        // FUNÇÕES DE PAGAMENTO PIX
+        // ============================================
+        
+        let currentPayment = {
+            amount: 0,
+            transactionId: null,
+            plan: null
+        };
+
+        function openPaymentModal(amount, plan) {
+            currentPayment.amount = amount;
+            currentPayment.plan = plan;
+            
+            document.getElementById('paymentModal').style.display = 'block';
+            document.getElementById('paymentAmount').textContent = `R$ ${amount.toFixed(2).replace('.', ',')}`;
+            
+            // Resetar estados
+            document.getElementById('paymentLoading').style.display = 'block';
+            document.getElementById('paymentQRCode').style.display = 'none';
+            document.getElementById('paymentSuccess').style.display = 'none';
+            document.getElementById('paymentError').style.display = 'none';
+            
+            generatePixPayment(amount, plan);
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            currentPayment = { amount: 0, transactionId: null, plan: null };
+        }
+
+        async function generatePixPayment(amount, plan) {
+            try {
+                const response = await fetch('/api/premium/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: amount,
+                        plan: plan,
+                        email: localStorage.getItem('userEmail') || 'anonymous@example.com',
+                        cpf: localStorage.getItem('userCPF') || '00000000000'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao gerar código PIX');
+                }
+
+                const data = await response.json();
+                
+                if (data.success && data.checkoutUrl) {
+                    currentPayment.transactionId = data.transactionId;
+                    
+                    // Fechar modal e redirecionar para Mercado Pago
+                    closePaymentModal();
+                    
+                    // Redirecionar para checkout do Mercado Pago
+                    window.location.href = data.checkoutUrl;
+                } else {
+                    showPaymentError(data.message || 'Erro ao gerar PIX');
+                }
+            } catch (error) {
+                showPaymentError(error.message);
+            }
+        }
+
+        function displayQRCode(qrCodeData) {
+            const container = document.getElementById('qrcodeContainer');
+            container.innerHTML = `<img src="${qrCodeData}" alt="QR Code PIX" style="max-width: 250px; border-radius: 8px; border: 2px solid #0AC9D2;" />`;
+        }
+
+        function copyPixKey() {
+            const pixKey = document.getElementById('pixKey');
+            pixKey.select();
+            document.execCommand('copy');
+            
+            // Feedback visual
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copiado!';
+            setTimeout(() => { btn.textContent = originalText; }, 2000);
+        }
+
+        async function checkPaymentStatus() {
+            if (!currentPayment.transactionId) {
+                showPaymentError('ID da transação não encontrado');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/payment/status/${currentPayment.transactionId}`);
+                const data = await response.json();
+
+                if (data.success && data.status === 'PAID') {
+                    // Pagamento confirmado
+                    localStorage.setItem('userCredits', data.credits || 200);
+                    document.getElementById('paymentQRCode').style.display = 'none';
+                    document.getElementById('paymentSuccess').style.display = 'block';
+                } else if (data.status === 'PENDING') {
+                    showPaymentError('Pagamento ainda não foi detectado. Aguarde ou verifique novamente em instantes.');
+                } else {
+                    showPaymentError('Pagamento não confirmado. Tente novamente.');
+                }
+            } catch (error) {
+                showPaymentError(error.message);
+            }
+        }
+
+        function showPaymentError(message) {
+            document.getElementById('paymentLoading').style.display = 'none';
+            document.getElementById('paymentQRCode').style.display = 'none';
+            document.getElementById('paymentError').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Verificar créditos antes de converter
+        function hasEnoughCredits(requiredCredits = 1) {
+            const credits = parseInt(localStorage.getItem('userCredits') || '0');
+            return credits >= requiredCredits;
+        }
+
+        function deductCredits(amount = 1) {
+            const credits = parseInt(localStorage.getItem('userCredits') || '0');
+            const newCredits = Math.max(0, credits - amount);
+            localStorage.setItem('userCredits', newCredits);
+            return newCredits;
+        }
+
+        // Verificar se está retornando do Mercado Pago
+        async function checkMercadoPagoReturn() {
+            const params = new URLSearchParams(window.location.search);
+            const paymentStatus = params.get('payment');
+            const preferenceId = params.get('preferenceId');
+
+            if (paymentStatus && preferenceId) {
+                // Remover parâmetros da URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                if (paymentStatus === 'success') {
+                    try {
+                        // Verificar status do pagamento
+                        const response = await fetch('/api/payment/check-status', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ preferenceId: preferenceId })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success && data.status === 'approved') {
+                            // Adicionar créditos
+                            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
+                            const totalCredits = currentCredits + (data.credits || 3);
+                            localStorage.setItem('userCredits', totalCredits);
+
+                            // Mostrar notificação de sucesso
+                            showSuccessNotification(`✅ Pagamento confirmado! +${data.credits || 3} créditos adicionados!`);
+                        } else {
+                            showErrorNotification('Pagamento ainda não foi confirmado. Atualize a página em alguns momentos.');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao verificar pagamento:', error);
+                        showErrorNotification('Erro ao verificar pagamento: ' + error.message);
+                    }
+                } else if (paymentStatus === 'failed') {
+                    showErrorNotification('❌ Pagamento rejeitado. Tente novamente.');
+                } else if (paymentStatus === 'pending') {
+                    showErrorNotification('⏳ Pagamento pendente. Aguarde a confirmação.');
+                } else if (paymentStatus === 'error') {
+                    showErrorNotification('❌ Erro no processamento do pagamento.');
+                }
+            }
+        }
+
+        function showSuccessNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-weight: bold;
+                animation: slideIn 0.3s ease-in-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        function showErrorNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #f44336;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-weight: bold;
+                animation: slideIn 0.3s ease-in-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Executar ao carregar a página
+        document.addEventListener('DOMContentLoaded', checkMercadoPagoReturn);
     </script>
 </body>
 </html>

@@ -124,10 +124,10 @@ function loadConfig() {
         PORT: validator.integer('PORT', 3000),
         HOST: validator.required('HOST', 'localhost'),
         
-        // Security
-        JWT_SECRET: validator.required('JWT_SECRET', 'dev-secret-key'),
-        API_KEY: validator.required('API_KEY', 'dev-api-key'),
-        SESSION_SECRET: validator.required('SESSION_SECRET', 'dev-session-secret'),
+        // Security - 🔒 NO DEFAULTS FOR SECRETS!
+        JWT_SECRET: validator.required('JWT_SECRET', null),
+        API_KEY: validator.required('API_KEY', null),
+        SESSION_SECRET: validator.required('SESSION_SECRET', null),
         
         // Database (optional)
         DATABASE_URL: validator.required('DATABASE_URL', null),
@@ -156,6 +156,54 @@ function loadConfig() {
     };
     
     validator.validate();
+    
+    // 🔒 SECURITY: Enforce strong secrets in all environments
+    function validateSecrets(cfg) {
+        const isProduction = cfg.NODE_ENV === 'production';
+        const isStaging = cfg.NODE_ENV === 'staging';
+        
+        // Check if secrets are missing
+        if (!cfg.JWT_SECRET) {
+            const msg = 'CRITICAL: JWT_SECRET is not set! Generate one with:\n' +
+                       'node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"';
+            console.error('❌', msg);
+            throw new Error(msg);
+        }
+        
+        if (!cfg.API_KEY) {
+            const msg = 'CRITICAL: API_KEY is not set!';
+            console.error('❌', msg);
+            throw new Error(msg);
+        }
+        
+        if (!cfg.SESSION_SECRET) {
+            const msg = 'CRITICAL: SESSION_SECRET is not set!';
+            console.error('❌', msg);
+            throw new Error(msg);
+        }
+        
+        // Check for dev secrets in production/staging
+        const devSecrets = ['dev-secret-key', 'dev-api-key', 'dev-session-secret'];
+        
+        if ((isProduction || isStaging) && devSecrets.includes(cfg.JWT_SECRET)) {
+            throw new Error(`❌ CRITICAL: Using development secret '${cfg.JWT_SECRET}' in ${cfg.NODE_ENV}!`);
+        }
+        
+        if ((isProduction || isStaging) && devSecrets.includes(cfg.API_KEY)) {
+            throw new Error(`❌ CRITICAL: Using development secret '${cfg.API_KEY}' in ${cfg.NODE_ENV}!`);
+        }
+        
+        // Check secret strength (minimum 32 characters)
+        if (cfg.JWT_SECRET.length < 32) {
+            const msg = `⚠️ WARNING: JWT_SECRET is weak (${cfg.JWT_SECRET.length} chars). Minimum 32 recommended.`;
+            if (isProduction) throw new Error(`CRITICAL: ${msg}`);
+            console.warn(msg);
+        }
+        
+        console.log('✅ Security validation passed');
+    }
+    
+    validateSecrets(config);
     
     return config;
 }

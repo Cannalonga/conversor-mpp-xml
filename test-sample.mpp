@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/project/msbuild/2009/01">
+  <ProjectDefaults>
+    <NewProjectsUseNewDefaults>True</NewProjectsUseNewDefaults>
+    <ProjectStartDate>2024-01-01T00:00:00</ProjectStartDate>
+  </ProjectDefaults>
+  <Tasks>
+    <Task>
+      <UID>1</UID>
+      <ID>1</ID>
+      <Name>Tarefa de Teste</Name>
+      <Type>0</Type>
+      <IsNull>False</IsNull>
+      <CreateDate>2024-01-01T00:00:00</CreateDate>
+      <Contact>Gerente</Contact>
+      <Notes>Esta é uma tarefa de teste</Notes>
+      <Duration>PT8H0M0S</Duration>
+      <Start>2024-01-01T08:00:00</Start>
+      <Finish>2024-01-01T16:00:00</Finish>
+    </Task>
+  </Tasks>
+  <Resources/>
+</Project>
