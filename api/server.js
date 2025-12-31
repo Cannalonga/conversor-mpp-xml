@@ -79,6 +79,7 @@ const helmetConfig = {
         reportUri: '/api/security/csp-report',
         reportOnly: false
     },
+    // ❌ REMOVIDO: upgrade-insecure-requests estava causando redirecionamento HTTP→HTTPS
     
     // ✅ HSTS - Força HTTPS (desabilitar para desenvolvimento HTTP)
     hsts: false,
