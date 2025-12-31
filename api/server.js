@@ -11,6 +11,7 @@ require('dotenv').config();
 
 const uploadUtils = require('./upload-utils');
 const downloadToken = require('../utils/downloadToken');
+const MercadoPagoService = require('./mercado-pago-service');
 
 // Import converter routes (4 novos conversores)
 const converterRoutes = require('./converter-routes');
@@ -976,6 +977,65 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     }
 });
 
+// ============================================================
+// MERCADO PAGO - POST /api/premium/checkout
+// ============================================================
+const mpService = new MercadoPagoService({
+    accessToken: process.env.MP_ACCESS_TOKEN,
+    publicKey: process.env.MP_PUBLIC_KEY,
+    environment: process.env.MERCADO_PAGO_ENVIRONMENT || 'test'
+});
+
+app.post('/api/premium/checkout', async (req, res) => {
+    try {
+        const { amount, plan, email, cpf } = req.body;
+
+        // Validar dados de entrada
+        if (!amount || !plan) {
+            return res.status(400).json({
+                success: false,
+                message: 'Parâmetros obrigatórios: amount, plan'
+            });
+        }
+
+        console.log('[CHECKOUT] Iniciando pagamento:', { amount, plan, email });
+
+        // Tentar com Mercado Pago
+        const mpResult = await mpService.createPaymentPreference({
+            amount: amount,
+            description: `Pacote ${plan} - CannaConverter`,
+            email: email || 'anonymous@example.com',
+            cpf: cpf || '00000000000',
+            plan: plan,
+            returnUrl: 'http://cannaconvert.store',
+            notificationUrl: `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/premium/webhook`
+        });
+
+        console.log('[CHECKOUT] ✅ Preferência criada:', mpResult.preferenceId);
+
+        res.json({
+            success: true,
+            transactionId: mpResult.preferenceId,
+            checkoutUrl: mpResult.checkoutUrl,
+            qrCode: mpResult.checkoutUrl, // URL do QR Code (Mercado Pago serve a imagem)
+            pixKey: mpResult.preferenceId,
+            amount: mpResult.amount,
+            status: mpResult.status,
+            // Mercado Pago retorna uma URL de checkout que inclui QR Code
+            paymentUrl: mpResult.checkoutUrl
+        });
+
+    } catch (error) {
+        console.error('[CHECKOUT] Erro ao criar checkout:', error.message);
+        
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao gerar código PIX: ' + (error.message || 'Tente novamente'),
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
 // Gerar QR Code para pagamento
 app.post('/api/payment/qrcode', async (req, res) => {
     try {
@@ -1047,6 +1107,55 @@ app.get('/api/payment/status/:conversionId', async (req, res) => {
     } catch (error) {
         console.error('Erro ao verificar status do pagamento:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// ============================================================
+// MERCADO PAGO WEBHOOK - POST /api/premium/webhook
+// ============================================================
+app.post('/api/premium/webhook', async (req, res) => {
+    try {
+        console.log('[WEBHOOK MP] Recebido evento:', req.body.type);
+        console.log('[WEBHOOK MP] Dados completos:', JSON.stringify(req.body, null, 2));
+
+        // O Mercado Pago sempre espera 200 OK para confirmar recebimento
+        // Mesmo que haja erro, respondemos 200 para não fazer retry
+        
+        // Validar webhook (opcional com segredo)
+        // const isValid = mpService.validateWebhook(req.body, req.headers);
+        // if (!isValid) {
+        //     console.warn('[WEBHOOK MP] ⚠️ Assinatura inválida');
+        //     return res.status(200).json({ success: false, message: 'Invalid signature' });
+        // }
+
+        // Processar webhook
+        if (req.body.type === 'payment' && req.body.data) {
+            const paymentId = req.body.data.id;
+            console.log('[WEBHOOK MP] Verificando pagamento:', paymentId);
+            
+            try {
+                // Buscar status do pagamento
+                if (mpService && mpService.getPaymentStatus) {
+                    const status = await mpService.getPaymentStatus(paymentId);
+                    console.log('[WEBHOOK MP] Status do pagamento:', status.status);
+                    
+                    if (status.status === 'approved') {
+                        console.log('[WEBHOOK MP] ✅ Pagamento aprovado:', paymentId);
+                        // TODO: Adicionar créditos ao usuário
+                    }
+                }
+            } catch (statusError) {
+                console.log('[WEBHOOK MP] ⚠️ Não conseguiu buscar status:', statusError.message);
+            }
+        }
+
+        // IMPORTANTE: Sempre responder 200 OK ao Mercado Pago
+        res.status(200).json({ success: true, message: 'Webhook recebido' });
+
+    } catch (error) {
+        console.error('[WEBHOOK MP] Erro ao processar webhook:', error.message);
+        // Sempre retornar 200 para não fazer retry infinito
+        res.status(200).json({ success: true, message: 'Processado com erro (mas aceito)' });
     }
 });
 
@@ -1313,6 +1422,109 @@ app.get('/api/queue/stats', async (req, res) => {
         res.status(500).json({
             error: 'Erro interno do servidor',
             code: 'STATS_ERROR'
+        });
+    }
+});
+
+// MERCADO PAGO - RETORNO DO PAGAMENTO
+// Redirecionado pelo Mercado Pago após o usuário completar o pagamento
+app.get('/pagamento/sucesso', (req, res) => {
+    try {
+        // Mercado Pago retorna: ?status=approved&external_reference=...&preference_id=...
+        const { status, external_reference, preference_id } = req.query;
+        
+        console.log('[PAYMENT RETURN] ✅ Pagamento sucesso:', { status, external_reference, preference_id });
+        
+        // Redirecionar para página de sucesso no frontend
+        // A página renderizará baseado no localStorage onde salvamos o transactionId
+        res.redirect('/?payment=success&preferenceId=' + preference_id);
+    } catch (error) {
+        console.error('[PAYMENT RETURN] Erro:', error);
+        res.redirect('/?payment=error');
+    }
+});
+
+app.get('/pagamento/erro', (req, res) => {
+    try {
+        const { status, preference_id } = req.query;
+        
+        console.log('[PAYMENT RETURN] ❌ Pagamento rejeitado:', { status, preference_id });
+        
+        res.redirect('/?payment=failed&preferenceId=' + preference_id);
+    } catch (error) {
+        console.error('[PAYMENT RETURN] Erro:', error);
+        res.redirect('/?payment=error');
+    }
+});
+
+app.get('/pagamento/pendente', (req, res) => {
+    try {
+        const { status, preference_id } = req.query;
+        
+        console.log('[PAYMENT RETURN] ⏳ Pagamento pendente:', { status, preference_id });
+        
+        res.redirect('/?payment=pending&preferenceId=' + preference_id);
+    } catch (error) {
+        console.error('[PAYMENT RETURN] Erro:', error);
+        res.redirect('/?payment=error');
+    }
+});
+
+// Endpoint para verificar status de pagamento (após retorno)
+app.post('/api/payment/check-status', async (req, res) => {
+    try {
+        const { preferenceId } = req.body;
+        
+        if (!preferenceId) {
+            return res.status(400).json({ success: false, message: 'preferenceId requerido' });
+        }
+        
+        console.log('[CHECK STATUS] Verificando preferência:', preferenceId);
+        
+        // Buscar status no Mercado Pago
+        const preference = await mpService.getPreferenceStatus(preferenceId);
+        
+        // Verificar se tem pagamentos aprovados
+        let isApproved = false;
+        let paymentDetails = null;
+        
+        if (preference.paymentsMade && preference.paymentsMade.length > 0) {
+            for (const payment of preference.paymentsMade) {
+                if (payment.status === 'approved') {
+                    isApproved = true;
+                    paymentDetails = payment;
+                    break;
+                }
+            }
+        }
+        
+        if (isApproved) {
+            console.log('[CHECK STATUS] ✅ Pagamento aprovado:', paymentDetails);
+            
+            // TODO: Registrar créditos para usuário
+            // Por enquanto vamos simular armazenando em localStorage no frontend
+            
+            res.json({
+                success: true,
+                status: 'approved',
+                message: 'Pagamento confirmado! Créditos adicionados.',
+                paymentId: paymentDetails.id,
+                amount: paymentDetails.transaction_amount,
+                credits: Math.floor(paymentDetails.transaction_amount / 10) // R$10 = 1 crédito
+            });
+        } else {
+            res.json({
+                success: false,
+                status: 'pending',
+                message: 'Pagamento ainda não foi confirmado. Aguarde alguns momentos.'
+            });
+        }
+        
+    } catch (error) {
+        console.error('[CHECK STATUS] Erro:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Erro ao verificar status do pagamento' 
         });
     }
 });

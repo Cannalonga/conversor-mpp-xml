@@ -409,6 +409,28 @@
             100% { transform: rotate(360deg); }
         }
 
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
         .download-btn {
             display: inline-block;
             background: #28a745;
@@ -1512,15 +1534,14 @@
 
                 const data = await response.json();
                 
-                if (data.success && data.qrCode && data.pixKey) {
+                if (data.success && data.checkoutUrl) {
                     currentPayment.transactionId = data.transactionId;
                     
-                    document.getElementById('paymentLoading').style.display = 'none';
-                    document.getElementById('paymentQRCode').style.display = 'block';
-                    document.getElementById('pixKey').value = data.pixKey;
+                    // Fechar modal e redirecionar para Mercado Pago
+                    closePaymentModal();
                     
-                    // Gerar QR Code visualmente
-                    displayQRCode(data.qrCode);
+                    // Redirecionar para checkout do Mercado Pago
+                    window.location.href = data.checkoutUrl;
                 } else {
                     showPaymentError(data.message || 'Erro ao gerar PIX');
                 }
@@ -1590,6 +1611,103 @@
             localStorage.setItem('userCredits', newCredits);
             return newCredits;
         }
+
+        // Verificar se está retornando do Mercado Pago
+        async function checkMercadoPagoReturn() {
+            const params = new URLSearchParams(window.location.search);
+            const paymentStatus = params.get('payment');
+            const preferenceId = params.get('preferenceId');
+
+            if (paymentStatus && preferenceId) {
+                // Remover parâmetros da URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                if (paymentStatus === 'success') {
+                    try {
+                        // Verificar status do pagamento
+                        const response = await fetch('/api/payment/check-status', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ preferenceId: preferenceId })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success && data.status === 'approved') {
+                            // Adicionar créditos
+                            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
+                            const totalCredits = currentCredits + (data.credits || 3);
+                            localStorage.setItem('userCredits', totalCredits);
+
+                            // Mostrar notificação de sucesso
+                            showSuccessNotification(`✅ Pagamento confirmado! +${data.credits || 3} créditos adicionados!`);
+                        } else {
+                            showErrorNotification('Pagamento ainda não foi confirmado. Atualize a página em alguns momentos.');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao verificar pagamento:', error);
+                        showErrorNotification('Erro ao verificar pagamento: ' + error.message);
+                    }
+                } else if (paymentStatus === 'failed') {
+                    showErrorNotification('❌ Pagamento rejeitado. Tente novamente.');
+                } else if (paymentStatus === 'pending') {
+                    showErrorNotification('⏳ Pagamento pendente. Aguarde a confirmação.');
+                } else if (paymentStatus === 'error') {
+                    showErrorNotification('❌ Erro no processamento do pagamento.');
+                }
+            }
+        }
+
+        function showSuccessNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-weight: bold;
+                animation: slideIn 0.3s ease-in-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        function showErrorNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #f44336;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-weight: bold;
+                animation: slideIn 0.3s ease-in-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Executar ao carregar a página
+        document.addEventListener('DOMContentLoaded', checkMercadoPagoReturn);
     </script>
 </body>
 </html>
