@@ -964,7 +964,7 @@
                             ✓ Conversão em lote<br>
                             ✓ Histórico de conversões
                         </p>
-                        <button class="free-badge" style="background: #FF6B6B; border: none; cursor: pointer; font-size: 0.95rem;">💳 Comprar Agora</button>
+                        <button class="free-badge" style="background: #FF6B6B; border: none; cursor: pointer; font-size: 0.95rem;" onclick="openPaymentModal(30, 'complete')">💳 Comprar Agora</button>
                     </div>
 
                     <!-- Plano 3: Enterprise -->
@@ -987,6 +987,58 @@
                 </p>
             </div>
         </section>
+        
+        <!-- Modal de Pagamento PIX -->
+        <div id="paymentModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <span class="close" onclick="closePaymentModal()">&times;</span>
+                <h2>Comprar Créditos</h2>
+                
+                <div style="margin: 2rem 0;">
+                    <div id="paymentLoading" style="text-align: center; display: none;">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                        <p>Gerando código PIX...</p>
+                    </div>
+                    
+                    <div id="paymentQRCode" style="text-align: center; display: none;">
+                        <div id="qrcodeContainer"></div>
+                        <p style="margin-top: 1rem; color: #666;">
+                            <strong>Valor:</strong> <span id="paymentAmount">R$ 30,00</span>
+                        </p>
+                        <p style="color: #666; font-size: 0.9rem;">
+                            Escaneie o código QR com seu celular ou copie a chave PIX abaixo
+                        </p>
+                        
+                        <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Chave PIX:</p>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" id="pixKey" readonly style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem;" />
+                                <button onclick="copyPixKey()" style="padding: 0.5rem 1rem; background: #0AC9D2; color: white; border: none; border-radius: 4px; cursor: pointer;">📋 Copiar</button>
+                            </div>
+                        </div>
+                        
+                        <p style="margin-top: 1.5rem; color: #666; font-size: 0.9rem;">
+                            Após transferir, clique em "Verificar Pagamento"
+                        </p>
+                        <button onclick="checkPaymentStatus()" style="margin-top: 1rem; padding: 0.8rem 1.5rem; background: #388e3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">✓ Verificar Pagamento</button>
+                    </div>
+                    
+                    <div id="paymentSuccess" style="text-align: center; display: none;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                        <h3 style="color: #388e3c;">Pagamento Confirmado!</h3>
+                        <p style="margin-top: 1rem;">Seus créditos foram adicionados com sucesso.</p>
+                        <button onclick="closePaymentModal()" style="margin-top: 1.5rem; padding: 0.8rem 1.5rem; background: #0AC9D2; color: white; border: none; border-radius: 4px; cursor: pointer;">Fechar</button>
+                    </div>
+                    
+                    <div id="paymentError" style="text-align: center; display: none;">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
+                        <h3 style="color: #d32f2f;">Erro no Pagamento</h3>
+                        <p id="errorMessage" style="margin-top: 1rem; color: #666;"></p>
+                        <button onclick="closePaymentModal()" style="margin-top: 1.5rem; padding: 0.8rem 1.5rem; background: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer;">Tentar Novamente</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Modal Termos de Uso -->
@@ -1319,6 +1371,25 @@
         async function handleFile(file) {
             if (!currentConverter) return;
 
+            // ✅ VERIFICAR CRÉDITOS ANTES DE CONVERTER
+            const creditsRequired = 1; // Padrão: 1 crédito por conversão
+            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
+            
+            if (currentCredits < creditsRequired) {
+                const resultArea = document.getElementById('resultArea');
+                const resultText = document.getElementById('resultText');
+                
+                resultArea.className = 'result-area error';
+                resultArea.style.display = 'block';
+                resultText.innerHTML = `
+                    <h3 style="color: #d32f2f; margin-bottom: 1rem;">❌ Créditos Insuficientes</h3>
+                    <p>Você tem <strong>${currentCredits} créditos</strong>, mas precisa de <strong>${creditsRequired}</strong>.</p>
+                    <p style="margin-top: 1rem;">Compre créditos para continuar!</p>
+                    <button onclick="closeModal(); openPaymentModal(30, 'complete')" style="margin-top: 1rem; padding: 0.8rem 1.5rem; background: #FF6B6B; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💳 Comprar Créditos</button>
+                `;
+                return;
+            }
+
             const resultArea = document.getElementById('resultArea');
             const resultText = document.getElementById('resultText');
 
@@ -1339,9 +1410,13 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
+                    // ✅ Deduzir crédito após conversão bem-sucedida
+                    const remainingCredits = deductCredits(1);
+                    
                     resultArea.className = 'result-area success';
                     
                     let html = `<h3 style="color: #388e3c; margin-bottom: 1rem;">✅ Conversão concluída!</h3>`;
+                    html += `<p style="font-size: 0.9rem; color: #666;">💰 Créditos restantes: <strong>${remainingCredits}</strong></p>`;
                     
                     if (data.conversion) {
                         html += `<p><strong>Arquivo:</strong> ${file.name}</p>`;
@@ -1386,6 +1461,135 @@
                 closeModal();
             }
         });
+
+        // ============================================
+        // FUNÇÕES DE PAGAMENTO PIX
+        // ============================================
+        
+        let currentPayment = {
+            amount: 0,
+            transactionId: null,
+            plan: null
+        };
+
+        function openPaymentModal(amount, plan) {
+            currentPayment.amount = amount;
+            currentPayment.plan = plan;
+            
+            document.getElementById('paymentModal').style.display = 'block';
+            document.getElementById('paymentAmount').textContent = `R$ ${amount.toFixed(2).replace('.', ',')}`;
+            
+            // Resetar estados
+            document.getElementById('paymentLoading').style.display = 'block';
+            document.getElementById('paymentQRCode').style.display = 'none';
+            document.getElementById('paymentSuccess').style.display = 'none';
+            document.getElementById('paymentError').style.display = 'none';
+            
+            generatePixPayment(amount, plan);
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            currentPayment = { amount: 0, transactionId: null, plan: null };
+        }
+
+        async function generatePixPayment(amount, plan) {
+            try {
+                const response = await fetch('/api/premium/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: amount,
+                        plan: plan,
+                        email: localStorage.getItem('userEmail') || 'anonymous@example.com',
+                        cpf: localStorage.getItem('userCPF') || '00000000000'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao gerar código PIX');
+                }
+
+                const data = await response.json();
+                
+                if (data.success && data.qrCode && data.pixKey) {
+                    currentPayment.transactionId = data.transactionId;
+                    
+                    document.getElementById('paymentLoading').style.display = 'none';
+                    document.getElementById('paymentQRCode').style.display = 'block';
+                    document.getElementById('pixKey').value = data.pixKey;
+                    
+                    // Gerar QR Code visualmente
+                    displayQRCode(data.qrCode);
+                } else {
+                    showPaymentError(data.message || 'Erro ao gerar PIX');
+                }
+            } catch (error) {
+                showPaymentError(error.message);
+            }
+        }
+
+        function displayQRCode(qrCodeData) {
+            const container = document.getElementById('qrcodeContainer');
+            container.innerHTML = `<img src="${qrCodeData}" alt="QR Code PIX" style="max-width: 250px; border-radius: 8px; border: 2px solid #0AC9D2;" />`;
+        }
+
+        function copyPixKey() {
+            const pixKey = document.getElementById('pixKey');
+            pixKey.select();
+            document.execCommand('copy');
+            
+            // Feedback visual
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copiado!';
+            setTimeout(() => { btn.textContent = originalText; }, 2000);
+        }
+
+        async function checkPaymentStatus() {
+            if (!currentPayment.transactionId) {
+                showPaymentError('ID da transação não encontrado');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/payment/status/${currentPayment.transactionId}`);
+                const data = await response.json();
+
+                if (data.success && data.status === 'PAID') {
+                    // Pagamento confirmado
+                    localStorage.setItem('userCredits', data.credits || 200);
+                    document.getElementById('paymentQRCode').style.display = 'none';
+                    document.getElementById('paymentSuccess').style.display = 'block';
+                } else if (data.status === 'PENDING') {
+                    showPaymentError('Pagamento ainda não foi detectado. Aguarde ou verifique novamente em instantes.');
+                } else {
+                    showPaymentError('Pagamento não confirmado. Tente novamente.');
+                }
+            } catch (error) {
+                showPaymentError(error.message);
+            }
+        }
+
+        function showPaymentError(message) {
+            document.getElementById('paymentLoading').style.display = 'none';
+            document.getElementById('paymentQRCode').style.display = 'none';
+            document.getElementById('paymentError').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Verificar créditos antes de converter
+        function hasEnoughCredits(requiredCredits = 1) {
+            const credits = parseInt(localStorage.getItem('userCredits') || '0');
+            return credits >= requiredCredits;
+        }
+
+        function deductCredits(amount = 1) {
+            const credits = parseInt(localStorage.getItem('userCredits') || '0');
+            const newCredits = Math.max(0, credits - amount);
+            localStorage.setItem('userCredits', newCredits);
+            return newCredits;
+        }
     </script>
 </body>
 </html>
